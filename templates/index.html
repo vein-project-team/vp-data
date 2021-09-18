@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vein Project</title>
+    <link rel="stylesheet" href="/static/iconfont/iconfont.css">
+    <link rel="stylesheet" href="/static/css/index.css">
+    <script src="/static/lib/echarts.js"></script>
+    <script src="/static/lib/axios.js"></script>
+</head>
+<body>
+    <header>
+        <input type="text" id="daysInput" placeholder="200">
+        <a id="daysInputSubmit" href="javascript:;">
+            <span class="iconfont icon-shuaxin"></span> 刷新
+        </a>
+    </header>
+    <div class="index-box">
+        <h3>上证指数</h3>
+        <div class="index-graph" id="SH"></div>
+    </div>
+    <div class="index-box">
+        <h3>深证指数</h3>
+        <div class="index-graph" id="SZ"></div>
+    </div>
+    <script src="/static/js/index.js"></script>
+</body>
+</html>
