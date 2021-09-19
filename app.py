@@ -1,7 +1,7 @@
 from flask import Flask
 from flask import request
 from flask import render_template
-from database import trimmer
+from database import dispatcher
 
 app = Flask(__name__)
 
@@ -20,7 +20,7 @@ def index_daily():
 def index_daily_data():
     index_code = request.args.get('code')
     days = int(request.args.get('days'))
-    return trimmer.get_index_daily(index_code, days)
+    return dispatcher.get_index_daily(index_code, days)
 
 
 if __name__ == '__main__':
