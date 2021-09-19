@@ -1,0 +1,14 @@
+.intro {
+    margin: 20vh auto;
+    width: 400px;
+    text-align: center;
+}
+
+.intro h1 {
+    border-bottom: 1px dotted #aaa;
+}
+
+.intro .iconfont {
+    color: darkred;
+    font-size: 48px;
+}

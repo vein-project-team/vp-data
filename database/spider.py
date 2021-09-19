@@ -46,9 +46,9 @@ def get_index_daily(index_code, days):
     return data
 
 
-def get_ma(code, days, ma_days):
-    start_date, end_date = get_start_end_date(days + ma_days).values()
-    df = ts.pro_bar(ts_code=code, start_date=start_date, end_date=end_date, ma=[ma_days])
+# def get_ma(code, days, ma_days):
+#     start_date, end_date = get_start_end_date(days + ma_days).values()
+#     df = ts.pro_bar(ts_code=code, start_date=start_date, end_date=end_date, ma=[ma_days])
 
 
 if __name__ == '__main__':

@@ -1,18 +1,23 @@
 from flask import Flask
 from flask import request
 from flask import render_template
-import trimmer
+from database import trimmer
 
 app = Flask(__name__)
 
 
 @app.route('/')
-def index_page():
-    return render_template('index.html')
+def home_page():
+    return render_template('home.html')
 
 
 @app.route('/index-daily')
-def get_index_daily():
+def index_daily():
+    return render_template('index-daily.html')
+
+
+@app.route('/index-daily-data')
+def index_daily_data():
     index_code = request.args.get('code')
     days = int(request.args.get('days'))
     return trimmer.get_index_daily(index_code, days)

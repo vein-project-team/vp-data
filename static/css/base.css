@@ -1,0 +1,110 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+a {
+    text-decoration: none;
+}
+
+header {
+    position: fixed;
+    z-index: 1;
+    width: 100vw;
+    height: 60px;
+    padding: 15px 20px;
+    background-color: #333;
+    box-sizing: border-box;
+}
+
+/*header input[type='text'] {*/
+/*    height: 25px;*/
+/*    padding: 2px 5px;*/
+/*    color: white;*/
+/*    font-size: 14px;*/
+/*    line-height: 25px;*/
+/*    background-color: #333;*/
+/*    border: 1px solid #aaa;*/
+/*}*/
+
+header a {
+    display: inline-block;
+    text-align: center;
+    margin-left: 5px;
+    padding: 2px 5px;
+    background-color: #333;
+    border: 1px solid #444;
+    border-radius: 16px;
+    line-height: 28px;
+    height: 28px;
+    color: white;
+    cursor: pointer;
+}
+
+header a:hover {
+    background-color: #444;
+}
+
+.container {
+    float: right;
+    overflow: hidden;
+    margin-top: 60px;
+}
+
+.full {
+    width: 100%;
+    transition: 0.2s;
+}
+
+.aside {
+    width: 90%;
+    transition: 0.2s;
+}
+
+.menu {
+    position: fixed;
+    margin-top: 60px;
+    height: 100vh;
+    background-color: #333;
+    overflow: hidden;
+    float: left;
+    border-top: 1px dotted white;
+}
+
+.fold {
+    width: 0;
+    transition: 0.2s;
+}
+
+.unfold {
+    width: 10vw;
+    transition: 0.2s;
+}
+
+.menu ul {
+    width: 10vw;
+}
+
+.menu li {
+    width: 100%;
+    height: 30px;
+}
+
+.menu li a {
+    display: block;
+    margin-top: 10px;
+    width: 100%;
+    height: 100%;
+    padding-top: 10px;
+    text-align: center;
+    color: white;
+    font-size: 16px;
+}
+
+.menu li a span {
+    font-size: 16px;
+}
+
+.menu li a:hover{
+    background-color: #444;
+}

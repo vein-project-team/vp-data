@@ -6,11 +6,60 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "1013193",
+      "name": "叶子",
+      "font_class": "leaf",
+      "unicode": "e6b8",
+      "unicode_decimal": 59064
+    },
+    {
+      "icon_id": "5698138",
+      "name": "指数",
+      "font_class": "zhishu",
+      "unicode": "e625",
+      "unicode_decimal": 58917
+    },
+    {
       "icon_id": "15857009",
       "name": "刷新",
       "font_class": "shuaxin",
       "unicode": "e668",
       "unicode_decimal": 58984
+    },
+    {
+      "icon_id": "18767979",
+      "name": "home",
+      "font_class": "shouye",
+      "unicode": "e532",
+      "unicode_decimal": 58674
+    },
+    {
+      "icon_id": "19264630",
+      "name": "登录",
+      "font_class": "denglu",
+      "unicode": "e95d",
+      "unicode_decimal": 59741
+    },
+    {
+      "icon_id": "19924561",
+      "name": "Organization - Data - report--data - 32",
+      "font_class": "Organization-Data-report--data-32",
+      "unicode": "e686",
+      "unicode_decimal": 59014
+    },
+    {
+      "icon_id": "21267402",
+      "name": "stock",
+      "font_class": "stock",
+      "unicode": "ecbf",
+      "unicode_decimal": 60607
+    },
+    {
+      "icon_id": "23882424",
+      "name": "industry",
+      "font_class": "a-bianzu4",
+      "unicode": "e504",
+      "unicode_decimal": 58628
     }
   ]
 }

@@ -1,4 +1,4 @@
-import spider
+from database import spider
 import numpy as np
 
 
