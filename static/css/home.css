@@ -1,7 +1,9 @@
 .intro {
     margin: 20vh auto;
-    width: 400px;
+    padding: 50px 0px;
+    width: 600px;
     text-align: center;
+    background-color: rgba(255,255,255,0.5);
 }
 
 .intro h1 {
