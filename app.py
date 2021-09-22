@@ -1,8 +1,10 @@
 from flask import Flask
 from flask import request
 from flask import render_template
-from database import dispatcher
+from data_storage.builder import db_init
+from data_handler import reader
 
+db_init()
 app = Flask(__name__)
 
 
@@ -18,9 +20,9 @@ def index_daily():
 
 @app.route('/index-daily-data')
 def index_daily_data():
-    index_code = request.args.get('code')
+    index_suffix = request.args.get('index')
     days = int(request.args.get('days'))
-    return dispatcher.get_index_daily(index_code, days)
+    return reader.get_index_daily(index_suffix, days)
 
 
 if __name__ == '__main__':

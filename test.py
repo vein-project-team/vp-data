@@ -1,4 +1,6 @@
-from database import cacher
+from data_handler import reader
+from data_storage.builder import db_init
 
 if __name__ == '__main__':
-    pass
+    db_init()
+    print(reader.get_index_daily('SH', 10))

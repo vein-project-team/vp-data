@@ -1,16 +1,22 @@
-from database import spider
-from database import utils
+from data_api import spider
 import numpy as np
+import utils
 
 
 def get_index_ma(index_code, days, ma_days):
-    ma = []
+    k_ma = []
+    vol_ma = []
     data = spider.get_index_daily(index_code, days + ma_days)
-    data = data['close'].tolist()
-    data.reverse()
+    data = data.iloc[::-1]
+    close = data['close'].tolist()
+    vol = data['vol'].tolist()
     for i in range(30, len(data)):
-        ma.append(np.mean(data[i-30:i]))
-    return ma
+        k_ma.append(np.mean(close[i-30:i]))
+        vol_ma.append(np.mean(vol[i-30:i]))
+    return {
+        'k_ma': k_ma,
+        'vol_ma': vol_ma
+    }
 
 
 def get_index_AD_line(index_suffix, days, only_main_board=True):
