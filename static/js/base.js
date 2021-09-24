@@ -97,8 +97,4 @@
         changeMenuStatus();
     });
 
-    container.addEventListener('click', function (event) {
-        changeMenuStatus();
-    });
-
 }

@@ -7,8 +7,8 @@ def get_index_daily(index_suffix, days):
     data = read_data(f'''
     SELECT * FROM (
     SELECT * FROM {index_suffix}_INDEX_DAILY
-    ORDER BY DATE DESC LIMIT {days})
-    ORDER BY DATE ASC;
+    ORDER BY TRADE_DATE DESC LIMIT {days})
+    ORDER BY TRADE_DATE ASC;
     ''')
 
     return {

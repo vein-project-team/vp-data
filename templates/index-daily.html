@@ -4,16 +4,16 @@
 {% endblock %}
 {% block content %}
     <div class="index-box" id="SH">
-        <h3>上证指数</h3>
-        <div class="index-graph"></div>
-        <div class="index-vol-graph"></div>
-        <div class="index-ad-line"></div>
-    </div>
-    <div class="index-box" id="SZ">
-        <h3>深证指数</h3>
-        <div class="index-graph"></div>
-        <div class="index-vol-graph"></div>
-        <div class="index-ad-line"></div>
+        <ul class="index-nav">
+            <li @click="changeCurrentIndexTo('上证指数', 'SH')">
+                <a href="javascript:;" class="menu-button" :class="{'current': isCurrent('SH')}">上证指数</a>
+            </li>
+            <li @click="changeCurrentIndexTo('深证指数', 'SZ')">
+                <a href="javascript:;" class="menu-button" :class="{'current': isCurrent('SZ')}">深证指数</a>
+            </li>
+        </ul>
+        <div class="index-daily-chart"></div>
+        <div class="index-ad-line-chart"></div>
     </div>
     <script src="/static/js/index-daily.js"></script>
 {% endblock %}

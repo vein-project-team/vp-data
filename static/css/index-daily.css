@@ -8,25 +8,30 @@
     background-color: #fff;
 }
 
-.index-box h3 {
+.index-box .index-nav {
+    width: 100%;
     height: 60px;
     line-height: 60px;
     padding-left: 30px;
-    color: white;
     background-color: #333;
+    list-style: none;
 }
 
-.index-box .index-graph {
+.index-box .index-nav .current {
+    background-color: darkred;
+}
+
+
+.index-box .index-nav li {
+    float: left;
+}
+
+.index-box .index-daily-chart {
     width: 100%;
-    height: 360px;
+    height: 480px;
 }
 
-.index-box .index-vol-graph {
-    width: 100%;
-    height: 120px;
-}
-
-.index-box .index-ad-line {
+.index-box .index-ad-line-chart {
     width: 100%;
     height: 120px;
 }

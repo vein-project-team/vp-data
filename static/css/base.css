@@ -27,7 +27,7 @@ header {
 /*    border: 1px solid #aaa;*/
 /*}*/
 
-header a {
+.menu-button {
     display: inline-block;
     text-align: center;
     margin-left: 5px;
@@ -41,7 +41,7 @@ header a {
     cursor: pointer;
 }
 
-header a:hover {
+.menu-button:hover {
     background-color: #444;
 }
 
@@ -110,6 +110,7 @@ header a:hover {
 
 .menu li a {
     display: block;
+    height: 100%;
     margin-top: 10px;
     padding-top: 10px;
     text-align: center;

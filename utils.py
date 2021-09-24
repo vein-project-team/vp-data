@@ -2,6 +2,10 @@ import datetime
 import time
 
 
+def log(info):
+    print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] {info}")
+
+
 def round_list(the_list, points=2):
     for i in range(0, len(the_list)):
         the_list[i] = round(the_list[i], points)

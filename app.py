@@ -4,7 +4,7 @@ from flask import render_template
 from data_storage.builder import db_init
 from data_handler import reader
 
-db_init()
+db_init(200)
 app = Flask(__name__)
 
 

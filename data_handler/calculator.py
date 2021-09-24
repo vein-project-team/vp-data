@@ -21,9 +21,12 @@ def get_index_ma(index_code, days, ma_days):
 
 def get_index_AD_line(index_suffix, days, only_main_board=True):
     ad_point = 0
-    ad_line = []
+    ad_line = [0]
     trade_date_list = spider.get_trade_date_list(days)
     trade_date_list = trade_date_list['cal_date'].tolist()
+    if len(trade_date_list) == 1:
+        return ad_line
+    trade_date_list = trade_date_list[1:]
     for date in trade_date_list:
         data = spider.get_up_down_daily(date)
         if only_main_board is True:
