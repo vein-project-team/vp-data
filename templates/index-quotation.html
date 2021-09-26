@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block links %}
-    <link rel="stylesheet" href="/static/css/index-daily.css">
+    <link rel="stylesheet" href="/static/css/index-quotation.css">
 {% endblock %}
 {% block content %}
     <div class="index-box" id="SH">
@@ -12,8 +12,12 @@
                 <a href="javascript:;" class="menu-button" :class="{'current': isCurrent('SZ')}">深证指数</a>
             </li>
         </ul>
-        <div class="index-daily-chart"></div>
-        <div class="index-ad-line-chart"></div>
+        <div class="quotation-chart index-daily-chart"></div>
+        <div class="ad-line-chart index-daily-ad-line-chart"></div>
+        <div class="quotation-chart index-weekly-chart"></div>
+        <div class="ad-line-chart index-weekly-ad-line-chart"></div>
+        <div class="quotation-chart index-monthly-chart"></div>
+        <div class="ad-line-chart index-monthly-ad-line-chart"></div>
     </div>
-    <script src="/static/js/index-daily.js"></script>
+    <script src="/static/js/index-quotation.js"></script>
 {% endblock %}

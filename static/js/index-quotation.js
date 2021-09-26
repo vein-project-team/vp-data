@@ -3,40 +3,55 @@
         data() {
             return {
                 currentIndex: 'SH',
-                SH: null,
-                SZ: null,
+                SH: {
+                    'daily': null,
+                    'weekly': null
+                },
+                SZ: {
+                    'daily': null,
+                    'weekly': null
+                },
             }
         },
         mounted() {
-            this.drawIndexGraph('上证指数', 'SH', 120);
+            this.drawIndexGraph('上证指数', 'SH', 'daily', 120);
+            this.drawIndexGraph('上证指数', 'SH', 'weekly', 120);
         },
         methods: {
             changeCurrentIndexTo(indexName, indexSuffix) {
                 this.currentIndex = indexSuffix;
-                this.drawIndexGraph(indexName, indexSuffix, 120);
+                this.drawIndexGraph(indexName, indexSuffix, 'daily', 120);
+                this.drawIndexGraph(indexName, indexSuffix, 'weekly', 120);
             },
             isCurrent(id) {
                 return id == this.currentIndex;
             },
-            drawIndexGraph(indexName, indexSuffix, days) {
-                let indexDailyChart = echarts.init(document.querySelector(`.index-daily-chart`));
-                let adLineChart = echarts.init(document.querySelector(`.index-ad-line-chart`));
-                if (this[indexSuffix] == undefined) {
-                    axios.get(`/index-daily-data?index=${indexSuffix}&days=${days}`)
+            drawIndexGraph(indexName, indexSuffix, frequency, size) {
+                let quotationChart = echarts.init(document.querySelector(`.index-${frequency}-chart`));
+                let adLineChart = echarts.init(document.querySelector(`.index-${frequency}-ad-line-chart`));
+                if (this[indexSuffix][frequency] == null) {
+                    axios.get(`/index-quotation-data?index=${indexSuffix}&size=${size}`)
                         .then((response) => {
-                            let date = response.data[indexSuffix]['date'];
-                            let kLine = response.data[indexSuffix]['k_line'];
-                            let volRaw = response.data[indexSuffix]['vol'];
-                            let kMa30 = response.data[indexSuffix]['k_ma30'];
-                            let volMa30 = response.data[indexSuffix]['vol_ma30'];
-                            let adLine = response.data[indexSuffix]['ad_line'];
+                            let date = response.data[indexSuffix][frequency]['date'];
+                            let kLine = response.data[indexSuffix][frequency]['k_line'];
+                            let volRaw = response.data[indexSuffix][frequency]['vol'];
+                            let kMa30 = response.data[indexSuffix][frequency]['k_ma30'];
+                            let volMa30 = response.data[indexSuffix][frequency]['vol_ma30'];
+                            let ups = response.data[indexSuffix][frequency]['ups'];
+                            let downs = response.data[indexSuffix][frequency]['downs'];
+                            let adLine = response.data[indexSuffix][frequency]['ad_line'];
 
                             let vol = []
-                            for (let i = 0; i < kLine.length; i++) {
+                            for (let i = 0; i < size; i++) {
                                 vol.push([date[i], volRaw[i], kLine[i][0] > kLine[i][1] ? 1 : -1]);
                             }
 
-                            let indexDailyChartOption = {
+                            let adLineOffsets = []
+                            for (let i = 0; i < size; i++) {
+                                adLineOffsets.push(ups[i] - downs[i]);
+                            }
+
+                            let quotationChartOption = {
 
                                 tooltip: {
                                     trigger: 'axis',
@@ -209,17 +224,21 @@
                                         type: 'line',
                                         showSymbol: false,
                                         data: adLine,
+                                    },
+                                    {
+                                        type: 'bar',
+                                        data: adLineOffsets,
                                     }
                                 ]
                             };
 
                             let data = {
-                                indexDailyChartOption: indexDailyChartOption,
+                                quotationChartOption: quotationChartOption,
                                 adLineChartOption: adLineChartOption
                             };
 
-                            this[indexSuffix] = data
-                            indexDailyChart.setOption(data['indexDailyChartOption']);
+                            this[indexSuffix][frequency] = data
+                            quotationChart.setOption(data['quotationChartOption']);
                             adLineChart.setOption(data['adLineChartOption']);
 
                         })
@@ -227,8 +246,8 @@
                             console.log(error);
                         });
                 } else {
-                    indexDailyChart.setOption(this[indexSuffix]['indexDailyChartOption']);
-                    adLineChart.setOption(this[indexSuffix]['adLineChartOption']);
+                    quotationChart.setOption(this[indexSuffix][frequency]['quotationChartOption']);
+                    adLineChart.setOption(this[indexSuffix][frequency]['adLineChartOption']);
                 }
             }
         }
