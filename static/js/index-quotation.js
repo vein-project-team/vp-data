@@ -28,7 +28,6 @@
             },
             drawIndexGraph(indexName, indexSuffix, frequency, size) {
                 let quotationChart = echarts.init(document.querySelector(`.index-${frequency}-chart`));
-                let adLineChart = echarts.init(document.querySelector(`.index-${frequency}-ad-line-chart`));
                 if (this[indexSuffix][frequency] == null) {
                     axios.get(`/index-quotation-data?index=${indexSuffix}&size=${size}`)
                         .then((response) => {
@@ -48,7 +47,8 @@
 
                             let adLineOffsets = []
                             for (let i = 0; i < size; i++) {
-                                adLineOffsets.push(ups[i] - downs[i]);
+                                let adLineOffset = ups[i] - downs[i];
+                                adLineOffsets.push([date[i], adLineOffset, adLineOffset >= 0 ? 1 : -1]);
                             }
 
                             let quotationChartOption = {
@@ -75,7 +75,7 @@
                                                 <li>收盘：${currentData[2]}</li>
                                                 <li>最低：${currentData[3]}</li>
                                                 <li>最高：${currentData[4]}</li>
-                                            </ul>`
+                                            </ul>`;
                                         } else if (params[0].componentSubType == "bar") {
                                             let date = params[2].name;
                                             let vol = params[0].data[1];
@@ -84,7 +84,18 @@
                                             <ul style="padding-left: 15px;">
                                                 <li>成交量：${vol}</li>
                                             </ul>
-                                            `
+                                            `;
+                                        } else {
+                                            let date = params[2].name;
+                                            let adPoint = params[0].data;
+                                            let adOffset = params[1].data[1];
+                                            return `
+                                            <span class="axis-label-date">${date}</span>
+                                            <ul style="padding-left: 15px;">
+                                                <li>腾落线：${adPoint}</li>
+                                                <li>变动量：${adOffset}</li>
+                                            </ul>
+                                            `;
                                         }
                                     }
                                 },
@@ -94,29 +105,48 @@
                                         backgroundColor: '#777'
                                     }
                                 },
-                                visualMap: {
-                                    show: false,
-                                    seriesIndex: 1,
-                                    pieces: [{
-                                        value: 1,
-                                        color: '#00aa00'
-                                    }, {
-                                        value: -1,
-                                        color: '#aa0000'
-                                    }]
-                                },
-                                grid: [
+                                visualMap: [
                                     {
-                                        top: "5%",
-                                        left: '6.5%',
-                                        right: '3%',
-                                        height: '60%'
+                                        show: false,
+                                        seriesIndex: 1,
+                                        pieces: [{
+                                            value: 1,
+                                            color: '#00aa00'
+                                        }, {
+                                            value: -1,
+                                            color: '#aa0000'
+                                        }]
                                     },
                                     {
+                                        show: false,
+                                        seriesIndex: 5,
+                                        pieces: [{
+                                            value: 1,
+                                            color: '#aa0000'
+                                        }, {
+                                            value: -1,
+                                            color: '#00aa00'
+                                        }]
+                                    },
+                                ],
+                                grid: [
+                                    {
+                                        top: 20,
                                         left: '6%',
-                                        right: '3%',
-                                        top: '66%',
-                                        height: '16%'
+                                        right: '4%',
+                                        height: 360
+                                    },
+                                    {
+                                        top: 380,
+                                        left: '6%',
+                                        right: '4%',
+                                        height: 120
+                                    },
+                                    {
+                                        top: 500,
+                                        left: '6%',
+                                        right: '4%',
+                                        height: 120
                                     }
                                 ],
                                 xAxis: [
@@ -124,10 +154,6 @@
                                         type: 'category',
                                         show: false,
                                         data: date,
-                                        scale: true,
-                                        splitNumber: 20,
-                                        min: 'dataMin',
-                                        max: 'dataMax',
                                         axisPointer: {
                                             label: {
                                                 show: false
@@ -136,12 +162,24 @@
                                     },
                                     {
                                         type: 'category',
-                                        gridIndex: 1,
+                                        show: false,
                                         data: date,
-                                        scale: true,
-                                        splitNumber: 20,
-                                        min: 'dataMin',
-                                        max: 'dataMax'
+                                        gridIndex: 1,
+                                        axisPointer: {
+                                            label: {
+                                                show: false
+                                            }
+                                        }
+                                    },
+                                    {
+                                        type: 'category',
+                                        gridIndex: 2,
+                                        data: date,
+                                        axisLabel: {
+                                            interval: 10,
+                                            showMaxLabel: true,
+                                            showMinLabel: true
+                                        }
                                     }
                                 ],
                                 yAxis: [
@@ -154,18 +192,23 @@
                                     {
                                         scale: true,
                                         gridIndex: 1,
-                                        splitNumber: 2,
                                         axisLabel: {show: false},
                                         axisLine: {show: false},
                                         axisTick: {show: false},
                                         splitLine: {show: false}
-                                    }
+                                    },
+                                    {
+                                        show: false,
+                                        scale: true,
+                                        gridIndex: 2,
+                                    },
                                 ],
-
                                 series: [{
                                     type: 'candlestick',
                                     data: kLine,
                                     barWidth: 7,
+                                    xAxisIndex: 0,
+                                    yAxisIndex: 0,
                                     itemStyle: {
                                         color: '#aa0000',
                                         color0: '#00aa00',
@@ -184,8 +227,9 @@
                                         type: 'line',
                                         showSymbol: false,
                                         data: kMa30,
-                                        name: "MA30",
                                         smooth: true,
+                                        xAxisIndex: 0,
+                                        yAxisIndex: 0,
                                         lineStyle: {
                                             color: 'darkblue'
                                         }
@@ -194,52 +238,38 @@
                                         type: 'line',
                                         showSymbol: false,
                                         data: volMa30,
-                                        name: "MA30",
                                         smooth: true,
                                         xAxisIndex: 1,
                                         yAxisIndex: 1,
                                         lineStyle: {
                                             color: 'darkblue'
                                         }
-                                    }
-                                ]
-                            };
-
-                            let adLineChartOption = {
-                                grid: {
-                                    top: '10px',
-                                    left: '60px',
-                                    right: '40px',
-                                    bottom: '30px'
-                                },
-                                xAxis: {
-                                    data: date
-                                },
-                                yAxis: {
-                                    show: false,
-                                    scale: true,
-                                },
-                                series: [
+                                    },
                                     {
                                         type: 'line',
                                         showSymbol: false,
+                                        xAxisIndex: 2,
+                                        yAxisIndex: 2,
                                         data: adLine,
+                                        lineStyle: {
+                                            color: 'darkblue'
+                                        }
                                     },
                                     {
                                         type: 'bar',
-                                        data: adLineOffsets,
+                                        xAxisIndex: 2,
+                                        yAxisIndex: 2,
+                                        data: adLineOffsets
                                     }
                                 ]
                             };
 
                             let data = {
                                 quotationChartOption: quotationChartOption,
-                                adLineChartOption: adLineChartOption
                             };
 
                             this[indexSuffix][frequency] = data
                             quotationChart.setOption(data['quotationChartOption']);
-                            adLineChart.setOption(data['adLineChartOption']);
 
                         })
                         .catch(function (error) {
@@ -247,7 +277,6 @@
                         });
                 } else {
                     quotationChart.setOption(this[indexSuffix][frequency]['quotationChartOption']);
-                    adLineChart.setOption(this[indexSuffix][frequency]['adLineChartOption']);
                 }
             }
         }
