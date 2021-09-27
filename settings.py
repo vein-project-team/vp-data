@@ -1,1 +1,1 @@
-DB_SIZE = 120
+DB_SIZE = 100

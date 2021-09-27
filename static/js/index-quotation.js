@@ -14,14 +14,16 @@
             }
         },
         mounted() {
-            this.drawIndexGraph('上证指数', 'SH', 'daily', 120);
-            this.drawIndexGraph('上证指数', 'SH', 'weekly', 120);
+            this.drawIndexGraph('上证指数', 'SH', 'daily', 100);
+            this.drawIndexGraph('上证指数', 'SH', 'weekly', 100);
+            this.drawIndexGraph('上证指数', 'SH', 'monthly', 100);
         },
         methods: {
             changeCurrentIndexTo(indexName, indexSuffix) {
                 this.currentIndex = indexSuffix;
-                this.drawIndexGraph(indexName, indexSuffix, 'daily', 120);
-                this.drawIndexGraph(indexName, indexSuffix, 'weekly', 120);
+                this.drawIndexGraph(indexName, indexSuffix, 'daily', 100);
+                this.drawIndexGraph(indexName, indexSuffix, 'weekly', 100);
+                this.drawIndexGraph(indexName, indexSuffix, 'monthly', 100);
             },
             isCurrent(id) {
                 return id == this.currentIndex;

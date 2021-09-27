@@ -3,7 +3,7 @@ from flask import Flask
 from flask import request
 from flask import render_template
 from data_storage.builder import db_init
-from data_handler import trimmer
+from data_handler import dispatcher
 
 db_init(DB_SIZE)
 app = Flask(__name__)
@@ -25,8 +25,9 @@ def index_daily_data():
     size = int(request.args.get('size'))
     return {
         index_suffix: {
-            "daily": trimmer.get_index_daily_from_db(index_suffix, size),
-            'weekly': trimmer.get_index_weekly_from_db(index_suffix, size)
+            "daily": dispatcher.get_index_quotation_from_db(index_suffix, 'DAILY', size),
+            'weekly': dispatcher.get_index_quotation_from_db(index_suffix, 'WEEKLY', size),
+            'monthly': dispatcher.get_index_quotation_from_db(index_suffix, 'MONTHLY', size)
         }
     }
 

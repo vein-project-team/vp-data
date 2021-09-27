@@ -1,2 +1,3 @@
 # vein-project
- Kevyn's stock market analysis project
+ Kevyn's stock market analysis framework
+

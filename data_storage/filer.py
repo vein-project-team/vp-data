@@ -1,33 +1,16 @@
 import sqlite3
-from utils import log, round_list
+from utils import log
 from data_api import spider
-from data_handler import trimmer
+from data_handler import dispatcher
 from data_storage import cacher
-
-
-def fill_trade_date_list_table(days):
-    conn = sqlite3.connect('vein-project.db')
-    log('检查并填充数据进表：TRADE_DATE_LIST...')
-    data = spider.get_trade_date_list(days)
-    data = data['cal_date'].tolist()
-    for date in data:
-        conn.execute(f'''
-        INSERT OR IGNORE INTO TRADE_DATE_LIST VALUES (
-            {date}
-        );
-        ''')
-    conn.commit()
 
 
 def fill_index_quotation_table(table_name, size):
     conn = sqlite3.connect('vein-project.db')
     log(f'检查并填充数据进表：{table_name}...')
     index_code = '000001.SH' if table_name[:2] == 'SH' else '399001.SZ'
-    data = None
-    if 'DAILY' in table_name:
-        data = trimmer.get_index_daily_from_api(index_code, size)
-    elif 'WEEKLY' in table_name:
-        data = trimmer.get_index_weekly_from_api(index_code, size)
+    frequency = table_name.split('_')[-1]
+    data = dispatcher.get_index_quotation_from_api(index_code, frequency, size)
     for i in range(0, size):
         conn.execute(f'''
         REPLACE INTO {table_name} VALUES (
@@ -54,11 +37,12 @@ def fill_tables(size):
     else:
         log('正在进行数据初始填充...')
         latest_date = spider.get_latest_finished_trade_date()
-        fill_trade_date_list_table(size)
         fill_index_quotation_table('SH_INDEX_DAILY', size)
         fill_index_quotation_table('SZ_INDEX_DAILY', size)
         fill_index_quotation_table('SH_INDEX_WEEKLY', size)
         fill_index_quotation_table('SZ_INDEX_WEEKLY', size)
+        fill_index_quotation_table('SH_INDEX_MONTHLY', size)
+        fill_index_quotation_table('SZ_INDEX_MONTHLY', size)
         log('数据初始填充已完成!')
         cacher.write_cache('log', {
             'latest_date': latest_date
@@ -75,30 +59,15 @@ def update_tables():
     else:
         days = spider.get_trade_days_between(cache_date, latest_date) - 1
         log(f'需要更新 {days} 个交易日的数据...')
-        fill_trade_date_list_table(days)
         fill_index_quotation_table('SH_INDEX_DAILY', days)
         fill_index_quotation_table('SZ_INDEX_DAILY', days)
         fill_index_quotation_table('SH_INDEX_WEEKLY', days)
         fill_index_quotation_table('SZ_INDEX_WEEKLY', days)
+        fill_index_quotation_table('SH_INDEX_MONTHLY', days)
+        fill_index_quotation_table('SZ_INDEX_MONTHLY', days)
         cache['latest_date'] = latest_date
         cacher.override_cache('log', cache)
         log('数据更新完成！')
-
-
-def trim_trade_date_list_table(keep_records):
-    conn = sqlite3.connect('vein-project.db')
-    c = conn.cursor()
-    c.execute('''
-    SELECT COUNT(*) FROM TRADE_DATE_LIST;
-    ''')
-    total_records = c.fetchone()[0]
-    need_trim_records = total_records - keep_records
-    if need_trim_records > 0:
-        log(f'交易日历表中当前有 {total_records} 条数据， 需裁剪掉前 {need_trim_records} 条...')
-        c.execute(f'''
-        DELETE FROM TRADE_DATE_LIST WHERE TRADE_DATE IN (SELECT TRADE_DATE FROM TRADE_DATE_LIST LIMIT {need_trim_records});
-        ''')
-        conn.commit()
 
 
 def trim_index_daily_table(table_name, keep_records):
@@ -127,11 +96,13 @@ def trim_index_daily_table(table_name, keep_records):
 
 def trim_tables(keep_records):
     log('正在裁剪数据表...')
-    trim_trade_date_list_table(keep_records)
+    # trim_trade_date_list_table(keep_records)
     trim_index_daily_table('SH_INDEX_DAILY', keep_records)
     trim_index_daily_table('SZ_INDEX_DAILY', keep_records)
     trim_index_daily_table('SH_INDEX_WEEKLY', keep_records)
     trim_index_daily_table('SZ_INDEX_WEEKLY', keep_records)
+    trim_index_daily_table('SH_INDEX_MONTHLY', keep_records)
+    trim_index_daily_table('SZ_INDEX_MONTHLY', keep_records)
     log('数据裁剪完成！')
 
 

@@ -12,24 +12,26 @@ else:
 
 def db_init(db_size):
     log(f'当前数据库大小设定为：{db_size}')
-    create_trade_date_list_table()
+    # create_trade_date_list_table()
     create_index_quotation_table('SH_INDEX_DAILY')
     create_index_quotation_table('SZ_INDEX_DAILY')
     create_index_quotation_table('SH_INDEX_WEEKLY')
     create_index_quotation_table('SZ_INDEX_WEEKLY')
+    create_index_quotation_table('SH_INDEX_MONTHLY')
+    create_index_quotation_table('SZ_INDEX_MONTHLY')
     filer.fill_tables(db_size)
     filer.update_tables()
     filer.trim_tables(db_size)
 
 
-def create_trade_date_list_table():
-    conn = sqlite3.connect('vein-project.db')
-    log(f'检查或创建表：TRADE_DATE_LIST...')
-    conn.execute('''
-    CREATE TABLE IF NOT EXISTS TRADE_DATE_LIST (
-        TRADE_DATE CHAR(8) PRIMARY KEY
-    );
-    ''')
+# def create_trade_date_list_table():
+#     conn = sqlite3.connect('vein-project.db')
+#     log(f'检查或创建表：TRADE_DATE_LIST...')
+#     conn.execute('''
+#     CREATE TABLE IF NOT EXISTS TRADE_DATE_LIST (
+#         TRADE_DATE CHAR(8) PRIMARY KEY
+#     );
+#     ''')
 
 
 def create_index_quotation_table(table_name):

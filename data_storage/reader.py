@@ -21,4 +21,3 @@ def get_index_quotation(index_suffix, frequency, size):
 
 if __name__ == '__main__':
     pass
-    # get_index_daily("000001.SH", 200)
