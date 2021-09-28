@@ -40,5 +40,19 @@ def get_index_quotation_from_db(index_suffix, frequency, size):
     }
 
 
+def get_up_down_limits_statistic_from_api(date, exchange):
+    raw = spider.get_up_down_limits_statistic(date, exchange)
+    up_limits = raw.loc[raw['limit'] == 'U']
+    down_limits = raw.loc[raw['limit'] == 'D']
+    print(calculator.get_max_limiting_stocks(up_limits, date, exchange))
+    data = {
+        'date': date,
+        'up_limits': len(up_limits),
+        "down_limits": len(down_limits),
+        'strongest': None,
+        'weakest': None
+    }
+
+
 if __name__ == '__main__':
-    pass
+    get_up_down_limits_statistic_from_api('20210928', 'SH')

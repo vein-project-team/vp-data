@@ -42,16 +42,19 @@ def get_trade_days_between(day1, day2):
     return len(trade_date_list)
 
 
-def get_trade_date_before(days):
+def get_trade_date_before(days, date='last'):
     """
     获取开始日期和结束日期
+    :param date: 日期，默认是最后一个完成的交易日
     :param days: 多少个交易日之前开始？
     :return: 开始日期和结束日期组成的dict
     """
-    end_date = get_latest_finished_trade_date()
+    end_date = date
+    if date == 'last':
+        end_date = get_latest_finished_trade_date()
     trade_date_list = pro.query('trade_cal', is_open="1", start_date='20100101', end_date=end_date)
     length = len(trade_date_list)
-    start_date = trade_date_list["cal_date"][length - days]
+    start_date = trade_date_list["cal_date"][length - days - 1]
     return start_date
 
 
@@ -104,14 +107,12 @@ def get_stock_list(index_suffix):
     :param index_suffix: 那个交易所？
     :return:股票代码列表
     """
-    exchange = ''
-    if index_suffix != 'ALL':
-        exchange = 'SSE' if index_suffix == 'SH' else 'SZSE'
+    exchange = 'SSE' if index_suffix == 'SH' else 'SZSE'
     data = pro.stock_basic(exchange=exchange, list_status='L', fields='ts_code')
     return data
 
 
-def get_stocks_change(exchange, frequency, date):
+def get_stocks_change(frequency, date, exchange='ALL'):
     """
     获取某日某交易所股票涨跌数据
     :param exchange: 上交所 | 深交所
@@ -120,16 +121,25 @@ def get_stocks_change(exchange, frequency, date):
     :return: 当日股票涨跌数据 dataframe
     """
     data = None
-    stock_list = get_stock_list(exchange)
     if frequency == 'DAILY':
         data = pro.daily(trade_date=date, fields='ts_code, change')
     elif frequency == 'WEEKLY':
         data = pro.weekly(trade_date=date, fields='ts_code, change')
     elif frequency == 'MONTHLY':
         data = pro.monthly(trade_date=date, fields='ts_code, change')
-    data = pd.merge(stock_list, data, how='inner')
+    if exchange != 'ALL':
+        stock_list = get_stock_list(exchange)
+        data = pd.merge(stock_list, data, how='inner')
+    return data
+
+
+def get_up_down_limits_statistic(date, exchange='ALL'):
+    data = pro.limit_list(trade_date=date)
+    if exchange != 'ALL':
+        stock_list = get_stock_list(exchange)
+        data = pd.merge(stock_list, data, how='inner')
     return data
 
 
 if __name__ == '__main__':
-    pass
+    print(get_up_down_limits_statistic('SH', '20210924'))

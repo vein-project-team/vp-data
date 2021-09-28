@@ -1,3 +1,5 @@
+import pandas as pd
+
 from data_api import spider
 import numpy as np
 
@@ -42,6 +44,21 @@ def get_index_ad_line(index_suffix, frequency, size):
         'downs': downs,
         'ad_line': ad_line
     }
+
+
+def get_max_limiting_stocks(data, date, exchange, limit_type='U', acc=1):
+    pre_date = spider.get_trade_date_before(1, date)
+    pre_data = spider.get_up_down_limits_statistic(pre_date, exchange)
+    data = data['ts_code']
+    pre_data = pre_data.loc[pre_data['limit'] == limit_type]['ts_code']
+    result = pd.merge(data, pre_data, how='inner')
+    if len(result) == 0:
+        return {
+            'days': acc,
+            'data': data
+        }
+    else:
+        return get_max_limiting_stocks(result, pre_date, exchange, limit_type, acc+1)
 
 
 if __name__ == '__main__':
