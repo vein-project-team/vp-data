@@ -1,8 +1,10 @@
 {
     const indexBean = {
+        delimiters: ['[[', ']]'],
         data() {
             return {
                 currentIndex: 'SH',
+                currentIndexName: '上证指数',
                 SH: {
                     'daily': null,
                     'weekly': null
@@ -21,6 +23,7 @@
         methods: {
             changeCurrentIndexTo(indexName, indexSuffix) {
                 this.currentIndex = indexSuffix;
+                this.currentIndexName = indexName;
                 this.drawIndexGraph(indexName, indexSuffix, 'daily', 100);
                 this.drawIndexGraph(indexName, indexSuffix, 'weekly', 100);
                 this.drawIndexGraph(indexName, indexSuffix, 'monthly', 100);

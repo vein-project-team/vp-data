@@ -11,7 +11,17 @@
             <li @click="changeCurrentIndexTo('深证指数', 'SZ')">
                 <a href="javascript:;" class="menu-button" :class="{'current': isCurrent('SZ')}">深证指数</a>
             </li>
+            <li>
+                <a href="javascript:;" class="menu-button disabled" :class="{'current': isCurrent('BJ')}">北证指数</a>
+            </li>
+            <li>
+                <a href="javascript:;" class="menu-button disabled" :class="{'current': isCurrent('CY')}">创业板指</a>
+            </li>
+            <li>
+                <a href="javascript:;" class="menu-button disabled" :class="{'current': isCurrent('KC')}">科创板指</a>
+            </li>
         </ul>
+        <div class="index-title">[[ currentIndexName ]]</div>
         <div class="quotation-chart index-daily-chart"></div>
         <div class="quotation-chart index-weekly-chart"></div>
         <div class="quotation-chart index-monthly-chart"></div>

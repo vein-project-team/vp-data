@@ -1,5 +1,4 @@
 .index-box {
-    position: relative;
     width: 1160px;
     margin: 20px auto;
     box-shadow: 0px 0px 5px 5px rgba(0,0,0,0.1);
@@ -9,6 +8,9 @@
 }
 
 .index-box .index-nav {
+    position: fixed;
+    z-index: 2;
+    top: 0px;
     width: 100%;
     height: 60px;
     line-height: 60px;
@@ -21,9 +23,19 @@
     background-color: darkred;
 }
 
+.index-box .index-nav .disabled {
+    opacity: 0.5;
+}
+
 
 .index-box .index-nav li {
     float: left;
+}
+
+.index-box .index-title {
+    font-size: 30px;
+    font-weight: bold;
+    padding: 10px 0px 20px 20px;
 }
 
 .index-box .quotation-chart {

@@ -27,7 +27,7 @@ def get_index_ad_line(index_suffix, frequency, size):
     ad_point = 0
     for date in trade_date_list:
         up, down = 0, 0
-        data = spider.get_stocks_change(index_suffix, frequency, date)
+        data = spider.get_stocks_change(frequency, date, exchange=index_suffix)
         data = data['change'].tolist()
         for i in data:
             if i > 0:
