@@ -2,6 +2,11 @@ from data_api import spider
 from data_storage import reader
 from data_handler import calculator
 from utils import round_list
+import pandas as pd
+
+pd.set_option('display.max_rows', 500)
+pd.set_option('display.max_columns', 500)
+pd.set_option('display.width', 1000)
 
 
 def get_index_quotation_from_api(index_code, frequency, size):
@@ -10,12 +15,12 @@ def get_index_quotation_from_api(index_code, frequency, size):
     raw = raw[30:]
     ad_line_data = calculator.get_index_ad_line(index_code[-2:], frequency, size)
     return {
-        'date': raw['trade_date'].tolist(),
-        'open': round_list(raw['open'].tolist()),
-        'close': round_list(raw['close'].tolist()),
-        'low': round_list(raw['low'].tolist()),
-        'high': round_list(raw['high'].tolist()),
-        'vol': round_list(raw['vol'].tolist()),
+        'date': raw['trade_date'],
+        'open': round_list(raw['open']),
+        'close': round_list(raw['close']),
+        'low': round_list(raw['low']),
+        'high': round_list(raw['high']),
+        'vol': round_list(raw['vol']),
         'k_ma30': round_list(ma30['k_ma']),
         'vol_ma30': round_list(ma30['vol_ma']),
         'ups': ad_line_data['ups'],
@@ -40,19 +45,21 @@ def get_index_quotation_from_db(index_suffix, frequency, size):
     }
 
 
-def get_up_down_limits_statistic_from_api(date, exchange):
-    raw = spider.get_up_down_limits_statistic(date, exchange)
-    up_limits = raw.loc[raw['limit'] == 'U']
-    down_limits = raw.loc[raw['limit'] == 'D']
-    print(calculator.get_max_limiting_stocks(up_limits, date, exchange))
-    data = {
-        'date': date,
-        'up_limits': len(up_limits),
-        "down_limits": len(down_limits),
-        'strongest': None,
-        'weakest': None
-    }
+def get_up_down_limits_statistic_from_api(date):
+    raw = spider.get_up_down_limits_statistic(date)
+    raw['con_days'] = 1
+    # print(raw)
+    # up_limits = raw.loc[raw['limit'] == 'U']
+    # down_limits = raw.loc[raw['limit'] == 'D']
+    print(calculator.get_max_limiting_stocks(raw, date))
+    # data = {
+    #     'date': date,
+    #     'up_limits': len(up_limits),
+    #     "down_limits": len(down_limits),
+    #     'strongest': None,
+    #     'weakest': None
+    # }
 
 
 if __name__ == '__main__':
-    get_up_down_limits_statistic_from_api('20210928', 'SH')
+    get_up_down_limits_statistic_from_api('20210930')

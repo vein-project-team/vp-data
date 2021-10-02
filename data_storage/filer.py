@@ -30,6 +30,10 @@ def fill_index_quotation_table(table_name, size):
     conn.commit()
 
 
+def fill_limits_statistic_table():
+    pass
+
+
 def fill_tables(size):
     if cacher.has_cache('log'):
         log('发现有效的日志缓存，数据初始填充已跳过...')

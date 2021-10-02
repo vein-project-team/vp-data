@@ -134,7 +134,7 @@ def get_stocks_change(frequency, date, exchange='ALL'):
 
 
 def get_up_down_limits_statistic(date, exchange='ALL'):
-    data = pro.limit_list(trade_date=date)
+    data = pro.limit_list(trade_date=date, fields="ts_code,trade_date,fc_ratio,fl_ratio,fd_amount,first_time,last_time,open_times,strth,limit")
     if exchange != 'ALL':
         stock_list = get_stock_list(exchange)
         data = pd.merge(stock_list, data, how='inner')
