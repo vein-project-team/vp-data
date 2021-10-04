@@ -67,3 +67,7 @@ def create_limits_statistic_table():
 
 def complete():
     log(f'数据库初始化完成！')
+
+
+if __name__ == '__main__':
+    create_limits_statistic_table()

@@ -13,8 +13,8 @@ def get_quotation_ma(data):
         k_ma.append(np.mean(close[i-30:i]))
         vol_ma.append(np.mean(vol[i-30:i]))
     return {
-        'k_ma': k_ma,
-        'vol_ma': vol_ma
+        'k_ma': pd.Series(k_ma),
+        'vol_ma': pd.Series(vol_ma)
     }
 
 
@@ -22,7 +22,8 @@ def get_index_ad_line(index_suffix, frequency, size):
     ups = []
     downs = []
     ad_line = []
-    trade_date_list = spider.get_trade_date_list(frequency, size)
+    tdk = spider.get_trade_date_keeper()
+    trade_date_list = tdk.get_trade_date_list_forward(frequency, size)
     trade_date_list = trade_date_list['trade_date']
     ad_point = 0
     for date in trade_date_list:
@@ -39,15 +40,16 @@ def get_index_ad_line(index_suffix, frequency, size):
         ad_point += up - down
         ad_line.append(ad_point)
     return {
-        'date': trade_date_list,
-        'ups': ups,
-        'downs': downs,
-        'ad_line': ad_line
+        'date': pd.Series(trade_date_list),
+        'ups': pd.Series(ups),
+        'downs': pd.Series(downs),
+        'ad_line': pd.Series(ad_line)
     }
 
 
 def get_max_limiting_stocks(data, date, con_stocks=None):
-    pre_date = spider.get_trade_date_before(1, date)
+    tdk = spider.get_trade_date_keeper()
+    pre_date = tdk.get_trade_date_before(1, date)
     pre_data = spider.get_up_down_limits_statistic(pre_date)
     pre_stocks = pre_data[['ts_code', 'limit']]
     if con_stocks is None:

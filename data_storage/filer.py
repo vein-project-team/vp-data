@@ -3,6 +3,7 @@ from utils import log
 from data_api import spider
 from data_handler import dispatcher
 from data_storage import cacher
+from tqdm import tqdm
 
 
 def fill_index_quotation_table(table_name, size):
@@ -30,8 +31,30 @@ def fill_index_quotation_table(table_name, size):
     conn.commit()
 
 
-def fill_limits_statistic_table():
-    pass
+def fill_limits_statistic_table(size):
+    conn = sqlite3.connect('vein-project.db')
+    log(f'检查并填充数据进表：LIMITS_STATISTIC...')
+    tdk = spider.get_trade_date_keeper()
+    trade_date_list = tdk.get_trade_date_list_forward('DAILY', size)
+    for date in tqdm(trade_date_list['trade_date'], desc='检查并填充数据进表：LIMITS_STATISTIC'):
+        data = dispatcher.get_up_down_limits_statistic_from_api(date)
+        for i in range(0, len(data)):
+            conn.execute(f'''
+            INSERT INTO LIMITS_STATISTIC VALUES (
+                {data['trade_date'][i]},
+                '{data['ts_code'][i]}',
+                {data['fc_ratio'][i]},
+                {data['fl_ratio'][i]},
+                {data['fd_amount'][i]},
+                '{data['first_time'][i]}',
+                '{data['last_time'][i]}',
+                {data['open_times'][i]},
+                {data['strth'][i]},
+                '{data['limit'][i]}',
+                {data['con_days'][i]}
+            );
+            ''')
+    conn.commit()
 
 
 def fill_tables(size):
@@ -40,13 +63,15 @@ def fill_tables(size):
         return
     else:
         log('正在进行数据初始填充...')
-        latest_date = spider.get_latest_finished_trade_date()
+        tdk = spider.get_trade_date_keeper()
+        latest_date = tdk.get_latest_finished_trade_date()
         fill_index_quotation_table('SH_INDEX_DAILY', size)
         fill_index_quotation_table('SZ_INDEX_DAILY', size)
         fill_index_quotation_table('SH_INDEX_WEEKLY', size)
         fill_index_quotation_table('SZ_INDEX_WEEKLY', size)
         fill_index_quotation_table('SH_INDEX_MONTHLY', size)
         fill_index_quotation_table('SZ_INDEX_MONTHLY', size)
+        fill_limits_statistic_table(size)
         log('数据初始填充已完成!')
         cacher.write_cache('log', {
             'latest_date': latest_date
@@ -56,12 +81,14 @@ def fill_tables(size):
 def update_tables():
     cache = cacher.read_cache('log')
     cache_date = cache['latest_date']
-    latest_date = spider.get_latest_finished_trade_date()
+    tdk = spider.get_trade_date_keeper()
+    latest_date = tdk.get_latest_finished_trade_date()
     if latest_date == cache_date:
         log("数据无需更新!")
         return
     else:
-        days = spider.get_trade_days_between(cache_date, latest_date) - 1
+        tdk = spider.get_trade_date_keeper()
+        days = tdk.get_trade_days_between(cache_date, latest_date) - 1
         log(f'需要更新 {days} 个交易日的数据...')
         fill_index_quotation_table('SH_INDEX_DAILY', days)
         fill_index_quotation_table('SZ_INDEX_DAILY', days)
@@ -69,6 +96,7 @@ def update_tables():
         fill_index_quotation_table('SZ_INDEX_WEEKLY', days)
         fill_index_quotation_table('SH_INDEX_MONTHLY', days)
         fill_index_quotation_table('SZ_INDEX_MONTHLY', days)
+        fill_limits_statistic_table(days)
         cache['latest_date'] = latest_date
         cacher.override_cache('log', cache)
         log('数据更新完成！')
@@ -100,7 +128,6 @@ def trim_index_daily_table(table_name, keep_records):
 
 def trim_tables(keep_records):
     log('正在裁剪数据表...')
-    # trim_trade_date_list_table(keep_records)
     trim_index_daily_table('SH_INDEX_DAILY', keep_records)
     trim_index_daily_table('SZ_INDEX_DAILY', keep_records)
     trim_index_daily_table('SH_INDEX_WEEKLY', keep_records)
@@ -111,4 +138,4 @@ def trim_tables(keep_records):
 
 
 if __name__ == '__main__':
-    pass
+    fill_limits_statistic_table(100)
