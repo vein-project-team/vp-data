@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block links %}
+    <link rel="stylesheet" href="/static/css/stock-list.css">
+{% endblock %}
+{% block content %}
+    <div class="central-box">
+        <h3 class="title">股票列表</h3>
+        <a class="stock" v-for="stock in stock_list[0]" :href="'/stock-quotation?stock='+stock.ts_code">
+            <span class="code">[[ stock.ts_code ]]</span>
+            <span class="name">[[ stock.name ]]</span>
+            <span class="area">[[ stock.area ]]</span>
+            <span class="industry">[[ stock.industry ]]</span>
+            <span class="market">[[ stock.market ]]</span>
+            <span class="list_date">[[ stock.date ]]</span>
+        </a>
+    </div>
+    <script src="/static/js/stock-list.js"></script>
+{% endblock %}

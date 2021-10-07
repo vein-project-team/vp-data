@@ -1,11 +1,11 @@
-from settings import *
+import pandas as pd
 from flask import Flask
 from flask import request
 from flask import render_template
-from data_storage.builder import db_init
-from data_handler import dispatcher
+from database.dispatcher import get_index_quotation_from_db
+from database.dispatcher import get_stock_list_from_db
+from database.dispatcher import get_stock_details_from_db
 
-db_init(DB_SIZE)
 app = Flask(__name__)
 
 
@@ -15,20 +15,48 @@ def home_page():
 
 
 @app.route('/index-quotation')
-def index_daily():
+def index_quotation():
     return render_template('index-quotation.html')
 
 
 @app.route('/index-quotation-data')
-def index_daily_data():
+def index_quotation_data():
     index_suffix = request.args.get('index')
     size = int(request.args.get('size'))
     return {
         index_suffix: {
-            "daily": dispatcher.get_index_quotation_from_db(index_suffix, 'DAILY', size),
-            'weekly': dispatcher.get_index_quotation_from_db(index_suffix, 'WEEKLY', size),
-            'monthly': dispatcher.get_index_quotation_from_db(index_suffix, 'MONTHLY', size)
+            "daily": get_index_quotation_from_db(index_suffix, 'DAILY', size),
+            'weekly': get_index_quotation_from_db(index_suffix, 'WEEKLY', size),
+            'monthly': get_index_quotation_from_db(index_suffix, 'MONTHLY', size)
         }
+    }
+
+
+@app.route('/stock-list')
+def stock_list():
+    return render_template('stock-list.html')
+
+
+@app.route('/stock-list-data')
+def stock_list_data():
+    exchange = request.args.get('exchange')
+    page = int(request.args.get('page'))
+    data = get_stock_list_from_db(exchange, page)
+    return data
+
+
+@app.route('/stock-quotation')
+def stock_quotation():
+    stock = request.args.get('stock')
+    return render_template('stock-quotation.html', stock=stock)
+
+
+@app.route('/stock-quotation-data')
+def stock_quotation_data():
+    stock = request.args.get('stock')
+    frequency = request.args.get('frequency')
+    return {
+        stock: get_stock_details_from_db(stock, frequency)
     }
 
 

@@ -1,0 +1,30 @@
+.stock {
+    display: block;
+    height: 40px;
+    font-size: 20px;
+    line-height: 40px;
+    margin-left: 30px;
+    margin-right: 30px;
+    padding: 1px 3px 1px 3px;
+    color: black;
+}
+
+.stock:hover {
+    background-color: #ddd;
+    cursor: pointer;
+}
+
+.stock span {
+    display: inline-block;
+    height: 100%;
+    width: 200px;
+    text-align: center;
+}
+
+.stock .code {
+    color: darkblue;
+}
+
+.stock .name {
+    font-weight: bold;
+}

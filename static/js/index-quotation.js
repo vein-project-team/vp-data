@@ -116,10 +116,10 @@
                                         seriesIndex: 1,
                                         pieces: [{
                                             value: 1,
-                                            color: '#00aa00'
+                                            color: '#aa0000'
                                         }, {
                                             value: -1,
-                                            color: '#aa0000'
+                                            color: '#00aa00'
                                         }]
                                     },
                                     {
@@ -215,8 +215,8 @@
                                     xAxisIndex: 0,
                                     yAxisIndex: 0,
                                     itemStyle: {
-                                        color: '#aa0000',
-                                        color0: '#00aa00',
+                                        color: '#00aa00',
+                                        color0: '#aa0000',
                                         borderColor: null,
                                         borderColor0: null
                                     },

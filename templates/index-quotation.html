@@ -3,7 +3,7 @@
     <link rel="stylesheet" href="/static/css/index-quotation.css">
 {% endblock %}
 {% block content %}
-    <div class="index-box" id="SH">
+    <div class="central-box" id="SH">
         <ul class="index-nav">
             <li @click="changeCurrentIndexTo('上证指数', 'SH')">
                 <a href="javascript:;" class="menu-button" :class="{'current': isCurrent('SH')}">上证指数</a>
@@ -21,7 +21,7 @@
                 <a href="javascript:;" class="menu-button disabled" :class="{'current': isCurrent('KC')}">科创板指</a>
             </li>
         </ul>
-        <div class="index-title">[[ currentIndexName ]]</div>
+        <h3 class="title">[[ currentIndexName ]]</h3>
         <div class="quotation-chart index-daily-chart"></div>
         <div class="quotation-chart index-weekly-chart"></div>
         <div class="quotation-chart index-monthly-chart"></div>

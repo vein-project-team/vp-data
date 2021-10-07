@@ -32,9 +32,14 @@
         }
     }
 
-    function changeContainerHeight() {
-        if (container.clientHeight < window.innerHeight) {
-            container.style.height = window.innerHeight + 'px';
+    function changeContainerHeight(value=null) {
+        if (value == null){
+            if (container.clientHeight < window.innerHeight) {
+                container.style.height = window.innerHeight + 'px';
+            }
+        }
+        else {
+            container.style.height = value;
         }
     }
 
