@@ -1,58 +1,52 @@
-import sqlite3
 import os
+import sqlite3
 from utils import log
 
 
-def db_init(db_size):
-    if not os.path.exists('vein-project.db'):
-        log('正在创建数据库...')
-    else:
-        log('数据库已存在...')
-    log(f'当前数据库大小设定为：{db_size}')
+def create_tables():
+    create_trade_date_list_table('TRADE_DATE_LIST_DAILY')
+    create_trade_date_list_table('TRADE_DATE_LIST_WEEKLY')
+    create_trade_date_list_table('TRADE_DATE_LIST_MONTHLY')
 
-    create_trade_date_list_table('DAILY')
-    create_trade_date_list_table('WEEKLY')
-    create_trade_date_list_table('MONTHLY')
+    create_stock_list_table('SH_STOCK_LIST')
+    create_stock_list_table('SZ_STOCK_LIST')
 
-    create_stock_list_table('SH')
-    create_stock_list_table('SZ')
+    create_index_quotation_table('SH_INDEX_DAILY')
+    create_index_quotation_table('SH_INDEX_WEEKLY')
+    create_index_quotation_table('SH_INDEX_MONTHLY')
+    create_details_table('SH_DETAILS_DAILY')
+    create_details_table('SH_DETAILS_WEEKLY')
+    create_details_table('SH_DETAILS_MONTHLY')
+    create_limits_statistic_table('SH_LIMITS_STATISTIC')
+    create_limits_statistic_details_table('SH_LIMITS_STATISTIC_DETAILS')
 
-    create_index_quotation_table('SH', 'DAILY')
-    create_index_quotation_table('SH', 'WEEKLY')
-    create_index_quotation_table('SH', 'MONTHLY')
-    create_limits_statistic_table('SH')
-    create_limits_statistic_details_table('SH')
-
-    create_index_quotation_table('SZ', 'DAILY')
-    create_index_quotation_table('SZ', 'WEEKLY')
-    create_index_quotation_table('SZ', 'MONTHLY')
-    create_limits_statistic_table('SZ')
-    create_limits_statistic_details_table('SZ')
-
-    create_details_table('SH', 'DAILY')
-    create_details_table('SH', 'WEEKLY')
-    create_details_table('SH', 'MONTHLY')
-    create_details_table('SZ', 'DAILY')
-    create_details_table('SZ', 'WEEKLY')
-    create_details_table('SZ', 'MONTHLY')
+    create_index_quotation_table('SZ_INDEX_DAILY')
+    create_index_quotation_table('SZ_INDEX_WEEKLY')
+    create_index_quotation_table('SZ_INDEX_MONTHLY')
+    create_details_table('SZ_DETAILS_DAILY')
+    create_details_table('SZ_DETAILS_WEEKLY')
+    create_details_table('SZ_DETAILS_MONTHLY')
+    create_limits_statistic_table('SZ_LIMITS_STATISTIC')
+    create_limits_statistic_details_table('SZ_LIMITS_STATISTIC_DETAILS')
 
     log(f'数据库初始化完成！')
 
 
-def create_trade_date_list_table(frequency):
+def create_trade_date_list_table(table_name):
     conn = sqlite3.connect('vein-project.db')
-    log(f'检查或创建表：TRADE_DATE_LIST_{frequency}...')
+    log(f'检查或创建表：{table_name}...')
     conn.execute(f'''
-    CREATE TABLE IF NOT EXISTS TRADE_DATE_LIST_{frequency} (
+    CREATE TABLE IF NOT EXISTS TRADE_DATE_LIST_{table_name} (
         TRADE_DATE CHAR(8) PRIMARY KEY
     );
     ''')
 
 
-def create_stock_list_table(index_suffix):
+def create_stock_list_table(table_name):
     conn = sqlite3.connect('vein-project.db')
+    log(f'检查或创建表：{table_name}...')
     conn.execute(f'''
-    CREATE TABLE IF NOT EXISTS {index_suffix}_STOCK_LIST (
+    CREATE TABLE IF NOT EXISTS {table_name} (
         TS_CODE CHAR(9) PRIMARY KEY NOT NULL, -- 股票代码
         NAME TEXT NOT NULL, -- 股票名称
         AREA TEXT, -- 所属地区
@@ -66,11 +60,11 @@ def create_stock_list_table(index_suffix):
     ''')
 
 
-def create_index_quotation_table(index_suffix, frequency):
+def create_index_quotation_table(table_name):
     conn = sqlite3.connect('vein-project.db')
-    log(f'检查或创建表：{index_suffix}_INDEX_{frequency}...')
+    log(f'检查或创建表：{table_name}...')
     conn.execute(f'''
-    CREATE TABLE IF NOT EXISTS {index_suffix}_INDEX_{frequency} (
+    CREATE TABLE IF NOT EXISTS {table_name} (
         TRADE_DATE CHAR(8) PRIMARY KEY,
         OPEN REAL,
         CLOSE REAL,
@@ -86,11 +80,11 @@ def create_index_quotation_table(index_suffix, frequency):
     ''')
 
 
-def create_details_table(index_suffix, frequency):
+def create_details_table(table_name):
     conn = sqlite3.connect('vein-project.db')
-    log(f'检查或创建表：{index_suffix}_DETAILS_{frequency}...')
+    log(f'检查或创建表：{table_name}...')
     conn.execute(f'''
-    CREATE TABLE IF NOT EXISTS {index_suffix}_DETAILS_{frequency} (
+    CREATE TABLE IF NOT EXISTS {table_name} (
         TS_CODE CHAR(9) NOT NULL, --股票代码
         TRADE_DATE CHAR(8) NOT NULL, --交易日
         OPEN REAL, -- 开盘价
@@ -117,11 +111,11 @@ def create_details_table(index_suffix, frequency):
     ''')
 
 
-def create_limits_statistic_table(index_suffix):
+def create_limits_statistic_table(table_name):
     conn = sqlite3.connect('vein-project.db')
-    log(f'检查或创建表：{index_suffix}_LIMITS_STATISTIC...')
+    log(f'检查或创建表：{table_name}...')
     conn.execute(f'''
-    CREATE TABLE IF NOT EXISTS {index_suffix}_LIMITS_STATISTIC (
+    CREATE TABLE IF NOT EXISTS {table_name} (
         TRADE_DATE CHAR(8) PRIMARY KEY,
         UP_LIMITS_AMOUNT REAL,
         DOWN_LIMITS_AMOUNT REAL,
@@ -131,11 +125,11 @@ def create_limits_statistic_table(index_suffix):
     ''')
 
 
-def create_limits_statistic_details_table(index_suffix):
+def create_limits_statistic_details_table(table_name):
     conn = sqlite3.connect('vein-project.db')
-    log(f'检查或创建表：{index_suffix}_LIMITS_STATISTIC_DETAILS...')
+    log(f'检查或创建表：{table_name}...')
     conn.execute(f'''
-    CREATE TABLE IF NOT EXISTS {index_suffix}_LIMITS_STATISTIC_DETAILS (
+    CREATE TABLE IF NOT EXISTS {table_name} (
         TS_CODE CHAR(9),
         TRADE_DATE CHAR(8),
         FC_RATIO REAL,
@@ -150,7 +144,3 @@ def create_limits_statistic_details_table(index_suffix):
         PRIMARY KEY (TRADE_DATE, TS_CODE)
     );
     ''')
-
-
-if __name__ == '__main__':
-    db_init(120)

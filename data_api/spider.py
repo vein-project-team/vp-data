@@ -1,7 +1,7 @@
 import time
 import pandas as pd
 import tushare as ts
-from database.date_getter import date_getter as dg
+from data_api.date_getter import date_getter as dg
 ts.set_token("3f73ca482044f78edd9694a4e06a0edd9431c24cbac31a07f275d7cf")
 pro = ts.pro_api()
 

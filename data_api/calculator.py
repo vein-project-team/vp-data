@@ -1,7 +1,7 @@
 import pandas as pd
 from tqdm import tqdm as pb
-from database.date_getter import date_getter as dg
-from database import spider
+from data_api.date_getter import date_getter as dg
+from data_api import spider
 from numpy import mean
 
 

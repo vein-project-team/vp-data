@@ -1,11 +1,29 @@
+from pandas.io.sql import DatabaseError
+
 from utils import log
 
 from database.db_reader import read_from_db
-from database.date_getter import date_getter as dg
+from data_api.date_getter import date_getter as dg
 
 
-def light_check(func, table_name):
-    pass
+def light_checker(table_name):
+    """
+    检测到该涨表存在且表中记录大于零条
+    就算做检测通过
+    :param table_name: 表名
+    :return: 一个包含状态信息的report json
+    """
+    try:
+        data = read_from_db(f'''SELECT COUNT(*) AS RECORDS FROM {table_name};''')
+        return {
+            'pass': data['RECORDS'][0] > 0,
+            'records': data['RECORDS'][0]
+        }
+    except DatabaseError:
+        return {
+            'pass': False,
+            'records': -1
+        }
 
 
 def check_trade_date_list_table(frequency):
