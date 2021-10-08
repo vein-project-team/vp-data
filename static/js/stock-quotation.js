@@ -132,7 +132,6 @@
                             ],
                             series: [{
                                 type: 'candlestick',
-                                connectNulls: true,
                                 data: kLine,
                                 barWidth: 7,
                                 xAxisIndex: 0,

@@ -1,13 +1,7 @@
 import time
-
 import pandas as pd
 import tushare as ts
 from database.date_getter import date_getter as dg
-
-# 显示所有列
-pd.set_option('display.max_columns', None)
-
-
 ts.set_token("3f73ca482044f78edd9694a4e06a0edd9431c24cbac31a07f275d7cf")
 pro = ts.pro_api()
 
@@ -45,7 +39,6 @@ def get_stock_list(index_suffix='ALL'):
     elif index_suffix == 'SZ':
         exchange = 'SZSE'
     data = pro.stock_basic(exchange=exchange, list_status='L', fields='ts_code,name,area,industry,market,list_status,list_date,delist_date,is_hs')
-    data.fillna('NULL', inplace=True)
     return data
 
 
@@ -82,14 +75,14 @@ def get_stock_details(ts_code, size, frequency='DAILY'):
     data = ts.pro_bar(ts_code=ts_code, freq=frequency[0], adj='qfq', start_date=start_date, ma=[30])
     cols = ['ts_code', 'trade_date', 'open', 'close', 'low', 'high', 'pre_close', 'change', 'pct_chg', 'vol', 'amount', 'ma30', 'ma_v_30']
     data = data[cols]
-    data = data[:-30]
+    if len(data) >= size + 30:
+        data = data[:-30]
     start_date = dg.get_trade_date_before(size, frequency=frequency)
     adj = pro.adj_factor(ts_code=ts_code, start_date=start_date)
     basic = pro.daily_basic(ts_code=ts_code, start_date=start_date, fields='ts_code,trade_date,turnover_rate,volume_ratio,pe,pe_ttm,pb,dv_ratio,dv_ttm')
-    data = pd.merge(data, adj, how='inner')
-    data = pd.merge(data, basic, how='inner')
-    data.fillna('NULL', inplace=True)
-    return data.iloc[::-1].reset_index(drop=True)
+    data = pd.merge(data, adj, how='left')
+    data = pd.merge(data, basic, how='left')
+    return data
 
 
 def get_up_down_limits_statistic_details(date, exchange='ALL'):
@@ -106,5 +99,7 @@ def get_up_down_limits_statistic_details(date, exchange='ALL'):
 
 
 if __name__ == '__main__':
-    data = get_stock_details('600000.SH', 100, 'MONTHLY')
-    print(data)
+    pass
+    # data = get_stock_details('003039.SZ', 100, 'MONTHLY')
+    # print(data)
+

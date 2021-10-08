@@ -7,8 +7,10 @@
             };
         },
         mounted() {
-            axios.get(`/stock-list-data?exchange=sh&page=1`)
+            let page = 1;
+            axios.get(`/stock-list-data?exchange=sh&page=${page}`)
                 .then((response) => {
+                    response.data['stocks'].length = 100;
                     this.stock_list.push(response.data['stocks']);
                     changeContainerHeight('');
                 }).catch(function (error) {

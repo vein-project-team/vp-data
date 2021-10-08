@@ -2,9 +2,7 @@ import pandas as pd
 from flask import Flask
 from flask import request
 from flask import render_template
-from database.dispatcher import get_index_quotation_from_db
-from database.dispatcher import get_stock_list_from_db
-from database.dispatcher import get_stock_details_from_db
+import json_trimmer as jt
 
 app = Flask(__name__)
 
@@ -22,14 +20,7 @@ def index_quotation():
 @app.route('/index-quotation-data')
 def index_quotation_data():
     index_suffix = request.args.get('index')
-    size = int(request.args.get('size'))
-    return {
-        index_suffix: {
-            "daily": get_index_quotation_from_db(index_suffix, 'DAILY', size),
-            'weekly': get_index_quotation_from_db(index_suffix, 'WEEKLY', size),
-            'monthly': get_index_quotation_from_db(index_suffix, 'MONTHLY', size)
-        }
-    }
+    return jt.get_index_quotation_json(index_suffix)
 
 
 @app.route('/stock-list')
@@ -39,9 +30,7 @@ def stock_list():
 
 @app.route('/stock-list-data')
 def stock_list_data():
-    exchange = request.args.get('exchange')
-    page = int(request.args.get('page'))
-    data = get_stock_list_from_db(exchange, page)
+    data = jt.get_all_stock_list_json()
     return data
 
 
@@ -55,9 +44,8 @@ def stock_quotation():
 def stock_quotation_data():
     stock = request.args.get('stock')
     frequency = request.args.get('frequency')
-    return {
-        stock: get_stock_details_from_db(stock, frequency)
-    }
+    data = jt.get_filled_stock_details_json(stock, frequency)
+    return data
 
 
 if __name__ == '__main__':

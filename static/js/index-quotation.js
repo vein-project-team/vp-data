@@ -16,25 +16,25 @@
             }
         },
         mounted() {
-            this.drawIndexGraph('上证指数', 'SH', 'daily', 100);
-            this.drawIndexGraph('上证指数', 'SH', 'weekly', 100);
-            this.drawIndexGraph('上证指数', 'SH', 'monthly', 100);
+            this.drawIndexGraph('上证指数', 'SH', 'daily');
+            this.drawIndexGraph('上证指数', 'SH', 'weekly');
+            this.drawIndexGraph('上证指数', 'SH', 'monthly');
         },
         methods: {
             changeCurrentIndexTo(indexName, indexSuffix) {
                 this.currentIndex = indexSuffix;
                 this.currentIndexName = indexName;
-                this.drawIndexGraph(indexName, indexSuffix, 'daily', 100);
-                this.drawIndexGraph(indexName, indexSuffix, 'weekly', 100);
-                this.drawIndexGraph(indexName, indexSuffix, 'monthly', 100);
+                this.drawIndexGraph(indexName, indexSuffix, 'daily');
+                this.drawIndexGraph(indexName, indexSuffix, 'weekly');
+                this.drawIndexGraph(indexName, indexSuffix, 'monthly');
             },
             isCurrent(id) {
                 return id == this.currentIndex;
             },
-            drawIndexGraph(indexName, indexSuffix, frequency, size) {
+            drawIndexGraph(indexName, indexSuffix, frequency) {
                 let quotationChart = echarts.init(document.querySelector(`.index-${frequency}-chart`));
                 if (this[indexSuffix][frequency] == null) {
-                    axios.get(`/index-quotation-data?index=${indexSuffix}&size=${size}`)
+                    axios.get(`/index-quotation-data?index=${indexSuffix}`)
                         .then((response) => {
                             let date = response.data[indexSuffix][frequency]['date'];
                             let kLine = response.data[indexSuffix][frequency]['k_line'];
@@ -46,12 +46,12 @@
                             let adLine = response.data[indexSuffix][frequency]['ad_line'];
 
                             let vol = []
-                            for (let i = 0; i < size; i++) {
+                            for (let i = 0; i < volRaw.length; i++) {
                                 vol.push([date[i], volRaw[i], kLine[i][0] > kLine[i][1] ? 1 : -1]);
                             }
 
                             let adLineOffsets = []
-                            for (let i = 0; i < size; i++) {
+                            for (let i = 0; i < adLine.length; i++) {
                                 let adLineOffset = ups[i] - downs[i];
                                 adLineOffsets.push([date[i], adLineOffset, adLineOffset >= 0 ? 1 : -1]);
                             }
