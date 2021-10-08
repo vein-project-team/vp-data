@@ -8,14 +8,7 @@ from dispatcher import get_up_down_limits_statistic_details_from_api
 from database.db_settings import DB_SIZE, TABLE_NAMES
 
 
-def write_to_db(table_name, data_searcher, checker):
-    report = checker(table_name)
-    if report['pass']:
-        log(f'检测到表 {table_name} 包含 {report["records"]} 条数据，初始填充被跳过。')
-        return
-
-    dataframe = data_searcher(table_name)
-    log(f'正在填充初始数据进表：{table_name}')
+def write_to_db(table_name, dataframe):
     conn = sqlite3.connect('vein-project.db')
     cursor = conn.cursor()
     cursor.execute(f'''PRAGMA TABLE_INFO({table_name});''')
@@ -47,34 +40,28 @@ def temp_searcher(table_name:str):
     return data
 
 
+def fill_table(table_name, data_searcher, checker):
+    report = checker(table_name)
+    if report['pass']:
+        log(f'检测到表 {table_name} 包含 {report["records"]} 条数据，初始填充被跳过。')
+        return
+
+    dataframe = data_searcher(table_name)
+    log(f'正在填充初始数据进表：{table_name}')
+    write_to_db(table_name, dataframe)
+
+
 def fill_tables():
     for table in TABLE_NAMES:
-        write_to_db(table, temp_searcher, light_checker)
-    # write_to_db('TRADE_DATE_LIST_DAILY', temp_searcher, light_checker)
-    # write_to_db('TRADE_DATE_LIST_WEEKLY', temp_searcher, light_checker)
-    # write_to_db('TRADE_DATE_LIST_MONTHLY', temp_searcher, light_checker)
-    #
-    # write_to_db('SH_STOCK_LIST', temp_searcher, light_checker)
-    # write_to_db('SZ_STOCK_LIST', temp_searcher, light_checker)
-    #
-    # write_to_db('SH_INDEX_DAILY', temp_searcher, light_checker)
-    # write_to_db('SH_INDEX_WEEKLY', temp_searcher, light_checker)
-    # write_to_db('SH_INDEX_MONTHLY', temp_searcher, light_checker)
-    # write_to_db('SH_DETAILS_DAILY', temp_searcher, light_checker)
-    # write_to_db('SH_DETAILS_WEEKLY', temp_searcher, light_checker)
-    # write_to_db('SH_DETAILS_MONTHLY', temp_searcher, light_checker)
-    # write_to_db('SH_LIMITS_STATISTIC_DETAILS', temp_searcher, light_checker)
-    #
-    #
-    # write_to_db('SZ_INDEX_DAILY', temp_searcher, light_checker)
-    # write_to_db('SZ_INDEX_WEEKLY', temp_searcher, light_checker)
-    # write_to_db('SZ_INDEX_MONTHLY', temp_searcher, light_checker)
-    # write_to_db('SZ_DETAILS_DAILY', temp_searcher, light_checker)
-    # write_to_db('SZ_DETAILS_WEEKLY', temp_searcher, light_checker)
-    # write_to_db('SZ_DETAILS_MONTHLY', temp_searcher, light_checker)
-    # write_to_db('SZ_LIMITS_STATISTIC_DETAILS', temp_searcher, light_checker)
+        fill_table(table, temp_searcher, light_checker)
+
+    # for table in TABLE_NAMES:
+    #     fill_table(table, temp_searcher, date_checker)
+
     # TODO SH_LIMITS_STATISTIC
     # TODO SH_LIMITS_STATISTIC
+
+
 
 
 if __name__ == '__main__':

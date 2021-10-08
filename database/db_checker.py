@@ -26,6 +26,11 @@ def light_checker(table_name):
         }
 
 
+def date_checker(table_name):
+    data = read_from_db(f'''SELECT TRADE_DATE FROM {table_name};''')
+
+
+
 def check_trade_date_list_table(frequency):
     end_date = dg.get_trade_date_before(1, frequency=frequency)
     data = read_from_db(f'''SELECT * FROM TRADE_DATE_LIST_{frequency} WHERE TRADE_DATE = {end_date}''')
