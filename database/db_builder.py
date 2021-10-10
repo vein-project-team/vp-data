@@ -36,7 +36,7 @@ def create_trade_date_list_table(table_name):
     conn = sqlite3.connect('vein-project.db')
     log(f'检查或创建表：{table_name}...')
     conn.execute(f'''
-    CREATE TABLE IF NOT EXISTS TRADE_DATE_LIST_{table_name} (
+    CREATE TABLE IF NOT EXISTS {table_name} (
         TRADE_DATE CHAR(8) PRIMARY KEY
     );
     ''')

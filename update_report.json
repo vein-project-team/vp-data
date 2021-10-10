@@ -1,0 +1,21 @@
+{
+  "old_daily_start_date": "20210512",
+  "old_weekly_start_date": "20191108",
+  "old_monthly_start_date": "20130628",
+  "old_daily_end_date": "20211008",
+  "old_weekly_end_date": "20211008",
+  "old_monthly_end_date": "20210930",
+  "new_daily_start_date": "20210512",
+  "new_weekly_start_date": "20191108",
+  "new_monthly_start_date": "20130628",
+  "new_daily_end_date": "20211008",
+  "new_weekly_end_date": "20211008",
+  "new_monthly_end_date": "20210930",
+  "daily_update_size": 0,
+  "weekly_update_size": 0,
+  "monthly_update_size": 0,
+  "sh_added_stocks": [],
+  "sh_removed_stocks": [],
+  "sz_added_stocks": [],
+  "sz_removed_stocks": []
+}

@@ -1,14 +1,12 @@
 import sqlite3
 from utils import log
 from database.db_checker import light_checker
-from dispatcher import get_trade_date_list_from_api
-from dispatcher import get_stock_list_from_api
-from dispatcher import get_index_quotation_from_api, get_stocks_details_by_exchange_from_api
-from dispatcher import get_up_down_limits_statistic_details_from_api
-from database.db_settings import DB_SIZE, TABLE_NAMES
+from database.db_settings import TABLE_NAMES, update_data_source, init_data_source
 
 
 def write_to_db(table_name, dataframe):
+    if dataframe is None or len(dataframe) == 0:
+        return
     conn = sqlite3.connect('vein-project.db')
     cursor = conn.cursor()
     cursor.execute(f'''PRAGMA TABLE_INFO({table_name});''')
@@ -22,47 +20,39 @@ def write_to_db(table_name, dataframe):
     conn.commit()
 
 
-def temp_searcher(table_name:str):
-    words = table_name.split('_')
-    data = None
-    if 'TRADE_DATE_LIST' in table_name:
-        data = get_trade_date_list_from_api(words[-1], DB_SIZE)
-    elif 'STOCK_LIST' in table_name:
-        data = get_stock_list_from_api(words[0])
-    elif 'INDEX' in table_name:
-        data = get_index_quotation_from_api(words[0], words[-1], DB_SIZE)
-    elif 'DETAILS' in table_name:
-        data = get_stocks_details_by_exchange_from_api(words[0], words[-1], DB_SIZE)
-    elif 'LIMITS_STATISTIC_DETAILS' in table_name:
-        data = get_up_down_limits_statistic_details_from_api(DB_SIZE, words[0])
-    else:
-        pass
-    return data
+class DataGetter:
+
+    def __init__(self, func, args):
+        self.target = func
+        self.args = args
+
+    def get(self):
+        return self.target(*self.args)
 
 
-def fill_table(table_name, data_searcher, checker):
+def fill_table(table_name, data_getter, checker):
     report = checker(table_name)
     if report['pass']:
-        log(f'检测到表 {table_name} 包含 {report["records"]} 条数据，初始填充被跳过。')
         return
 
-    dataframe = data_searcher(table_name)
-    log(f'正在填充初始数据进表：{table_name}')
+    log(f'正在填充数据进表：{table_name}')
+    dataframe = data_getter.get()
     write_to_db(table_name, dataframe)
 
 
 def fill_tables():
     for table in TABLE_NAMES:
-        fill_table(table, temp_searcher, light_checker)
-
-    # for table in TABLE_NAMES:
-    #     fill_table(table, temp_searcher, date_checker)
+        func = init_data_source()[table]['func']
+        args = init_data_source()[table]['args']
+        fill_table(
+            table,
+            DataGetter(func, args),
+            light_checker,
+        )
 
     # TODO SH_LIMITS_STATISTIC
     # TODO SH_LIMITS_STATISTIC
-
-
 
 
 if __name__ == '__main__':
-    temp_searcher('SH_INDEX_DAILY')
+    pass

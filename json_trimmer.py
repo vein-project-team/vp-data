@@ -53,7 +53,7 @@ def get_all_stock_list_json():
     获取全部股票列表
     :return: 完整的股票列表json
     """
-    return get_stock_list_json_by_exchange('all')
+    return get_stock_list_json_by_exchange('ALL')
 
 
 def get_stock_details_json(stock, frequency):
@@ -108,6 +108,7 @@ def get_index_quotation_json_by_frequency(index_suffix, frequency):
     :return: 对应的指数行情 json
     """
     data = get_index_quotation_from_db(index_suffix, frequency)
+    data.fillna('', inplace=True)
     return {
         "date": [date for date in data['TRADE_DATE']],
         "k_line": [
@@ -128,13 +129,14 @@ def get_index_quotation_json(index_suffix):
     :param index_suffix: 指数后缀 SH | SZ
     :return: 该指数的完整行情json
     """
-    return {
+    data = {
         index_suffix: {
             "daily": get_index_quotation_json_by_frequency(index_suffix, 'DAILY'),
             'weekly': get_index_quotation_json_by_frequency(index_suffix, 'WEEKLY'),
             'monthly': get_index_quotation_json_by_frequency(index_suffix, 'MONTHLY')
         }
     }
+    return data
 
 
 if __name__ == '__main__':

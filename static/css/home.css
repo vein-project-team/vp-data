@@ -1,16 +1,37 @@
-.intro {
-    margin: 20vh auto;
-    padding: 50px 0px;
-    width: 600px;
+.central-box {
+    background-color: rgba(255,255,255,0);
+    color: white;
+}
+
+h1 {
     text-align: center;
-    background-color: rgba(255,255,255,0.5);
+    font-size: 60px;
 }
 
-.intro h1 {
-    border-bottom: 1px dotted #aaa;
+h2 {
+    text-align: center;
+    font-size: 40px;
+    margin-bottom: 50px;
 }
 
-.intro .iconfont {
-    color: darkred;
-    font-size: 48px;
+.logo {
+    display: block;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    box-shadow: 10px 10px 5px 5px rgba(200,200,200,0.1);
+    margin: 20px auto;
+}
+
+.intro {
+    float: left;
+    height: 400px;
+    width: 350px;
+    border: 1px solid white;
+    margin-right: 55px;
+    box-sizing: border-box;
+}
+
+.intro:last-child {
+    margin-right: 0px;
 }

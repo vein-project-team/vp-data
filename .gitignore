@@ -5,3 +5,4 @@ vein-project.db
 log.json
 test.py
 
+*.db

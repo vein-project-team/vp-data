@@ -2,7 +2,7 @@ import pandas as pd
 from tqdm import tqdm as pb
 from data_api import calculator
 from data_api.date_getter import date_getter as dg
-from database.db_reader import read_from_db
+from database.db_reader import read_table, read_from_db
 from data_api.spider import get_stock_list
 from data_api.spider import get_index_quotation
 from data_api.spider import get_up_down_limits_statistic_details
@@ -12,8 +12,8 @@ from data_api.spider import get_stock_details
 def get_trade_date_list_from_api(frequency, size):
     """
     从API侧拉取交易日表
-    :param frequency:
     :param size:
+    :param frequency:
     :return:
     """
     data = dg.get_trade_date_list_forward(frequency, size)
@@ -26,11 +26,11 @@ def get_trade_date_list_from_db(frequency):
     :param frequency:
     :return:
     """
-    data = read_from_db(f'''SELECT TRADE_DATE FROM TRADE_DATE_LIST_{frequency};''')
+    data = read_table(f'TRADE_DATE_LIST_{frequency}', 'TRADE_DATE')
     return data
 
 
-def get_stock_list_from_api(exchange):
+def get_stock_list_from_api(exchange='ALL'):
     """
     从API侧拉取股票列表
     :param exchange:
@@ -38,22 +38,23 @@ def get_stock_list_from_api(exchange):
     """
     data = get_stock_list(exchange)
     data.fillna('NULL', inplace=True)
+    data = data.reset_index(drop=True)
     return data
 
 
-def get_stock_list_from_db(exchange):
+def get_stock_list_from_db(exchange='ALL'):
     """
     从数据库侧拉取股票列表
     :param exchange:
     :return:
     """
-    if exchange == 'all':
+    if exchange == 'ALL':
         data = pd.concat([
-            read_from_db(f'''SELECT * FROM SZ_STOCK_LIST;'''),
-            read_from_db(f'''SELECT * FROM SH_STOCK_LIST;''')]
+            read_table('SZ_STOCK_LIST'),
+            read_table('SH_STOCK_LIST')]
         )
     else:
-        data = read_from_db(f'''SELECT * FROM {exchange}_STOCK_LIST;''')
+        data = read_table(f'{exchange}_STOCK_LIST')
     return data
 
 
@@ -65,6 +66,8 @@ def get_index_quotation_from_api(index_suffix, frequency, size):
     :param size:
     :return:
     """
+    if size == 0:
+        return
     index_code = ''
     if index_suffix == 'SH':
         index_code = '000001.SH'
@@ -86,7 +89,7 @@ def get_index_quotation_from_db(index_suffix, frequency):
     :param frequency:
     :return:
     """
-    data = read_from_db(f'''SELECT * FROM {index_suffix}_INDEX_{frequency};''')
+    data = read_table(f'{index_suffix}_INDEX_{frequency}')
     return data
 
 
@@ -98,7 +101,11 @@ def get_stock_details_from_api(ts_code, size, frequency):
     :param frequency:
     :return:
     """
+    if size == 0:
+        return None
     data = get_stock_details(ts_code, size, frequency)
+    if data is None:
+        return None
     data = data.iloc[::-1].reset_index(drop=True)
     data.fillna('NULL', inplace=True)
     return data
@@ -112,13 +119,31 @@ def get_stocks_details_by_exchange_from_api(index_suffix, frequency, size):
     :param size:
     :return:
     """
-    stock_list = read_from_db(f'''SELECT TS_CODE FROM {index_suffix}_STOCK_LIST''')['TS_CODE']
+    stock_list = read_table(f'{index_suffix}_STOCK_LIST')['TS_CODE']
     data = None
     for stock in pb(stock_list, desc='收集数据中', colour='#ffffff'):
         if data is None:
             data = get_stock_details_from_api(stock, size, frequency)
         else:
-            data = pd.concat([data, get_stock_details_from_api(stock, size, frequency)])
+            data = pd.concat([data, get_stock_details_from_api(stock, size, frequency)], axis=0)
+    data = data.reset_index(drop=True)
+    return round(data, 2)
+
+
+def get_stocks_details_by_set_from_api(stocks, frequency, size):
+    """
+    从API侧根据给定的股票集合拉取一堆股票的行情
+    :param stocks:
+    :param frequency:
+    :param size:
+    :return:
+    """
+    data = None
+    for stock in pb(stocks, desc='收集数据中', colour='#ffffff'):
+        if data is None:
+            data = get_stock_details_from_api(stock, size, frequency)
+        else:
+            data = pd.concat([data, get_stock_details_from_api(stock, size, frequency)], axis=0)
     data = data.reset_index(drop=True)
     return round(data, 2)
 
@@ -130,7 +155,7 @@ def get_stock_details_from_db(stock, frequency):
     :param frequency:
     :return:
     """
-    data = read_from_db(f'''SELECT * FROM {stock[-2:]}_DETAILS_{frequency} WHERE TS_CODE = "{stock}"''')
+    data = read_from_db(f'SELECT * FROM {stock[-2:]}_DETAILS_{frequency} WHERE TS_CODE = "{stock}"')
     return data
 
 
@@ -158,5 +183,4 @@ def get_up_down_limits_statistic_details_from_db():
 
 
 if __name__ == '__main__':
-    # print(get_index_quotation_from_db('SH', 'DAILY', 100))
     pass
