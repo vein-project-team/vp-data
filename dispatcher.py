@@ -119,6 +119,8 @@ def get_stocks_details_by_exchange_from_api(index_suffix, frequency, size):
     :param size:
     :return:
     """
+    if size == 0:
+        return None
     stock_list = read_table(f'{index_suffix}_STOCK_LIST')['TS_CODE']
     data = None
     for stock in pb(stock_list, desc='收集数据中', colour='#ffffff'):
@@ -138,6 +140,8 @@ def get_stocks_details_by_set_from_api(stocks, frequency, size):
     :param size:
     :return:
     """
+    if size == 0:
+        return None
     data = None
     for stock in pb(stocks, desc='收集数据中', colour='#ffffff'):
         if data is None:
@@ -166,6 +170,8 @@ def get_up_down_limits_statistic_details_from_api(size, exchange='ALL'):
     :param exchange:
     :return:
     """
+    if size == 0:
+        return None
     date_list = dg.get_trade_date_list_forward('DAILY', size)
     data = None
     for date in pb(date_list['trade_date'], desc='收集数据中', colour='#ffffff'):
