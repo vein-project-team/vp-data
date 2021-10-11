@@ -36,7 +36,6 @@
                 if (this[indexSuffix][frequency] == null) {
                     axios.get(`/index-quotation-data?index=${indexSuffix}`)
                         .then((response) => {
-                            console.log(response)
                             let date = response.data[indexSuffix][frequency]['date'];
                             let kLine = response.data[indexSuffix][frequency]['k_line'];
                             let volRaw = response.data[indexSuffix][frequency]['vol'];
