@@ -106,9 +106,9 @@ def get_stock_details_from_api(ts_code, size, frequency):
     data = get_stock_details(ts_code, size, frequency)
     if data is None:
         return None
-    data = data.iloc[::-1].reset_index(drop=True)
+    data.iloc[::-1].reset_index(drop=True)
     data.fillna('NULL', inplace=True)
-    return data
+    return round(data, 2)
 
 
 def get_stocks_details_by_exchange_from_api(index_suffix, frequency, size):
@@ -129,7 +129,7 @@ def get_stocks_details_by_exchange_from_api(index_suffix, frequency, size):
         else:
             data = pd.concat([data, get_stock_details_from_api(stock, size, frequency)], axis=0)
     data = data.reset_index(drop=True)
-    return round(data, 2)
+    return data
 
 
 def get_stocks_details_by_set_from_api(stocks, frequency, size):
@@ -152,7 +152,7 @@ def get_stocks_details_by_set_from_api(stocks, frequency, size):
     return round(data, 2)
 
 
-def get_stock_details_from_db(stock, frequency):
+def get_stock_details_daily_from_db(stock, frequency):
     """
     从数据库侧拉取个股行情
     :param stock:
@@ -163,7 +163,7 @@ def get_stock_details_from_db(stock, frequency):
     return data
 
 
-def get_up_down_limits_statistic_details_from_api(size, exchange='ALL'):
+def get_up_down_limits_details_daily_from_api(size, exchange='ALL'):
     """
     从API侧拉取涨跌停统计数据
     :param size:

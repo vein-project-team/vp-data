@@ -2,7 +2,7 @@ venv/
 .idea/
 __pycache__/
 vein-project.db
-log.json
+update_report.json
 test.py
 
 *.db

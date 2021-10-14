@@ -78,16 +78,20 @@ def get_stock_details(ts_code, size, frequency='DAILY'):
     :param ts_code: 股票代码
     :return: 股票数据 dataframe
     """
+    keep_date = dg.get_trade_date_before(size, frequency=frequency)
     start_date = dg.get_trade_date_before(size+30, frequency=frequency)
-    data = ts.pro_bar(ts_code=ts_code, freq=frequency[0], adj='qfq', start_date=start_date, ma=[30])
-    if data is None or len(data) <= 30:
-        return None
-    data = data[:-30]
+    data = ts.pro_bar(ts_code=ts_code, freq=frequency[0], start_date=start_date, ma=[30])
+    data = data.drop(data[data.trade_date < keep_date].index)
     cols = ['ts_code', 'trade_date', 'open', 'close', 'low', 'high', 'pre_close', 'change', 'pct_chg', 'vol', 'amount', 'ma30', 'ma_v_30']
     data = data[cols]
     start_date = dg.get_trade_date_before(size, frequency=frequency)
     adj = pro.adj_factor(ts_code=ts_code, start_date=start_date)
-    basic = pro.daily_basic(ts_code=ts_code, start_date=start_date, fields='ts_code,trade_date,turnover_rate,volume_ratio,pe,pe_ttm,pb,dv_ratio,dv_ttm')
+    basic = None
+    if frequency == 'DAILY':
+        basic = pro.daily_basic(ts_code=ts_code, start_date=start_date, fields='ts_code,trade_date,turnover_rate,volume_ratio,pe,pe_ttm,pb,dv_ratio,dv_ttm')
+    elif frequency == 'WEEKLY' or frequency == 'MONTHLY':
+        data['pct_chg'] *= 100
+        basic = pro.daily_basic(ts_code=ts_code, start_date=start_date, fields='ts_code,trade_date,pe,pe_ttm,pb,dv_ratio,dv_ttm')
     data = pd.merge(data, adj, how='left')
     data = pd.merge(data, basic, how='left')
     return data
@@ -97,15 +101,18 @@ def get_up_down_limits_statistic_details(date, exchange='ALL'):
     while True:
         try:
             data = pro.limit_list(trade_date=date, fields="ts_code,trade_date,fc_ratio,fl_ratio,fd_amount,first_time,last_time,open_times,strth,limit")
+            if exchange != 'ALL':
+                stock_list = get_stock_list(exchange)['ts_code']
+                data = pd.merge(stock_list, data, how='inner')
             break
         except Exception:
             time.sleep(5)
-    if exchange != 'ALL':
-        stock_list = get_stock_list(exchange)['ts_code']
-        data = pd.merge(stock_list, data, how='inner')
+
     return data
 
 
 if __name__ == '__main__':
-    print(get_stock_list())
+    get_stock_details('000035.SZ', 100, 'DAILY')
+    get_stock_details('000035.SZ', 100, 'WEEKLY')
+    get_stock_details('000035.SZ', 100, 'MONTHLY')
 

@@ -1,7 +1,7 @@
 import pandas as pd
 from dispatcher import get_trade_date_list_from_db
 from dispatcher import get_stock_list_from_db
-from dispatcher import get_stock_details_from_db
+from dispatcher import get_stock_details_daily_from_db
 from dispatcher import get_index_quotation_from_db
 
 
@@ -63,7 +63,7 @@ def get_stock_details_json(stock, frequency):
     :param frequency: 日线 | 月线 | 周线
     :return: 个股行情数据 json
     """
-    data = get_stock_details_from_db(stock, frequency)
+    data = get_stock_details_daily_from_db(stock, frequency)
     return {
         'date': [date for date in data['TRADE_DATE']],
         "k_line": [
@@ -86,7 +86,7 @@ def get_filled_stock_details_json(stock, frequency):
     :return:个股行情数据 json
     """
     full_date_list = get_trade_date_list_from_db(frequency)
-    data = get_stock_details_from_db(stock, frequency)
+    data = get_stock_details_daily_from_db(stock, frequency)
     data = pd.merge(full_date_list, data, how='left')
     data.fillna('', inplace=True)
     return {stock: {

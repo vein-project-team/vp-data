@@ -1,28 +1,3 @@
-.index-nav {
-    position: fixed;
-    z-index: 2;
-    top: 0px;
-    width: 100%;
-    height: 60px;
-    line-height: 60px;
-    padding-left: 30px;
-    background-color: #333;
-    list-style: none;
-}
-
-.index-nav .current {
-    background-color: darkred;
-}
-
-.index-nav .disabled {
-    opacity: 0.5;
-}
-
-
-.index-nav li {
-    float: left;
-}
-
 .quotation-chart {
     width: 100%;
     height: 640px;

@@ -1,13 +1,12 @@
 from flask import Flask
 from flask import request
 from flask import render_template
-from database.db_runner import setup_database, update_database
+import database.db_runner as db
 import json_trimmer as jt
 from database.db_updater import updater
 
 
-setup_database()
-update_database()
+db.run()
 app = Flask(__name__)
 
 

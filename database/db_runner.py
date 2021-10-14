@@ -3,6 +3,7 @@ import os
 import requests
 from database.db_builder import create_tables
 from database.db_writer import fill_tables
+from database.db_trimmer import trim_tables
 from database.db_settings import DB_SIZE
 from database.db_updater import updater
 from utils import log
@@ -44,3 +45,13 @@ def update_database():
             log('与数据接口的链接出现问题，正在重连...')
             continue
     log('数据库更新完成！')
+
+
+def trim_database():
+    trim_tables()
+
+
+def run():
+    setup_database()
+    update_database()
+    trim_database()

@@ -1,9 +1,8 @@
-from database.db_runner import setup_database
-from database.db_updater import updater
-from database.db_checker import stocks_checker
+from database.db_builder import create_tables
+from database.db_trimmer import trim_table, trim_tables
 
 if __name__ == '__main__':
-    pass
+    trim_tables()
 
 
 

@@ -4,6 +4,13 @@
 {% endblock %}
 {% block content %}
     <div class="central-box">
+        <ul class="nav">
+            <li>
+                <input type="text">
+                <a href="/stock-quotation?stock=600519.SH" class="bx bx-search search-button"></a>
+            </li>
+
+        </ul>
         <h3 class="title">股票列表</h3>
         <a class="stock" v-for="stock in stock_list[0]" :href="'/stock-quotation?stock='+stock.ts_code">
             <span class="code">[[ stock.ts_code ]]</span>

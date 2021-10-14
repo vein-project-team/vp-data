@@ -1,3 +1,22 @@
+.nav .search-button {
+    position: relative;
+    top: 1px;
+    display: inline-block;
+    width: 25px;
+    height: 25px;
+    text-align: center;
+    line-height: 25px;
+    font-size: 16px;
+    color: #aaa;
+    padding: 2px;
+    border: 1px solid #aaa;
+    border-radius: 4px;
+}
+
+.nav .search-button:hover {
+    background-color: #444;
+}
+
 .stock {
     display: block;
     height: 40px;

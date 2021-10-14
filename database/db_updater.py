@@ -5,7 +5,7 @@ from dispatcher import get_stock_list_from_api
 from database.db_settings import DB_SIZE, TABLES_NEED_UPDATE_BY_DATE, TABLES_NEED_UPDATE_BY_STOCKS, update_data_source
 from data_api.date_getter import date_getter as dg
 from database.db_writer import fill_table, DataGetter
-from database.db_checker import no_checker, date_checker, stocks_checker
+from database.db_checker import date_checker, stocks_checker
 from cacher import override_cache, read_cache
 from utils import log
 import numpy as np
