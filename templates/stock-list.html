@@ -6,20 +6,28 @@
     <div class="central-box">
         <ul class="nav">
             <li>
-                <input type="text">
-                <a href="/stock-quotation?stock=600519.SH" class="bx bx-search search-button"></a>
+                <input @keyup.enter="search" type="text" v-model="searchString">
+                <a @click="search" href="javascript:;" class="bx bx-search search-button"></a>
             </li>
 
         </ul>
         <h3 class="title">股票列表</h3>
-        <a class="stock" v-for="stock in stock_list[0]" :href="'/stock-quotation?stock='+stock.ts_code">
+        <a class="stock" v-for="stock in displayStockList" :href="'/stock-quotation?stock='+stock.ts_code">
             <span class="code">[[ stock.ts_code ]]</span>
             <span class="name">[[ stock.name ]]</span>
             <span class="area">[[ stock.area ]]</span>
             <span class="industry">[[ stock.industry ]]</span>
             <span class="market">[[ stock.market ]]</span>
-            <span class="list_date">[[ stock.date ]]</span>
+            <span class="list_date">[[ stock.list_date ]]</span>
         </a>
+        <hr>
+        <ul class="pages-bar">
+            <li class="bx bx-left-arrow-alt" @click="changePage(-1)"></li>
+            <li>
+                <input class="input-page" type="text" :placeholder="page" @keyup.enter="changePage(0, $event)">
+            </li>
+            <li class="bx bx-right-arrow-alt" @click="changePage(1)"></li>
+        </ul>
     </div>
     <script src="/static/js/stock-list.js"></script>
 {% endblock %}
