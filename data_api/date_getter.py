@@ -107,9 +107,10 @@ class DateGetter:
                 return latest_finished_trade_date
             day_counter += 3
 
-    def get_trade_days_between(self, day1, day2):
+    def get_trade_days_between(self, day1, day2, frequency='DAILY'):
         """
         获取两个交易日之间的交易日数量
+        :param frequency:
         :param day1: 交易日1
         :param day2: 交易日2
         :return: 之间的交易日数量 int
@@ -118,7 +119,7 @@ class DateGetter:
         end_date = day2
         if int(day1) > int(day2):
             start_date, end_date = end_date, start_date
-        trade_date_list = self.get_trade_date_between(start_date, end_date)
+        trade_date_list = self.get_trade_date_between(start_date, end_date, frequency)
         return len(trade_date_list)
 
     def get_trade_date_before(self, days, date='last', frequency='DAILY'):
@@ -158,6 +159,4 @@ date_getter = DateGetter()
 
 
 if __name__ == '__main__':
-    print(date_getter.get_trade_date_before(100))
-    print(date_getter.get_trade_date_before(100, frequency='WEEKLY'))
-    print(date_getter.get_trade_date_before(100, frequency='MONTHLY'))
+    print(date_getter.get_trade_days_between('20211008', '20211015', 'MONTHLY'))

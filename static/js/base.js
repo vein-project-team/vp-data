@@ -40,6 +40,12 @@
         }
         else {
             container.style.height = value;
+            setTimeout(() => {
+                if (container.clientHeight < window.innerHeight) {
+                    container.style.height = window.innerHeight + 'px';
+                }
+            }, 1);
+
         }
     }
 

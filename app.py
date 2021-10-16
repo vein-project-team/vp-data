@@ -79,5 +79,20 @@ def stock_quotation_data():
     return data
 
 
+@app.route('/fund-list')
+def fund_list():
+    return render_template('construction-site.html')
+
+
+@app.route('/industry-list')
+def industry_list():
+    return render_template('construction-site.html')
+
+
+@app.route('/daily-review')
+def daily_review():
+    return render_template('construction-site.html')
+
+
 if __name__ == '__main__':
     app.run()

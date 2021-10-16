@@ -9,9 +9,16 @@
                 <input @keyup.enter="search" type="text" v-model="searchString">
                 <a @click="search" href="javascript:;" class="bx bx-search search-button"></a>
             </li>
-
         </ul>
-        <h3 class="title">股票列表</h3>
+        <h3 class="title">股票列表<span>总条数：[[ resultStockList.length ]]</span></h3>
+        <a class="action-bar">
+            <span @click="sortBy('ts_code')">代码 <b class="bx bxs-sort-alt" :class="{current: sortKey == 'ts_code'}"></b></span>
+            <span @click="sortBy('name')">名称 <b class="bx bxs-sort-alt" :class="{current: sortKey == 'name'}"></b></span>
+            <span @click="sortBy('area')">地区 <b class="bx bxs-sort-alt" :class="{current: sortKey == 'area'}"></b></span>
+            <span @click="sortBy('industry')">行业 <b class="bx bxs-sort-alt" :class="{current: sortKey == 'industry'}"></b></span>
+            <span @click="sortBy('market')">板块 <b class="bx bxs-sort-alt" :class="{current: sortKey == 'market'}"></b></span>
+            <span @click="sortBy('list_date')">上市日 <b class="bx bxs-sort-alt" :class="{current: sortKey == 'list_date'}"></b></span>
+        </a>
         <a class="stock" v-for="stock in displayStockList" :href="'/stock-quotation?stock='+stock.ts_code">
             <span class="code">[[ stock.ts_code ]]</span>
             <span class="name">[[ stock.name ]]</span>
@@ -22,11 +29,13 @@
         </a>
         <hr>
         <ul class="pages-bar">
-            <li class="bx bx-left-arrow-alt" @click="changePage(-1)"></li>
+            <li class="limit" @click="changePage(minPage)">first</li>
+            <li class="bx" :class="{'bx-left-arrow-alt': page != minPage, 'bx-arrow-to-left': page == minPage}" @click="changePage('pre')"></li>
             <li>
-                <input class="input-page" type="text" :placeholder="page" @keyup.enter="changePage(0, $event)">
+                <input class="input-page" type="text" :placeholder="page" @keyup.enter="changePage('input', $event)">
             </li>
-            <li class="bx bx-right-arrow-alt" @click="changePage(1)"></li>
+            <li class="bx" :class="{'bx-right-arrow-alt': page != maxPage, 'bx-arrow-to-right': page == maxPage}" @click="changePage('nex')"></li>
+            <li class="limit" @click="changePage(maxPage)">last</li>
         </ul>
     </div>
     <script src="/static/js/stock-list.js"></script>

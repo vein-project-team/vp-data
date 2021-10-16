@@ -5,6 +5,7 @@
 
 a {
     text-decoration: none;
+    color: white;
 }
 
 header {
@@ -65,14 +66,19 @@ header {
     border: 1px solid #444;
     border-radius: 16px;
     line-height: 25px;
-    font-size: 18px;
+    font-size: 16px;
     height: 25px;
     color: white;
     cursor: pointer;
 }
 
 .menu-button:hover {
-    background-color: #444;
+    background-color: darkred;
+}
+
+.menu-button .bx {
+    position: relative;
+    top: 1px;
 }
 
 .container {
@@ -148,12 +154,14 @@ header {
     font-size: 16px;
 }
 
-.menu li a span {
+.menu .bx {
+    position: relative;
+    top: 1px;
     font-size: 16px;
 }
 
 .menu li a:hover{
-    background-color: #444;
+    background-color: darkred;
 }
 
 .central-box {
