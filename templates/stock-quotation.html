@@ -7,7 +7,21 @@
         let stock = '{{ stock }}';
     </script>
     <div class="central-box">
-        <h3 class="title">{{ stock }}</h3>
+        <h3 class="title">[[ stockInfo.name ]]<span>[[ stockInfo.ts_code ]]</span></h3>
+        <div class="stock-info">
+            <ul>
+                <li><span>地区</span>：[[ stockInfo.area ]]</li>
+                <li><span>行业</span>：[[ stockInfo.industry ]]</li>
+                <li><span>板块</span>：[[ stockInfo.market ]]</li>
+                <li><span>上市日</span>：[[ stockInfo.list_date ]]</li>
+                <li><span>上市状态</span>：--</li>
+                <li><span>两融</span>：[[ stockInfo.is_hs ]]</li>
+                <li><span>总市值</span>：--</li>
+                <li><span>流通市值</span>：--</li>
+                <li><span>总股本</span>：--</li>
+                <li><span>流通股本</span>：--</li>
+            </ul>
+        </div>
         <div class="quotation-chart daily-chart"></div>
         <div class="quotation-chart weekly-chart"></div>
         <div class="quotation-chart monthly-chart"></div>

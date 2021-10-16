@@ -3,6 +3,7 @@ from dispatcher import get_trade_date_list_from_db
 from dispatcher import get_stock_list_from_db
 from dispatcher import get_stock_details_daily_from_db
 from dispatcher import get_index_quotation_from_db
+from dispatcher import get_stock_info_from_db
 
 
 def get_trade_date_list_by_frequency(frequency):
@@ -56,7 +57,7 @@ def get_all_stock_list_json():
     return get_stock_list_json_by_exchange('ALL')
 
 
-def get_stock_details_json(stock, frequency):
+def get_stock_details_json_by_frequency(stock, frequency):
     """
     获取个股行情数据
     :param stock: 股票代码
@@ -75,7 +76,7 @@ def get_stock_details_json(stock, frequency):
     }
 
 
-def get_filled_stock_details_json(stock, frequency):
+def get_filled_stock_details_json_by_frequency(stock, frequency):
     """
     获取填充过的个股行情数据
     许多个股并不拥有完整的全交易日数据
@@ -89,7 +90,7 @@ def get_filled_stock_details_json(stock, frequency):
     data = get_stock_details_daily_from_db(stock, frequency)
     data = pd.merge(full_date_list, data, how='left')
     data.fillna('', inplace=True)
-    return {stock: {
+    return {
         'date': [date for date in data['TRADE_DATE']],
         "k_line": [
             [open, close, low, high] for open, close, low, high in data[['OPEN', 'CLOSE', 'LOW', 'HIGH']].values
@@ -97,7 +98,38 @@ def get_filled_stock_details_json(stock, frequency):
         "vol": [vol for vol in data['VOL']],
         "k_ma30": [k_ma30 for k_ma30 in data['K_MA30']],
         "vol_ma30": [vol_ma30 for vol_ma30 in data['VOL_MA30']],
-    }}
+    }
+
+
+def get_filled_stock_details(stock):
+    return {
+        'DAILY': get_filled_stock_details_json_by_frequency(stock, 'DAILY'),
+        'WEEKLY': get_filled_stock_details_json_by_frequency(stock, 'WEEKLY'),
+        'MONTHLY': get_filled_stock_details_json_by_frequency(stock, 'MONTHLY')
+    }
+
+
+def get_stock_info_json(stock):
+    data = get_stock_info_from_db(stock)
+    return {
+        'ts_code': data['TS_CODE'][0],
+        'name': data['NAME'][0],
+        'area': data['AREA'][0],
+        'industry': data['INDUSTRY'][0],
+        'market': data['MARKET'][0],
+        'list_date': data['LIST_DATE'][0],
+        'is_hs': data['IS_HS'][0]
+    }
+
+
+def get_stock_json(stock):
+    return {
+        stock: {
+            'info': get_stock_info_json(stock),
+            'quotation': get_filled_stock_details(stock)
+        }
+    }
+
 
 
 def get_index_quotation_json_by_frequency(index_suffix, frequency):
@@ -140,4 +172,4 @@ def get_index_quotation_json(index_suffix):
 
 
 if __name__ == '__main__':
-    print(get_all_stock_list_json())
+    print(get_stock_info_json('600519.SH'))

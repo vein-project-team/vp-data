@@ -58,6 +58,14 @@ def get_stock_list_from_db(exchange='ALL'):
     return data
 
 
+def get_stock_info_from_db(stock):
+    data = pd.concat([
+        read_from_db(f"SELECT * FROM SH_STOCK_LIST WHERE TS_CODE = '{stock}'"),
+        read_from_db(f"SELECT * FROM SZ_STOCK_LIST WHERE TS_CODE = '{stock}'")]
+    )
+    return data
+
+
 def get_index_quotation_from_api(index_suffix, frequency, size):
     """
     从API侧拉取指数行情

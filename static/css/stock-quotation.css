@@ -1,3 +1,38 @@
+.title span {
+    font-size: 18px;
+    border-radius: 5px;
+    padding: 2px 3px;
+    margin-left: 15px;
+    color: darkblue;
+}
+
+.stock-info {
+    border-radius: 5px;
+    border: 1px dotted #333;
+    margin-bottom: 20px;
+    margin-left: 50px;
+    margin-right: 50px;
+    padding: 5px 7px;
+    height: 50px;
+}
+
+.stock-info ul {
+    list-style: none;
+    width: 1200px;
+}
+
+.stock-info li {
+    float: left;
+    font-size: 16px;
+    margin-right: 30px;
+    margin-top: 2px;
+    width: 151px;
+}
+
+.stock-info li span {
+    font-weight: bold;
+}
+
 .quotation-chart {
     width: 100%;
     height: 540px;

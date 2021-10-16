@@ -39,6 +39,7 @@
                     window.open(`/stock-quotation?stock=${this.resultStockList[0]['ts_code']}`, '_self');
                 }
                 else {
+                    this.resetSortArgs();
                     this.resetDisplayStockList();
                 }
             },
@@ -57,7 +58,13 @@
                     this.sortInd = 1;
                 }
                 else {
-                    this.sortInd *= -1;
+                    if (this.sortInd == 1)
+                        this.sortInd *= -1;
+                    else {
+                        this.resetSortArgs();
+                        this.sortBy('ts_code')
+                        return;
+                    }
                 }
                 this.resultStockList.sort((x, y) => {
                     if (x[key] == 'NULL' && y[key] == 'NULL')
@@ -88,6 +95,10 @@
                 });
                 this.page = 1;
                 this.resetDisplayStockList();
+            },
+            resetSortArgs() {
+                this.sortKey = '';
+                this.sortInd = 1;
             },
             search() {
                 this.resetResultStockList((item) => {

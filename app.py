@@ -74,8 +74,7 @@ def stock_quotation_data():
     :return:股票行情数据
     """
     stock = request.args.get('stock')
-    frequency = request.args.get('frequency')
-    data = jt.get_filled_stock_details_json(stock, frequency)
+    data = jt.get_stock_json(stock)
     return data
 
 
