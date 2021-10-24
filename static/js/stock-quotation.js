@@ -3,16 +3,16 @@
         delimiters: ['[[', ']]'],
         data() {
             return {
-                stock: stock,
+                stock: url('?stock'),
                 stockInfo: {},
                 stockQuotation: {},
             }
         },
         mounted() {
-            axios.get(`/stock-quotation-data?stock=${stock}`)
+            axios.get(`/stock-quotation-data?stock=${this.stock}`)
                     .then((response) => {
-                        this.stockInfo = response.data[stock]['info']
-                        this.stockQuotation = response.data[stock]['quotation']
+                        this.stockInfo = response.data[this.stock]['info']
+                        this.stockQuotation = response.data[this.stock]['quotation']
                         this.drawQuotationChart('DAILY');
                         this.drawQuotationChart('WEEKLY');
                         this.drawQuotationChart('MONTHLY');
