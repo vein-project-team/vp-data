@@ -1,0 +1,54 @@
+import sqlite3
+from utils import log
+from settings import DB_PATH, TABLES_NEED_FILL
+from source_map import DATA_SOURCE
+
+
+def write_to_db(table_name, dataframe):
+    if dataframe is None or len(dataframe) == 0:
+        log(f'没有发现需要添加到 {table_name} 中的数据。')
+        return
+    else:
+        log(f'正在填充数据进表：{table_name}')
+        conn = sqlite3.connect(DB_PATH)
+        dataframe.to_sql('TEMP', conn, index=False)
+        conn.execute(f'''REPLACE INTO {table_name} SELECT * FROM TEMP;''')
+        conn.execute('''DROP TABLE TEMP;''')
+        conn.commit()
+
+
+class DataGetter:
+
+    def __init__(self, getter, args):
+        self.getter = getter
+        self.args = args
+
+    def get(self):
+        return self.getter(*self.args)
+
+
+def fill_table(table_name, data_getter, checker):
+    report = checker(table_name)
+    if report['pass']:
+        log(f"{report['type']}: 检查通过，表 {table_name} 的操作被跳过。")
+        return
+    else:
+        dataframe = data_getter.get()
+        write_to_db(table_name, dataframe)
+
+
+def fill_tables():
+    for table_name in TABLES_NEED_FILL:
+        log(f'准备填充数据进表：{table_name}')
+        checker = DATA_SOURCE[table_name]['checker']
+        getter = DATA_SOURCE[table_name]['getter']
+        args = DATA_SOURCE[table_name]['args']
+        fill_table(
+            table_name,
+            DataGetter(getter, args),
+            checker
+        )
+
+
+if __name__ == '__main__':
+    pass

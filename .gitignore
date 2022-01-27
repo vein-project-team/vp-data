@@ -1,8 +1,6 @@
-venv/
-.idea/
-__pycache__/
-vein-project.db
+_old_v_1.0
+vp-renderer
+.vscode
 update_report.json
 test.py
-
 *.db
