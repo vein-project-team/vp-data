@@ -1,8 +1,8 @@
-from data_api import DataAPI
+from data_source import DataSource
 from database.db_reader import read_from_db
 
 
-class LocalAPI(DataAPI):
+class LocalSource(DataSource):
 
     @staticmethod
     def get(table_name, cols='*', condition='1'):

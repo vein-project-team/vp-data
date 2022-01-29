@@ -1,3 +1,3 @@
-# vein-project
- Kevyn's stock market analysis framework
+# vein-project: vp-data
+vein project database and data analysis system
 

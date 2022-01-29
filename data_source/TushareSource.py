@@ -1,10 +1,10 @@
-from data_api import DataAPI
+from data_source import DataSource
 import tushare as ts
 import pandas as pd
 from tqdm import tqdm as pb
 
 
-class TushareAPI(DataAPI):
+class TushareSource(DataSource):
 
     def __init__(self):
         super().__init__()

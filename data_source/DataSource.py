@@ -3,7 +3,7 @@ from pandas import DataFrame
 from database.db_reader import read_table_header
 
 
-class DataAPI(ABC):
+class DataSource(ABC):
 
     @staticmethod
     def convert_header(table_name, dataframe):
