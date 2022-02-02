@@ -148,7 +148,7 @@ CREATION_SQL = {
     );
     ''',
     'INCOME_STATEMENTS':'''
-    CREATE TABLE IF NOT EXISTS INCOME_STATEMENT (
+    CREATE TABLE IF NOT EXISTS INCOME_STATEMENTS (
         TS_CODE CHAR(9) NOT NULL, -- 股票代码
         ANN_DATE CHAR(8), -- 公告日期
         F_ANN_DATE CHAR(8), -- 实际公告日期
@@ -244,9 +244,271 @@ CREATION_SQL = {
         END_NET_PROFIT REAL, -- 终止经营净利润
         PRIMARY KEY (TS_CODE, END_DATE, REPORT_TYPE)
     );
+    ''',
+    'BALANCE_SHEETS':'''
+    CREATE TABLE IF NOT EXISTS BALANCE_SHEETS (
+        TS_CODE CHAR(9) NOT NULL, -- 股票代码
+        ANN_DATE CHAR(8), -- 公告日期
+        F_ANN_DATE CHAR(8), -- 实际公告日期
+        END_DATE CHAR(8) NOT NULL, -- 报告期结束日期
+        REPORT_TYPE CHAR(2) NOT NULL, -- 报告类型
+        COMP_TYPE CHAR(1), -- 公司类型
+        END_TYPE CHAR(1), -- 报告期编码      
+        TOTAL_SHARE REAL, -- 期末总股本
+        CAP_RESE REAL, -- 资本公积金
+        UNDISTR_PORFIT REAL, -- 未分配利润
+        SURPLUS_RESE REAL, -- 盈余公积金
+        SPECIAL_RESE REAL, -- 专项储备
+        MONEY_CAP REAL, -- 货币资金
+        TRAD_ASSET REAL, -- 交易性金融资产
+        NOTES_RECEIV REAL, -- 应收票据
+        ACCOUNTS_RECEIV REAL, -- 应收账款
+        OTH_RECEIV REAL, -- 其他应收款
+        PREPAYMENT REAL, -- 预付款项
+        DIV_RECEIV REAL, -- 应收股利
+        INT_RECEIV REAL, -- 应收利息
+        INVENTORIES REAL, -- 存货
+        AMOR_EXP REAL, -- 长期待摊费用
+        NCA_WITHIN_1Y REAL, -- 一年内到期的非流动资产
+        SETT_RSRV REAL, -- 结算备付金
+        LOANTO_OTH_BANK_FI REAL, -- 拆出资金
+        PREMIUM_RECEIV REAL, -- 应收保费
+        REINSUR_RECEIV REAL, -- 应收分保账款
+        REINSUR_RES_RECEIV REAL, -- 应收分保合同准备金
+        PUR_RESALE_FA REAL, -- 买入返售金融资产
+        OTH_CUR_ASSETS REAL, -- 其他流动资产
+        TOTAL_CUR_ASSETS REAL, -- 流动资产合计
+        FA_AVAIL_FOR_SALE REAL, -- 可供出售金融资产
+        HTM_INVEST REAL, -- 持有至到期投资
+        LT_EQT_INVEST REAL, -- 长期股权投资
+        INVEST_REAL_ESTATE REAL, -- 投资性房地产
+        TIME_DEPOSITS REAL, -- 定期存款
+        OTH_ASSETS REAL, -- 其他资产
+        LT_REC REAL, -- 长期应收款
+        FIX_ASSETS REAL, -- 固定资产
+        CIP REAL, -- 在建工程
+        CONST_MATERIALS REAL, -- 工程物资
+        FIXED_ASSETS_DISP REAL, -- 固定资产清理
+        PRODUC_BIO_ASSETS REAL, -- 生产性生物资产
+        OIL_AND_GAS_ASSETS REAL, -- 油气资产
+        INTAN_ASSETS REAL, -- 无形资产
+        R_AND_D REAL, -- 研发支出
+        GOODWILL REAL, -- 商誉
+        LT_AMOR_EXP REAL, -- 长期待摊费用
+        DEFER_TAX_ASSETS REAL, -- 递延所得税资产
+        DECR_IN_DISBUR REAL, -- 发放贷款及垫款
+        OTH_NCA REAL, -- 其他非流动资产
+        TOTAL_NCA REAL, -- 非流动资产合计
+        CASH_RESER_CB REAL, -- 现金及存放中央银行款项
+        DEPOS_IN_OTH_BFI REAL, -- 存放同业和其它金融机构款项
+        PREC_METALS REAL, -- 贵金属
+        DERIV_ASSETS REAL, -- 衍生金融资产
+        RR_REINS_UNE_PREM REAL, -- 应收分保未到期责任准备金
+        RR_REINS_OUTSTD_CLA REAL, -- 应收分保未决赔款准备金
+        RR_REINS_LINS_LIAB REAL, -- 应收分保寿险责任准备金
+        RR_REINS_LTHINS_LIAB REAL, -- 应收分保长期健康险责任准备金
+        REFUND_DEPOS REAL, -- 存出保证金
+        PH_PLEDGE_LOANS REAL, -- 保户质押贷款
+        REFUND_CAP_DEPOS REAL, -- 存出资本保证金
+        INDEP_ACCT_ASSETS REAL, -- 独立账户资产
+        CLIENT_DEPOS REAL, -- 其中：客户资金存款
+        CLIENT_PROV REAL, -- 其中：客户备付金
+        TRANSAC_SEAT_FEE REAL, -- 其中:交易席位费
+        INVEST_AS_RECEIV REAL, -- 应收款项类投资
+        TOTAL_ASSETS REAL, -- 资产总计
+        LT_BORR REAL, -- 长期借款
+        ST_BORR REAL, -- 短期借款
+        CB_BORR REAL, -- 向中央银行借款
+        DEPOS_IB_DEPOSITS REAL, -- 吸收存款及同业存放
+        LOAN_OTH_BANK REAL, -- 拆入资金
+        TRADING_FL REAL, -- 交易性金融负债
+        NOTES_PAYABLE REAL, -- 应付票据
+        ACCT_PAYABLE REAL, -- 应付账款
+        ADV_RECEIPTS REAL, -- 预收款项
+        SOLD_FOR_REPUR_FA REAL, -- 卖出回购金融资产款
+        COMM_PAYABLE REAL, -- 应付手续费及佣金
+        PAYROLL_PAYABLE REAL, -- 应付职工薪酬
+        TAXES_PAYABLE REAL, -- 应交税费
+        INT_PAYABLE REAL, -- 应付利息
+        DIV_PAYABLE REAL, -- 应付股利
+        OTH_PAYABLE REAL, -- 其他应付款
+        ACC_EXP REAL, -- 预提费用
+        DEFERRED_INC REAL, -- 递延收益
+        ST_BONDS_PAYABLE REAL, -- 应付短期债券
+        PAYABLE_TO_REINSURER REAL, -- 应付分保账款
+        RSRV_INSUR_CONT REAL, -- 保险合同准备金
+        ACTING_TRADING_SEC REAL, -- 代理买卖证券款
+        ACTING_UW_SEC REAL, -- 代理承销证券款
+        NON_CUR_LIAB_DUE_1Y REAL, -- 一年内到期的非流动负债
+        OTH_CUR_LIAB REAL, -- 其他流动负债
+        TOTAL_CUR_LIAB REAL, -- 流动负债合计
+        BOND_PAYABLE REAL, -- 应付债券
+        LT_PAYABLE REAL, -- 长期应付款
+        SPECIFIC_PAYABLES REAL, -- 专项应付款
+        ESTIMATED_LIAB REAL, -- 预计负债
+        DEFER_TAX_LIAB REAL, -- 递延所得税负债
+        DEFER_INC_NON_CUR_LIAB REAL, -- 递延收益-非流动负债
+        OTH_NCL REAL, -- 其他非流动负债
+        TOTAL_NCL REAL, -- 非流动负债合计
+        DEPOS_OTH_BFI REAL, -- 同业和其它金融机构存放款项
+        DERIV_LIAB REAL, -- 衍生金融负债
+        DEPOS REAL, -- 吸收存款
+        AGENCY_BUS_LIAB REAL, -- 代理业务负债
+        OTH_LIAB REAL, -- 其他负债
+        PREM_RECEIV_ADVA REAL, -- 预收保费
+        DEPOS_RECEIVED REAL, -- 存入保证金
+        PH_INVEST REAL, -- 保户储金及投资款
+        RESER_UNE_PREM REAL, -- 未到期责任准备金
+        RESER_OUTSTD_CLAIMS REAL, -- 未决赔款准备金
+        RESER_LINS_LIAB REAL, -- 寿险责任准备金
+        RESER_LTHINS_LIAB REAL, -- 长期健康险责任准备金
+        INDEPT_ACC_LIAB REAL, -- 独立账户负债
+        PLEDGE_BORR REAL, -- 其中:质押借款
+        INDEM_PAYABLE REAL, -- 应付赔付款
+        POLICY_DIV_PAYABLE REAL, -- 应付保单红利
+        TOTAL_LIAB REAL, -- 负债合计
+        TREASURY_SHARE REAL, -- 减:库存股
+        ORDIN_RISK_RESER REAL, -- 一般风险准备
+        FOREX_DIFFER REAL, -- 外币报表折算差额
+        INVEST_LOSS_UNCONF REAL, -- 未确认的投资损失
+        MINORITY_INT REAL, -- 少数股东权益
+        TOTAL_HLDR_EQY_EXC_MIN_INT REAL, -- 股东权益合计(不含少数股东权益)
+        TOTAL_HLDR_EQY_INC_MIN_INT REAL, -- 股东权益合计(含少数股东权益)
+        TOTAL_LIAB_HLDR_EQY REAL, -- 负债及股东权益总计
+        LT_PAYROLL_PAYABLE REAL, -- 长期应付职工薪酬
+        OTH_COMP_INCOME REAL, -- 其他综合收益
+        OTH_EQT_TOOLS REAL, -- 其他权益工具
+        OTH_EQT_TOOLS_P_SHR REAL, -- 其他权益工具(优先股)
+        LENDING_FUNDS REAL, -- 融出资金
+        ACC_RECEIVABLE REAL, -- 应收款项
+        ST_FIN_PAYABLE REAL, -- 应付短期融资款
+        PAYABLES REAL, -- 应付款项
+        HFS_ASSETS REAL, -- 持有待售的资产
+        HFS_SALES REAL, -- 持有待售的负债
+        COST_FIN_ASSETS REAL, -- 以摊余成本计量的金融资产
+        FAIR_VALUE_FIN_ASSETS REAL, -- 以公允价值计量且其变动计入其他综合收益的金融资产
+        CIP_TOTAL REAL, -- 在建工程(合计)(元)
+        OTH_PAY_TOTAL REAL, -- 其他应付款(合计)(元)
+        LONG_PAY_TOTAL REAL, -- 长期应付款(合计)(元)
+        DEBT_INVEST REAL, -- 债权投资(元)
+        OTH_DEBT_INVEST REAL, -- 其他债权投资(元)
+        OTH_EQ_INVEST REAL, -- 其他权益工具投资(元)
+        OTH_ILLIQ_FIN_ASSETS REAL, -- 其他非流动金融资产(元)
+        OTH_EQ_PPBOND REAL, -- 其他权益工具:永续债(元)
+        RECEIV_FINANCING REAL, -- 应收款项融资
+        USE_RIGHT_ASSETS REAL, -- 使用权资产
+        LEASE_LIAB REAL, -- 租赁负债
+        CONTRACT_ASSETS REAL, -- 合同资产
+        CONTRACT_LIAB REAL, -- 合同负债
+        ACCOUNTS_RECEIV_BILL REAL, -- 应收票据及应收账款
+        ACCOUNTS_PAY REAL, -- 应付票据及应付账款
+        OTH_RCV_TOTAL REAL, -- 其他应收款(合计)（元）
+        FIX_ASSETS_TOTAL REAL, -- 固定资产(合计)(元)
+        PRIMARY KEY (TS_CODE, END_DATE, REPORT_TYPE)
+    );
+    ''',
+    'STATEMENTS_OF_CASH_FLOWS':'''
+    CREATE TABLE IF NOT EXISTS STATEMENTS_OF_CASH_FLOWS (
+        TS_CODE CHAR(9) NOT NULL, -- 股票代码
+        ANN_DATE CHAR(8), -- 公告日期
+        F_ANN_DATE CHAR(8), -- 实际公告日期
+        END_DATE CHAR(8) NOT NULL, -- 报告期结束日期
+        REPORT_TYPE CHAR(2) NOT NULL, -- 报告类型
+        COMP_TYPE CHAR(1), -- 公司类型
+        END_TYPE CHAR(1), -- 报告期编码
+        NET_PROFIT REAL, -- 净利润
+        FINAN_EXP REAL, -- 财务费用
+        C_FR_SALE_SG REAL, -- 销售商品、提供劳务收到的现金
+        RECP_TAX_RENDS REAL, -- 收到的税费返还
+        N_DEPOS_INCR_FI REAL, -- 客户存款和同业存放款项净增加额
+        N_INCR_LOANS_CB REAL, -- 向中央银行借款净增加额
+        N_INC_BORR_OTH_FI REAL, -- 向其他金融机构拆入资金净增加额
+        PREM_FR_ORIG_CONTR REAL, -- 收到原保险合同保费取得的现金
+        N_INCR_INSURED_DEP REAL, -- 保户储金净增加额
+        N_REINSUR_PREM REAL, -- 收到再保业务现金净额
+        N_INCR_DISP_TFA REAL, -- 处置交易性金融资产净增加额
+        IFC_CASH_INCR REAL, -- 收取利息和手续费净增加额
+        N_INCR_DISP_FAAS REAL, -- 处置可供出售金融资产净增加额
+        N_INCR_LOANS_OTH_BANK REAL, -- 拆入资金净增加额
+        N_CAP_INCR_REPUR REAL, -- 回购业务资金净增加额
+        C_FR_OTH_OPERATE_A REAL, -- 收到其他与经营活动有关的现金
+        C_INF_FR_OPERATE_A REAL, -- 经营活动现金流入小计
+        C_PAID_GOODS_S REAL, -- 购买商品、接受劳务支付的现金
+        C_PAID_TO_FOR_EMPL REAL, -- 支付给职工以及为职工支付的现金
+        C_PAID_FOR_TAXES REAL, -- 支付的各项税费
+        N_INCR_CLT_LOAN_ADV REAL, -- 客户贷款及垫款净增加额
+        N_INCR_DEP_CBOB REAL, -- 存放央行和同业款项净增加额
+        C_PAY_CLAIMS_ORIG_INCO REAL, -- 支付原保险合同赔付款项的现金
+        PAY_HANDLING_CHRG REAL, -- 支付手续费的现金
+        PAY_COMM_INSUR_PLCY REAL, -- 支付保单红利的现金
+        OTH_CASH_PAY_OPER_ACT REAL, -- 支付其他与经营活动有关的现金
+        ST_CASH_OUT_ACT REAL, -- 经营活动现金流出小计
+        N_CASHFLOW_ACT REAL, -- 经营活动产生的现金流量净额
+        OTH_RECP_RAL_INV_ACT REAL, -- 收到其他与投资活动有关的现金
+        C_DISP_WITHDRWL_INVEST REAL, -- 收回投资收到的现金
+        C_RECP_RETURN_INVEST REAL, -- 取得投资收益收到的现金
+        N_RECP_DISP_FIOLTA REAL, -- 处置固定资产、无形资产和其他长期资产收回的现金净额
+        N_RECP_DISP_SOBU REAL, -- 处置子公司及其他营业单位收到的现金净额
+        STOT_INFLOWS_INV_ACT REAL, -- 投资活动现金流入小计
+        C_PAY_ACQ_CONST_FIOLTA REAL, -- 购建固定资产、无形资产和其他长期资产支付的现金
+        C_PAID_INVEST REAL, -- 投资支付的现金
+        N_DISP_SUBS_OTH_BIZ REAL, -- 取得子公司及其他营业单位支付的现金净额
+        OTH_PAY_RAL_INV_ACT REAL, -- 支付其他与投资活动有关的现金
+        N_INCR_PLEDGE_LOAN REAL, -- 质押贷款净增加额
+        STOT_OUT_INV_ACT REAL, -- 投资活动现金流出小计
+        N_CASHFLOW_INV_ACT REAL, -- 投资活动产生的现金流量净额
+        C_RECP_BORROW REAL, -- 取得借款收到的现金
+        PROC_ISSUE_BONDS REAL, -- 发行债券收到的现金
+        OTH_CASH_RECP_RAL_FNC_ACT REAL, -- 收到其他与筹资活动有关的现金
+        STOT_CASH_IN_FNC_ACT REAL, -- 筹资活动现金流入小计
+        FREE_CASHFLOW REAL, -- 企业自由现金流量
+        C_PREPAY_AMT_BORR REAL, -- 偿还债务支付的现金
+        C_PAY_DIST_DPCP_INT_EXP REAL, -- 分配股利、利润或偿付利息支付的现金
+        INCL_DVD_PROFIT_PAID_SC_MS REAL, -- 其中:子公司支付给少数股东的股利、利润
+        OTH_CASHPAY_RAL_FNC_ACT REAL, -- 支付其他与筹资活动有关的现金
+        STOT_CASHOUT_FNC_ACT REAL, -- 筹资活动现金流出小计
+        N_CASH_FLOWS_FNC_ACT REAL, -- 筹资活动产生的现金流量净额
+        EFF_FX_FLU_CASH REAL, -- 汇率变动对现金的影响
+        N_INCR_CASH_CASH_EQU REAL, -- 现金及现金等价物净增加额
+        C_CASH_EQU_BEG_PERIOD REAL, -- 期初现金及现金等价物余额
+        C_CASH_EQU_END_PERIOD REAL, -- 期末现金及现金等价物余额
+        C_RECP_CAP_CONTRIB REAL, -- 吸收投资收到的现金
+        INCL_CASH_REC_SAIMS REAL, -- 其中:子公司吸收少数股东投资收到的现金
+        UNCON_INVEST_LOSS REAL, -- 未确认投资损失
+        PROV_DEPR_ASSETS REAL, -- 加:资产减值准备
+        DEPR_FA_COGA_DPBA REAL, -- 固定资产折旧、油气资产折耗、生产性生物资产折旧
+        AMORT_INTANG_ASSETS REAL, -- 无形资产摊销
+        LT_AMORT_DEFERRED_EXP REAL, -- 长期待摊费用摊销
+        DECR_DEFERRED_EXP REAL, -- 待摊费用减少
+        INCR_ACC_EXP REAL, -- 预提费用增加
+        LOSS_DISP_FIOLTA REAL, -- 处置固定、无形资产和其他长期资产的损失
+        LOSS_SCR_FA REAL, -- 固定资产报废损失
+        LOSS_FV_CHG REAL, -- 公允价值变动损失
+        INVEST_LOSS REAL, -- 投资损失
+        DECR_DEF_INC_TAX_ASSETS REAL, -- 递延所得税资产减少
+        INCR_DEF_INC_TAX_LIAB REAL, -- 递延所得税负债增加
+        DECR_INVENTORIES REAL, -- 存货的减少
+        DECR_OPER_PAYABLE REAL, -- 经营性应收项目的减少
+        INCR_OPER_PAYABLE REAL, -- 经营性应付项目的增加
+        OTHERS REAL, -- 其他
+        IM_NET_CASHFLOW_OPER_ACT REAL, -- 经营活动产生的现金流量净额(间接法)
+        CONV_DEBT_INTO_CAP REAL, -- 债务转为资本
+        CONV_COPBONDS_DUE_WITHIN_1Y REAL, -- 一年内到期的可转换公司债券
+        FA_FNC_LEASES REAL, -- 融资租入固定资产
+        IM_N_INCR_CASH_EQU REAL, -- 现金及现金等价物净增加额(间接法)
+        NET_DISM_CAPITAL_ADD REAL, -- 拆出资金净增加额
+        NET_CASH_RECE_SEC REAL, -- 代理买卖证券收到的现金净额(元)
+        CREDIT_IMPA_LOSS REAL, -- 信用减值损失
+        USE_RIGHT_ASSET_DEP REAL, -- 使用权资产折旧
+        OTH_LOSS_ASSET REAL, -- 其他资产减值损失
+        END_BAL_CASH REAL, -- 现金的期末余额
+        BEG_BAL_CASH REAL, -- 减:现金的期初余额
+        END_BAL_CASH_EQU REAL, -- 加:现金等价物的期末余额
+        BEG_BAL_CASH_EQU REAL, -- 减:现金等价物的期初余额
+        PRIMARY KEY (TS_CODE, END_DATE, REPORT_TYPE)
+    );
     '''
-
-
+    
 
 }
 
@@ -261,7 +523,9 @@ TABLES_NEED_FILL = [
     'QUOTATIONS_MONTHLY',
     'LIMITS_STATISTIC',
     'ADJ_FACTORS',
-    'INCOME_STATEMENTS'
+    'INCOME_STATEMENTS',
+    'BALANCE_SHEETS',
+    'STATEMENTS_OF_CASH_FLOWS'
 ]
 
 TABLES_NEED_UPDATE = [
@@ -270,5 +534,7 @@ TABLES_NEED_UPDATE = [
     'QUOTATIONS_MONTHLY',
     'LIMITS_STATISTIC',
     'ADJ_FACTORS',
-    'INCOME_STATEMENTS'
+    'INCOME_STATEMENTS',
+    'BALANCE_SHEETS',
+    'STATEMENTS_OF_CASH_FLOWS'
 ]
