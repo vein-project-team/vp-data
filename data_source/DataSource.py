@@ -43,3 +43,14 @@ class DataSource(ABC):
     def get_adj_factors(self, *args) -> DataFrame:
         return DataFrame()
 
+    @abstractmethod
+    def get_income_statements(self, *args) -> DataFrame:
+        return DataFrame()
+
+    @abstractmethod
+    def get_balance_sheets(self, *args) -> DataFrame:
+        return DataFrame()
+
+    @abstractmethod
+    def get_cash_flows(self, *args) -> DataFrame:
+        return DataFrame()

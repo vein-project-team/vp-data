@@ -51,5 +51,10 @@ DATA_SOURCE = {
         'checker': light_checker,
         'getter': tushare_source.get_adj_factors,
         'args': []
+    },
+    "INCOME_STATEMENTS": {
+        'checker': light_checker,
+        'getter': tushare_source.get_income_statements,
+        'args': []
     }
 }
