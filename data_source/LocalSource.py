@@ -41,11 +41,11 @@ class LocalSource(DataSource):
     def get_adj_factors(self, cols='*', condition='1'):
         return self.get('ADJ_FACTORS', cols, condition)
 
-    def get_income_statements(self, *args):
-        return super().get_income_statements(*args)
+    def get_income_statements(self, cols='*', condition='1'):
+        return self.get('INCOME_STATEMENTS', cols, condition)
 
-    def get_balance_sheets(self, *args):
-        return super().get_balance_sheets(*args)
+    def get_balance_sheets(self, cols='*', condition='1'):
+        return super().get_balance_sheets()
 
-    def get_cash_flows(self, *args):
-        return super().get_cash_flows(*args)
+    def get_cash_flows(self, cols='*', condition='1'):
+        return super().get_cash_flows()
