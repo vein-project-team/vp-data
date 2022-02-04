@@ -510,6 +510,194 @@ CREATION_SQL = {
         BEG_BAL_CASH_EQU REAL, -- 减:现金等价物的期初余额
         PRIMARY KEY (TS_CODE, END_DATE, REPORT_TYPE)
     );
+    ''',
+    'INCOME_FORECASTS':'''
+    CREATE TABLE IF NOT EXISTS INCOME_FORECASTS (
+        TS_CODE CHAR(9) NOT NULL, -- 股票代码
+        ANN_DATE CHAR(8), -- 公告日期
+        END_DATE CHAR(8) NOT NULL, -- 报告期结束日期
+        TYPE CHAR(4), -- 报告类型
+        P_CHANGE_MIN REAL, -- 预告净利润变动幅度下限（%）
+        P_CHANGE_MAX REAL, -- 预告净利润变动幅度上限（%）
+        NET_PROFIT_MIN REAL, -- 预告净利润下限（万元）
+        NET_PROFIT_MAX REAL, -- 预告净利润上限（万元）
+        LAST_PARENT_NET REAL, -- 上年同期归属母公司净利润
+        FIRST_ANN_DATE CHAR(8), -- 首次公告日
+        SUMMARY TEXT, -- 业绩预告摘要
+        CHANGE_REASON TEXT, -- 业绩变动原因
+        PRIMARY KEY (TS_CODE, END_DATE)
+    );
+    ''',
+    'FINANCIAL_INDICATORS':'''
+    CREATE TABLE IF NOT EXISTS FINANCIAL_INDICATORS (    
+        TS_CODE CHAR(9) NOT NULL, -- 股票代码
+        ANN_DATE CHAR(8), -- 公告日期
+        END_DATE CHAR(8) NOT NULL, -- 报告期结束日期
+        EPS REAL, -- 基本每股收益
+        DT_EPS REAL, -- 稀释每股收益
+        TOTAL_REVENUE_PS REAL, -- 每股营业总收入
+        REVENUE_PS REAL, -- 每股营业收入
+        CAPITAL_RESE_PS REAL, -- 每股资本公积
+        SURPLUS_RESE_PS REAL, -- 每股盈余公积
+        UNDIST_PROFIT_PS REAL, -- 每股未分配利润
+        EXTRA_ITEM REAL, -- 非经常性损益
+        PROFIT_DEDT REAL, -- 扣除非经常性损益后的净利润（扣非净利润）
+        GROSS_MARGIN REAL, -- 毛利
+        CURRENT_RATIO REAL, -- 流动比率
+        QUICK_RATIO REAL, -- 速动比率
+        CASH_RATIO REAL, -- 保守速动比率
+        INVTURN_DAYS REAL, -- 存货周转天数
+        ARTURN_DAYS REAL, -- 应收账款周转天数
+        INV_TURN REAL, -- 存货周转率
+        AR_TURN REAL, -- 应收账款周转率
+        CA_TURN REAL, -- 流动资产周转率
+        FA_TURN REAL, -- 固定资产周转率
+        ASSETS_TURN REAL, -- 总资产周转率
+        OP_INCOME REAL, -- 经营活动净收益
+        VALUECHANGE_INCOME REAL, -- 价值变动净收益
+        INTERST_INCOME REAL, -- 利息费用
+        DAA REAL, -- 折旧与摊销
+        EBIT REAL, -- 息税前利润
+        EBITDA REAL, -- 息税折旧摊销前利润
+        FCFF REAL, -- 企业自由现金流量
+        FCFE REAL, -- 股权自由现金流量
+        CURRENT_EXINT REAL, -- 无息流动负债
+        NONCURRENT_EXINT REAL, -- 无息非流动负债
+        INTERESTDEBT REAL, -- 带息债务
+        NETDEBT REAL, -- 净债务
+        TANGIBLE_ASSET REAL, -- 有形资产
+        WORKING_CAPITAL REAL, -- 营运资金
+        NETWORKING_CAPITAL REAL, -- 营运流动资本
+        INVEST_CAPITAL REAL, -- 全部投入资本
+        RETAINED_EARNINGS REAL, -- 留存收益
+        DILUTED2_EPS REAL, -- 期末摊薄每股收益
+        BPS REAL, -- 每股净资产
+        OCFPS REAL, -- 每股经营活动产生的现金流量净额
+        RETAINEDPS REAL, -- 每股留存收益
+        CFPS REAL, -- 每股现金流量净额
+        EBIT_PS REAL, -- 每股息税前利润
+        FCFF_PS REAL, -- 每股企业自由现金流量
+        FCFE_PS REAL, -- 每股股东自由现金流量
+        NETPROFIT_MARGIN REAL, -- 销售净利率
+        GROSSPROFIT_MARGIN REAL, -- 销售毛利率
+        COGS_OF_SALES REAL, -- 销售成本率
+        EXPENSE_OF_SALES REAL, -- 销售期间费用率
+        PROFIT_TO_GR REAL, -- 净利润/营业总收入
+        SALEEXP_TO_GR REAL, -- 销售费用/营业总收入
+        ADMINEXP_OF_GR REAL, -- 管理费用/营业总收入
+        FINAEXP_OF_GR REAL, -- 财务费用/营业总收入
+        IMPAI_TTM REAL, -- 资产减值损失/营业总收入
+        GC_OF_GR REAL, -- 营业总成本/营业总收入
+        OP_OF_GR REAL, -- 营业利润/营业总收入
+        EBIT_OF_GR REAL, -- 息税前利润/营业总收入
+        ROE REAL, -- 净资产收益率
+        ROE_WAA REAL, -- 加权平均净资产收益率
+        ROE_DT REAL, -- 净资产收益率(扣除非经常损益)
+        ROA REAL, -- 总资产报酬率
+        NPTA REAL, -- 总资产净利润
+        ROIC REAL, -- 投入资本回报率
+        ROE_YEARLY REAL, -- 年化净资产收益率
+        ROA2_YEARLY REAL, -- 年化总资产报酬率
+        ROE_AVG REAL, -- 平均净资产收益率(增发条件)
+        OPINCOME_OF_EBT REAL, -- 经营活动净收益/利润总额
+        INVESTINCOME_OF_EBT REAL, -- 价值变动净收益/利润总额
+        N_OP_PROFIT_OF_EBT REAL, -- 营业外收支净额/利润总额
+        TAX_TO_EBT REAL, -- 所得税/利润总额
+        DTPROFIT_TO_PROFIT REAL, -- 扣除非经常损益后的净利润/净利润
+        SALESCASH_TO_OR REAL, -- 销售商品提供劳务收到的现金/营业收入
+        OCF_TO_OR REAL, -- 经营活动产生的现金流量净额/营业收入
+        OCF_TO_OPINCOME REAL, -- 经营活动产生的现金流量净额/经营活动净收益
+        CAPITALIZED_TO_DA REAL, -- 资本支出/折旧和摊销
+        DEBT_TO_ASSETS REAL, -- 资产负债率
+        ASSETS_TO_EQT REAL, -- 权益乘数
+        DP_ASSETS_TO_EQT REAL, -- 权益乘数(杜邦分析)
+        CA_TO_ASSETS REAL, -- 流动资产/总资产
+        NCA_TO_ASSETS REAL, -- 非流动资产/总资产
+        TBASSETS_TO_TOTALASSETS REAL, -- 有形资产/总资产
+        INT_TO_TALCAP REAL, -- 带息债务/全部投入资本
+        EQT_TO_TALCAPITAL REAL, -- 归属于母公司的股东权益/全部投入资本
+        CURRENTDEBT_TO_DEBT REAL, -- 流动负债/负债合计
+        LONGDEB_TO_DEBT REAL, -- 非流动负债/负债合计
+        OCF_TO_SHORTDEBT REAL, -- 经营活动产生的现金流量净额/流动负债
+        DEBT_TO_EQT REAL, -- 产权比率
+        EQT_TO_DEBT REAL, -- 归属于母公司的股东权益/负债合计
+        EQT_TO_INTERESTDEBT REAL, -- 归属于母公司的股东权益/带息债务
+        TANGIBLEASSET_TO_DEBT REAL, -- 有形资产/负债合计
+        TANGASSET_TO_INTDEBT REAL, -- 有形资产/带息债务
+        TANGIBLEASSET_TO_NETDEBT REAL, -- 有形资产/净债务
+        OCF_TO_DEBT REAL, -- 经营活动产生的现金流量净额/负债合计
+        OCF_TO_INTERESTDEBT REAL, -- 经营活动产生的现金流量净额/带息债务
+        OCF_TO_NETDEBT REAL, -- 经营活动产生的现金流量净额/净债务
+        EBIT_TO_INTEREST REAL, -- 已获利息倍数(EBIT/利息费用)
+        LONGDEBT_TO_WORKINGCAPITAL REAL, -- 长期债务与营运资金比率
+        EBITDA_TO_DEBT REAL, -- 息税折旧摊销前利润/负债合计
+        TURN_DAYS REAL, -- 营业周期
+        ROA_YEARLY REAL, -- 年化总资产净利率
+        ROA_DP REAL, -- 总资产净利率(杜邦分析)
+        FIXED_ASSETS REAL, -- 固定资产合计
+        PROFIT_PREFIN_EXP REAL, -- 扣除财务费用前营业利润
+        NON_OP_PROFIT REAL, -- 非营业利润
+        OP_TO_EBT REAL, -- 营业利润／利润总额
+        NOP_TO_EBT REAL, -- 非营业利润／利润总额
+        OCF_TO_PROFIT REAL, -- 经营活动产生的现金流量净额／营业利润
+        CASH_TO_LIQDEBT REAL, -- 货币资金／流动负债
+        CASH_TO_LIQDEBT_WITHINTEREST REAL, -- 货币资金／带息流动负债
+        OP_TO_LIQDEBT REAL, -- 营业利润／流动负债
+        OP_TO_DEBT REAL, -- 营业利润／负债合计
+        ROIC_YEARLY REAL, -- 年化投入资本回报率
+        TOTAL_FA_TRUN REAL, -- 固定资产合计周转率
+        PROFIT_TO_OP REAL, -- 利润总额／营业收入
+        Q_OPINCOME REAL, -- 经营活动单季度净收益
+        Q_INVESTINCOME REAL, -- 价值变动单季度净收益
+        Q_DTPROFIT REAL, -- 扣除非经常损益后的单季度净利润
+        Q_EPS REAL, -- 每股收益(单季度)
+        Q_NETPROFIT_MARGIN REAL, -- 销售净利率(单季度)
+        Q_GSPROFIT_MARGIN REAL, -- 销售毛利率(单季度)
+        Q_EXP_TO_SALES REAL, -- 销售期间费用率(单季度)
+        Q_PROFIT_TO_GR REAL, -- 净利润／营业总收入(单季度)
+        Q_SALEEXP_TO_GR REAL, -- 销售费用／营业总收入 (单季度)
+        Q_ADMINEXP_TO_GR REAL, -- 管理费用／营业总收入 (单季度)
+        Q_FINAEXP_TO_GR REAL, -- 财务费用／营业总收入 (单季度)
+        Q_IMPAIR_TO_GR_TTM REAL, -- 资产减值损失／营业总收入(单季度)
+        Q_GC_TO_GR REAL, -- 营业总成本／营业总收入 (单季度)
+        Q_OP_TO_GR REAL, -- 营业利润／营业总收入(单季度)
+        Q_ROE REAL, -- 净资产收益率(单季度)
+        Q_DT_ROE REAL, -- 净资产单季度收益率(扣除非经常损益)
+        Q_NPTA REAL, -- 总资产净利润(单季度)
+        Q_OPINCOME_TO_EBT REAL, -- 经营活动净收益／利润总额(单季度)
+        Q_INVESTINCOME_TO_EBT REAL, -- 价值变动净收益／利润总额(单季度)
+        Q_DTPROFIT_TO_PROFIT REAL, -- 扣除非经常损益后的净利润／净利润(单季度)
+        Q_SALESCASH_TO_OR REAL, -- 销售商品提供劳务收到的现金／营业收入(单季度)
+        Q_OCF_TO_SALES REAL, -- 经营活动产生的现金流量净额／营业收入(单季度)
+        Q_OCF_TO_OR REAL, -- 经营活动产生的现金流量净额／经营活动净收益(单季度)
+        BASIC_EPS_YOY REAL, -- 基本每股收益同比增长率(%)
+        DT_EPS_YOY REAL, -- 稀释每股收益同比增长率(%)
+        CFPS_YOY REAL, -- 每股经营活动产生的现金流量净额同比增长率(%)
+        OP_YOY REAL, -- 营业利润同比增长率(%)
+        EBT_YOY REAL, -- 利润总额同比增长率(%)
+        NETPROFIT_YOY REAL, -- 归属母公司股东的净利润同比增长率(%)
+        DT_NETPROFIT_YOY REAL, -- 归属母公司股东的净利润-扣除非经常损益同比增长率(%)
+        OCF_YOY REAL, -- 经营活动产生的现金流量净额同比增长率(%)
+        ROE_YOY REAL, -- 净资产收益率(摊薄)同比增长率(%)
+        BPS_YOY REAL, -- 每股净资产相对年初增长率(%)
+        ASSETS_YOY REAL, -- 资产总计相对年初增长率(%)
+        EQT_YOY REAL, -- 归属母公司的股东权益相对年初增长率(%)
+        TR_YOY REAL, -- 营业总收入同比增长率(%)
+        OR_YOY REAL, -- 营业收入同比增长率(%)
+        Q_GR_YOY REAL, -- 营业总收入同比增长率(%)(单季度)
+        Q_GR_QOQ REAL, -- 营业总收入环比增长率(%)(单季度)
+        Q_SALES_YOY REAL, -- 营业收入同比增长率(%)(单季度)
+        Q_SALES_QOQ REAL, -- 营业收入环比增长率(%)(单季度)
+        Q_OP_YOY REAL, -- 营业利润同比增长率(%)(单季度)
+        Q_OP_QOQ REAL, -- 营业利润环比增长率(%)(单季度)
+        Q_PROFIT_YOY REAL, -- 净利润同比增长率(%)(单季度)
+        Q_PROFIT_QOQ REAL, -- 净利润环比增长率(%)(单季度)
+        Q_NETPROFIT_YOY REAL, -- 归属母公司股东的净利润同比增长率(%)(单季度)
+        Q_NETPROFIT_QOQ REAL, -- 归属母公司股东的净利润环比增长率(%)(单季度)
+        EQUITY_YOY REAL, -- 净资产同比增长率
+        RD_EXP REAL, -- 研发费用
+        PRIMARY KEY (TS_CODE, END_DATE)
+    );
     '''
     
 
@@ -528,7 +716,9 @@ TABLES_NEED_FILL = [
     'ADJ_FACTORS',
     'INCOME_STATEMENTS',
     'BALANCE_SHEETS',
-    'STATEMENTS_OF_CASH_FLOWS'
+    'STATEMENTS_OF_CASH_FLOWS',
+    'INCOME_FORECASTS',
+    'FINANCIAL_INDICATORS'
 ]
 
 TABLES_NEED_UPDATE = [
@@ -536,5 +726,5 @@ TABLES_NEED_UPDATE = [
     'QUOTATIONS_WEEKLY',
     'QUOTATIONS_MONTHLY',
     'LIMITS_STATISTIC',
-    'ADJ_FACTORS',
+    'ADJ_FACTORS'
 ]

@@ -66,6 +66,16 @@ DATA_SOURCE = {
         'checker': light_checker,
         'getter': tushare_source.get_cash_flows,
         'args': []
+    },
+    "INCOME_FORECASTS": {
+        'checker': light_checker,
+        'getter': tushare_source.get_income_forecasts,
+        'args': []
+    },
+    "FINANCIAL_INDICATORS": {
+        'checker': light_checker,
+        'getter': tushare_source.get_financial_indicators,
+        'args': []
     }
     
 }
