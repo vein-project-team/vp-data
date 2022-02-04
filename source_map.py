@@ -56,5 +56,16 @@ DATA_SOURCE = {
         'checker': light_checker,
         'getter': tushare_source.get_income_statements,
         'args': []
+    },
+    "BALANCE_SHEETS": {
+        'checker': light_checker,
+        'getter': tushare_source.get_balance_sheets,
+        'args': []
+    },
+    "STATEMENTS_OF_CASH_FLOWS": {
+        'checker': light_checker,
+        'getter': tushare_source.get_cash_flows,
+        'args': []
     }
+    
 }
