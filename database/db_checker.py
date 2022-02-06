@@ -1,19 +1,8 @@
-from pandas.io.sql import DatabaseError
 from database.db_reader import read_from_db, check_table_exist, check_table_not_empty
+from data_source import date_getter
 
 def get_standard_latest_trade_date(frequency='daily'):
-    if frequency == 'daily':
-        return read_from_db(
-            'SELECT TRADE_DATE FROM INDICES_DAILY ORDER BY TRADE_DATE DESC LIMIT 1;'
-        )['TRADE_DATE'][0]
-    elif frequency == 'weekly':
-        return read_from_db(
-            'SELECT TRADE_dATE FROM INDICES_WEEKLY ORDER BY TRADE_DATE DESC  LIMIT 1;'
-        )['TRADE_DATE'][0]
-    elif frequency == 'monthly':
-        return read_from_db(
-            'SELECT TRADE_DATE FROM INDICES_MONTHLY ORDER BY TRADE_DATE DESC  LIMIT 1;'
-        )['TRADE_DATE'][0]
+    return date_getter.get_trade_date_before(frequency=frequency.upper())
 
 
 def get_latest_trade_date_from_table(table_name, column_name='TRADE_DATE'):
