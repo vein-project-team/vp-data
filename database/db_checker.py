@@ -1,6 +1,5 @@
 from pandas.io.sql import DatabaseError
-from database.db_reader import read_from_db
-
+from database.db_reader import read_from_db, check_table_exist, check_table_not_empty
 
 def get_standard_latest_trade_date(frequency='daily'):
     if frequency == 'daily':
@@ -38,24 +37,33 @@ def light_checker(table_name):
     :param table_name: 表名
     :return: 一个包含状态信息的report json
     """
-    try:
-        data = read_from_db(
-            f'''SELECT COUNT(*) AS RECORDS FROM {table_name};''')
-        passed = data['RECORDS'][0] > 0
-        return {
-            'type': '轻检测',
-            'need_fill': passed,
-            'fill_controller': {}
-        }
-    except DatabaseError:
+    if not check_table_exist(table_name):
         return {
             'type': '轻检测',
             'need_fill': False,
             'fill_controller': {}
         }
+    if check_table_not_empty(table_name):
+        return {
+            'type': '轻检测',
+            'need_fill': False,
+            'fill_controller': {}
+        }
+    else:
+        return {
+            'type': '轻检测',
+            'need_fill': True,
+            'fill_controller': {}
+        }
 
 
 def date_checker(table_name, frequency='daily', column_name='TRADE_DATE'):
+    if not check_table_not_empty(table_name):
+        return {
+            'type': '日期检测',
+            'need_fill': True,
+            'fill_controller': {}
+        }
     table_latest_date = get_latest_trade_date_from_table(table_name, column_name)
     standard_latest_date = get_standard_latest_trade_date(frequency)
     passed = table_latest_date == standard_latest_date

@@ -6,17 +6,6 @@ from database.db_reader import read_from_db
 class DateGetter:
 
     def __init__(self):
-        self.start_date = ''
-        self.today = ''
-        self.latest_finished_trade_date = ''
-        self.trade_date_list_daily = None
-        self.trade_date_list_weekly = None
-        self.trade_date_list_monthly = None
-
-    def refresh(self):
-        """
-        更新当前实例的数据
-        """
         self.start_date = '20100101'
         self.today = self.get_today()
         self.latest_finished_trade_date = read_from_db(
@@ -25,6 +14,12 @@ class DateGetter:
         self.trade_date_list_daily = read_from_db('SELECT TRADE_DATE FROM INDICES_DAILY;')
         self.trade_date_list_weekly = read_from_db('SELECT TRADE_DATE FROM INDICES_WEEKLY;')
         self.trade_date_list_monthly = read_from_db('SELECT TRADE_DATE FROM INDICES_MONTHLY;')
+
+    def refresh(self):
+        """
+        更新当前实例的数据
+        """
+        self.__init__()
 
     @staticmethod
     def get_today():
@@ -95,7 +90,7 @@ class DateGetter:
         trade_date_list = self.get_trade_date_between(start_date, end_date, frequency)
         return len(trade_date_list)
 
-    def get_trade_date_before(self, days, date='last', frequency='DAILY'):
+    def get_trade_date_before(self, days=1, date='last', frequency='DAILY'):
         """
         获取某日期n天前的交易日日期
         :param frequency:
@@ -108,7 +103,7 @@ class DateGetter:
             end_date = self.latest_finished_trade_date
         trade_date_list = self.get_trade_date_between(self.start_date, end_date, frequency)
         length = len(trade_date_list)
-        start_date = trade_date_list["trade_date"][length-days]
+        start_date = trade_date_list["TRADE_DATE"][length-days]
         return start_date
 
     def get_trade_date_list_forward(self, size, frequency='DAILY'):

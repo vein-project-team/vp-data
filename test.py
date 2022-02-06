@@ -1,7 +1,5 @@
-from data_source import tushare_source
+from database.db_reader import check_table_not_empty
 
 if __name__ == '__main__':
-    tushare_source.get_stock_list()
-    data_test=tushare_source.get_financial_indicators()
-    print(data_test)
-    
+    print(not check_table_not_empty('INDICES_DAILY'))
+    print(not check_table_not_empty('QUOTATIONS_DAILY'))
