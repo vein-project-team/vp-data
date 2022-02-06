@@ -96,21 +96,21 @@ class TushareSource(DataSource):
     def _trim_date_list(date_list, start_date):
         return date_list[date_list > start_date]
 
-    def get_index_list(self):
-        table_name = 'INDEX_LIST'
-        fields = self._get_fields(table_name)
-        data = self._change_order(table_name, pd.concat([
-            self.query('index_basic', market='SSE', fields=fields),
-            self.query('index_basic', market='SZSE', fields=fields),
-            self.query('index_basic', market='MSCI', fields=fields),
-            self.query('index_basic', market='CSI', fields=fields),
-            self.query('index_basic', market='CICC', fields=fields),
-            self.query('index_basic', market='SW', fields=fields),
-            self.query('index_basic', market='OTH', fields=fields)
-        ], axis=0).reset_index(drop=True).fillna('NULL'))
-        return self.convert_header(table_name, data)
+    # def get_index_list(self):
+    #     table_name = 'INDEX_LIST'
+    #     fields = self._get_fields(table_name)
+    #     data = self._change_order(table_name, pd.concat([
+    #         self.query('index_basic', market='SSE', fields=fields),
+    #         self.query('index_basic', market='SZSE', fields=fields),
+    #         self.query('index_basic', market='MSCI', fields=fields),
+    #         self.query('index_basic', market='CSI', fields=fields),
+    #         self.query('index_basic', market='CICC', fields=fields),
+    #         self.query('index_basic', market='SW', fields=fields),
+    #         self.query('index_basic', market='OTH', fields=fields)
+    #     ], axis=0).reset_index(drop=True).fillna('NULL'))
+    #     return self.convert_header(table_name, data)
 
-    def get_stock_list(self):
+    def get_stock_list(self, fill_controller):
         table_name = 'STOCK_LIST'
         fields = self._get_fields(table_name)
         data = self._change_order(table_name, pd.concat([
@@ -142,21 +142,21 @@ class TushareSource(DataSource):
         data = self.convert_header(table_name, data)
         return data
 
-    def get_indices_daily(self):
+    def get_indices_daily(self, fill_controller):
         return self._get_indices('INDICES_DAILY')
 
-    def get_indices_weekly(self):
+    def get_indices_weekly(self, fill_controller):
         return self._get_indices('INDICES_WEEKLY', 'weekly')
 
-    def get_indices_monthly(self):
+    def get_indices_monthly(self, fill_controller):
         return self._get_indices('INDICES_MONTHLY', 'monthly')
 
-    def _get_quotations(self, table_name, start_date='', frequency='daily'):
+    def _get_quotations(self, table_name, fill_controller, frequency='daily'):
         fields = self._get_fields(table_name)
         data = pd.DataFrame(columns=fields.split(','))
         trade_date_list = self.trade_date_list[frequency]
-        if start_date != '':
-            trade_date_list = self._trim_date_list(trade_date_list, start_date)
+        if len(fill_controller) > 0:
+            trade_date_list = self._trim_date_list(trade_date_list, fill_controller['latest_date'])
         if len(trade_date_list) == 0:
             return
         for trade_date in pb(trade_date_list, desc='长任务，请等待', colour='#ffffff'):
@@ -174,22 +174,22 @@ class TushareSource(DataSource):
         data = self.convert_header(table_name, data)
         return data
 
-    def get_quotations_daily(self, start_date=''):
-        return self._get_quotations('QUOTATIONS_DAILY', start_date)
+    def get_quotations_daily(self, fill_controller):
+        return self._get_quotations('QUOTATIONS_DAILY', fill_controller)
 
-    def get_quotations_weekly(self, start_date=''):
-        return self._get_quotations('QUOTATIONS_WEEKLY', start_date, 'weekly')
+    def get_quotations_weekly(self, fill_controller):
+        return self._get_quotations('QUOTATIONS_WEEKLY', fill_controller, 'weekly')
 
-    def get_quotations_monthly(self, start_date=''):
-        return self._get_quotations('QUOTATIONS_MONTHLY', start_date, 'monthly')
+    def get_quotations_monthly(self, fill_controller):
+        return self._get_quotations('QUOTATIONS_MONTHLY', fill_controller, 'monthly')
 
-    def get_limits_statistic(self, start_date=''):
+    def get_limits_statistic(self, fill_controller):
         table_name = 'LIMITS_STATISTIC'
         fields = self._get_fields(table_name)
         data = pd.DataFrame(columns=fields.split(','))
         trade_date_list = self.trade_date_list['daily']
-        if start_date != '':
-            trade_date_list = self._trim_date_list(trade_date_list, start_date)
+        if len(fill_controller) > 0:
+            trade_date_list = self._trim_date_list(trade_date_list, fill_controller['latest_date'])
         if len(trade_date_list) == 0:
             return
         for trade_date in pb(trade_date_list, desc='长任务，请等待', colour='#ffffff'):
@@ -207,13 +207,13 @@ class TushareSource(DataSource):
         data = self.convert_header(table_name, data)
         return data
 
-    def get_adj_factors(self, start_date=''):
+    def get_adj_factors(self, fill_controller):
         table_name = 'ADJ_FACTORS'
         fields = self._get_fields(table_name)
         data = pd.DataFrame(columns=fields.split(','))
         trade_date_list = self.trade_date_list['daily']
-        if start_date != '':
-            trade_date_list = self._trim_date_list(trade_date_list, start_date)
+        if len(fill_controller) > 0:
+            trade_date_list = self._trim_date_list(trade_date_list, fill_controller['latest_date'])
         if len(trade_date_list) == 0:
             return
         for trade_date in pb(trade_date_list, desc='长任务，请等待', colour='#ffffff'):
@@ -231,7 +231,7 @@ class TushareSource(DataSource):
         data = self.convert_header(table_name, data)
         return data
 
-    def get_income_statements(self):
+    def get_income_statements(self, fill_controller):
         table_name = 'INCOME_STATEMENTS'
         fields = self._get_fields(table_name)
         data = pd.DataFrame(columns=fields.split(','))
@@ -271,7 +271,7 @@ class TushareSource(DataSource):
             data = pd.concat([data, next_data], axis=0)
         return data
 
-    def get_balance_sheets(self, *args):
+    def get_balance_sheets(self, fill_controller):
         table_name = 'BALANCE_SHEETS'
         fields = self._get_fields(table_name)
         data = pd.DataFrame(columns=fields.split(','))
@@ -311,7 +311,7 @@ class TushareSource(DataSource):
             data = pd.concat([data, next_data], axis=0)
         return data
 
-    def get_cash_flows(self, *args):
+    def get_cash_flows(self, fill_controller):
         table_name = 'STATEMENTS_OF_CASH_FLOWS'
         fields = self._get_fields(table_name)
         data = pd.DataFrame(columns=fields.split(','))
@@ -351,7 +351,7 @@ class TushareSource(DataSource):
             data = pd.concat([data, next_data], axis=0)
         return data
 
-    def get_income_forecasts(self, *args):
+    def get_income_forecasts(self, fill_controller):
         table_name = 'INCOME_FORECASTS'
         fields = self._get_fields(table_name)
         data = pd.DataFrame(columns=fields.split(','))
@@ -367,7 +367,7 @@ class TushareSource(DataSource):
             data = pd.concat([data, next_data], axis=0)
         return data
 
-    def get_financial_indicators(self, *args):
+    def get_financial_indicators(self, fill_controller):
         table_name = 'FINANCIAL_INDICATORS'
         fields = self._get_fields(table_name)
         data = pd.DataFrame(columns=fields.split(','))

@@ -1,6 +1,6 @@
 DB_PATH = '.\\vein-project.db'
 TABLE_NAMES = [
-    'INDEX_LIST',
+    # 'INDEX_LIST',
     'STOCK_LIST',
     'INDICES_DAILY',
     'INDICES_WEEKLY',
@@ -18,24 +18,24 @@ TABLE_NAMES = [
 ]
 
 CREATION_SQL = {
-    'INDEX_LIST': '''
-    CREATE TABLE IF NOT EXISTS INDEX_LIST (
-        INDEX_CODE CHAR(9) PRIMARY KEY,
-        NAME TEXT,
-        FULLNAME TEXT,
-        MARKET CHAR(5),
-        PUBLISHER TEXT,
-        INDEX_TYPE TEXT, 
-        CATEGORY TEXT, 
-        BASE_DATE CHAR(8),
-        BASE_POINT REAL,
-        WEIGHT_RULE TEXT, 
-        DESCRIPTION TEXT,
-        LIST_DATE CHAR(8),
-        EXP_DATE CHAR(8)
+    # 'INDEX_LIST': '''
+    # CREATE TABLE IF NOT EXISTS INDEX_LIST (
+    #     INDEX_CODE CHAR(9) PRIMARY KEY,
+    #     NAME TEXT,
+    #     FULLNAME TEXT,
+    #     MARKET CHAR(5),
+    #     PUBLISHER TEXT,
+    #     INDEX_TYPE TEXT, 
+    #     CATEGORY TEXT, 
+    #     BASE_DATE CHAR(8),
+    #     BASE_POINT REAL,
+    #     WEIGHT_RULE TEXT, 
+    #     DESCRIPTION TEXT,
+    #     LIST_DATE CHAR(8),
+    #     EXP_DATE CHAR(8)
         
-    );
-    ''',
+    # );
+    # ''',
     'STOCK_LIST': '''
     CREATE TABLE IF NOT EXISTS STOCK_LIST (
         TS_CODE CHAR(9) PRIMARY KEY NOT NULL, -- 股票代码
@@ -706,7 +706,6 @@ CREATION_SQL = {
 }
 
 TABLES_NEED_FILL = [
-    'INDEX_LIST',
     'STOCK_LIST',
     'INDICES_DAILY',
     'INDICES_WEEKLY',
@@ -721,12 +720,4 @@ TABLES_NEED_FILL = [
     'STATEMENTS_OF_CASH_FLOWS',
     'INCOME_FORECASTS',
     'FINANCIAL_INDICATORS'
-]
-
-TABLES_NEED_UPDATE = [
-    'QUOTATIONS_DAILY',
-    'QUOTATIONS_WEEKLY',
-    'QUOTATIONS_MONTHLY',
-    'LIMITS_STATISTIC',
-    'ADJ_FACTORS'
 ]

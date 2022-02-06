@@ -3,4 +3,5 @@ vp-renderer
 .vscode
 update_report.json
 *.db
+*.rar
 *.csv

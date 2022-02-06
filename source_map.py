@@ -1,80 +1,75 @@
 from data_source import tushare_source
-from database.db_checker import no_checker, light_checker
+from database.db_checker import date_checker, manual_checker, no_checker, light_checker
 
 DATA_SOURCE = {
-    'INDEX_LIST': {
-        'checker': no_checker,
-        'getter': tushare_source.get_index_list,
-        'args': []
-    },
     'STOCK_LIST': {
-        'checker': no_checker,
         'getter': tushare_source.get_stock_list,
+        'checker': no_checker,
         'args': []
     },
     'INDICES_DAILY': {
-        'checker': no_checker,
         'getter': tushare_source.get_indices_daily,
+        'checker': no_checker,
         'args': []
     },
     'INDICES_WEEKLY': {
-        'checker': no_checker,
         'getter': tushare_source.get_indices_weekly,
+        'checker': no_checker,
         'args': []
     },
     'INDICES_MONTHLY': {
-        'checker': no_checker,
         'getter': tushare_source.get_indices_monthly,
+        'checker': no_checker,
         'args': []
     },
     'QUOTATIONS_DAILY': {
-        'checker': light_checker,
         'getter': tushare_source.get_quotations_daily,
+        'checker': date_checker,
         'args': []
     },
     'QUOTATIONS_WEEKLY': {
-        'checker': light_checker,
         'getter': tushare_source.get_quotations_weekly,
-        'args': []
+        'checker': date_checker,
+        'args': ['weekly']
     },
     'QUOTATIONS_MONTHLY': {
-        'checker': light_checker,
         'getter': tushare_source.get_quotations_monthly,
-        'args': []
+        'checker': date_checker,
+        'args': ['monthly']
     },
     'LIMITS_STATISTIC': {
-        'checker': light_checker,
         'getter': tushare_source.get_limits_statistic,
+        'checker': date_checker,
         'args': []
     },
     'ADJ_FACTORS': {
-        'checker': light_checker,
         'getter': tushare_source.get_adj_factors,
+        'checker': date_checker,
         'args': []
     },
     "INCOME_STATEMENTS": {
-        'checker': light_checker,
         'getter': tushare_source.get_income_statements,
+        'checker': manual_checker,
         'args': []
     },
     "BALANCE_SHEETS": {
-        'checker': light_checker,
         'getter': tushare_source.get_balance_sheets,
+        'checker': manual_checker,
         'args': []
     },
     "STATEMENTS_OF_CASH_FLOWS": {
-        'checker': light_checker,
         'getter': tushare_source.get_cash_flows,
+        'checker': manual_checker,
         'args': []
     },
     "INCOME_FORECASTS": {
-        'checker': light_checker,
         'getter': tushare_source.get_income_forecasts,
+        'checker': manual_checker,
         'args': []
     },
     "FINANCIAL_INDICATORS": {
-        'checker': light_checker,
         'getter': tushare_source.get_financial_indicators,
+        'checker': manual_checker,
         'args': []
     }
     

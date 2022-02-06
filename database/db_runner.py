@@ -4,7 +4,6 @@ import requests
 from settings import DB_PATH
 from database.db_builder import create_tables
 from database.db_writer import fill_tables
-from database.db_updater import db_updater
 from utils import log
 
 
@@ -33,25 +32,6 @@ def fill_database():
     log('数据库填充完成！')
 
 
-def update_database():
-    if not os.path.exists('vein-project.db'):
-        setup()
-    else:
-        log('数据库准备更新...')
-    while True:
-        try:
-            db_updater.update_database()
-            break
-        except ConnectionError:
-            log('与数据接口的链接出现问题，正在重连...')
-            continue
-        except requests.exceptions.ConnectionError:
-            log('与数据接口的链接出现问题，正在重连...')
-            continue
-    log('数据库更新完成！')
-
-
 def setup():
     build_database()
     fill_database()
-    update_database()

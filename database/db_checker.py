@@ -2,24 +2,32 @@ from pandas.io.sql import DatabaseError
 from database.db_reader import read_from_db
 
 
-def get_db_status():
-    return {
-        'latest_trade_date_daily': read_from_db(
-            'SELECT TRADE_DATE FROM QUOTATIONS_DAILY ORDER BY TRADE_DATE DESC LIMIT 1;'
-        )['TRADE_DATE'][0],
-        'latest_trade_date_weekly': read_from_db(
-            'SELECT TRADE_dATE FROM QUOTATIONS_WEEKLY ORDER BY TRADE_DATE DESC  LIMIT 1;'
-        )['TRADE_DATE'][0],
-        'latest_trade_date_monthly': read_from_db(
-            'SELECT TRADE_DATE FROM QUOTATIONS_MONTHLY ORDER BY TRADE_DATE DESC  LIMIT 1;'
+def get_standard_latest_trade_date(frequency='daily'):
+    if frequency == 'daily':
+        return read_from_db(
+            'SELECT TRADE_DATE FROM INDICES_DAILY ORDER BY TRADE_DATE DESC LIMIT 1;'
         )['TRADE_DATE'][0]
-    }
+    elif frequency == 'weekly':
+        return read_from_db(
+            'SELECT TRADE_dATE FROM INDICES_WEEKLY ORDER BY TRADE_DATE DESC  LIMIT 1;'
+        )['TRADE_DATE'][0]
+    elif frequency == 'monthly':
+        return read_from_db(
+            'SELECT TRADE_DATE FROM INDICES_MONTHLY ORDER BY TRADE_DATE DESC  LIMIT 1;'
+        )['TRADE_DATE'][0]
+
+
+def get_latest_trade_date_from_table(table_name, column_name='TRADE_DATE'):
+    return read_from_db(
+        f'''SELECT {column_name} FROM {table_name} ORDER BY {column_name} DESC LIMIT 1;'''
+    )[column_name][0]
 
 
 def no_checker(table_name):
     return {
         'type': '无检测',
-        'pass': False
+        'need_fill': True,
+        'fill_controller': {}
     }
 
 
@@ -31,19 +39,62 @@ def light_checker(table_name):
     :return: 一个包含状态信息的report json
     """
     try:
-        data = read_from_db(f'''SELECT COUNT(*) AS RECORDS FROM {table_name};''')
-        flag = data['RECORDS'][0] > 0
+        data = read_from_db(
+            f'''SELECT COUNT(*) AS RECORDS FROM {table_name};''')
+        passed = data['RECORDS'][0] > 0
         return {
             'type': '轻检测',
-            'pass': flag,
-            'records': data['RECORDS'][0]
+            'need_fill': passed,
+            'fill_controller': {}
         }
     except DatabaseError:
         return {
             'type': '轻检测',
-            'pass': False,
-            'records': 'unknown'
+            'need_fill': False,
+            'fill_controller': {}
         }
 
 
+def date_checker(table_name, frequency='daily', column_name='TRADE_DATE'):
+    table_latest_date = get_latest_trade_date_from_table(table_name, column_name)
+    standard_latest_date = get_standard_latest_trade_date(frequency)
+    passed = table_latest_date == standard_latest_date
+    if passed == True:
+        return {
+            'type': '日期检测',
+            'need_fill': False,
+            'fill_controller': {
+                'latest_date': table_latest_date
+            }
+        }
+    else: 
+        return {
+            'type': '日期检测',
+            'need_fill': True,
+            'fill_controller': {
+                'latest_date': table_latest_date
+            }
+        }
 
+
+def manual_checker(table_name):
+    while True:
+        print(f'是否要更新表 {table_name} ? (y/n)', end=': ')
+        user_resp = input().lower()
+        if user_resp == 'y':
+            print(f'请输入一个早于上次更新时间的日期 (yyyymmdd)', end=': ')
+            latest_date = input()
+            return {
+                'type': '手动检测',
+                'need_fill': True,
+                'fill_controller': {
+                    'latest_date': latest_date
+                }
+            }
+        elif user_resp == 'n':
+            return {
+                'type': '手动检测',
+                'need_fill': False,
+                'fill_controller': {}
+            }
+        else: pass

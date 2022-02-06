@@ -19,35 +19,35 @@ def write_to_db(table_name, dataframe):
 
 class DataGetter:
 
-    def __init__(self, getter, args):
+    def __init__(self, getter, checker, args):
         self.getter = getter
+        self.checker = checker
         self.args = args
 
     def get(self):
-        return self.getter(*self.args)
+        report = self.checker(*self.args)
+        table_name = self.args[0]
+        if report['need_fill'] == False:
+            log(f"{report['type']}: 检查得出，表 {table_name} 无需填充。")
+            return None
+        else:
+            log(f'准备填充数据进表：{table_name}')
+            return self.getter(fill_controller=report['fill_controller'])
 
 
-def fill_table(table_name, data_getter, checker):
-    report = checker(table_name)
-    if report['pass']:
-        log(f"{report['type']}: 检查通过，表 {table_name} 的操作被跳过。")
-        return
-    else:
-        dataframe = data_getter.get()
+def fill_table(table_name):
+    checker = DATA_SOURCE[table_name]['checker']
+    getter = DATA_SOURCE[table_name]['getter']
+    args = [table_name, ]
+    args += DATA_SOURCE[table_name]['args']
+    dataframe = DataGetter(getter, checker, args).get()
+    if dataframe is not None:
         write_to_db(table_name, dataframe)
 
 
 def fill_tables():
     for table_name in TABLES_NEED_FILL:
-        log(f'准备填充数据进表：{table_name}')
-        checker = DATA_SOURCE[table_name]['checker']
-        getter = DATA_SOURCE[table_name]['getter']
-        args = DATA_SOURCE[table_name]['args']
-        fill_table(
-            table_name,
-            DataGetter(getter, args),
-            checker
-        )
+        fill_table(table_name)
 
 
 if __name__ == '__main__':

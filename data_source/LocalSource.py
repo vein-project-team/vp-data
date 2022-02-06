@@ -45,7 +45,7 @@ class LocalSource(DataSource):
         return self.get('INCOME_STATEMENTS', cols, condition)
 
     def get_balance_sheets(self, cols='*', condition='1'):
-        return super().get_balance_sheets()
+        return self.get('BALANCE_SHEETS', cols, condition)
 
     def get_cash_flows(self, cols='*', condition='1'):
-        return super().get_cash_flows()
+        return self.get('STATEMENTS_OF_CASH_FLOWS', cols, condition)
