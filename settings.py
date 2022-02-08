@@ -96,7 +96,7 @@ CREATION_SQL = {
         LOW REAL, -- 最低价
         HIGH REAL, -- 最高价
         PRE_CLOSE REAL, -- 昨收
-        CHANGE REAL, -- 涨跌额
+        CHANGE REAL, -- 涨跌（元）
         VOL REAL, -- 成交量
         AMOUNT REAL, -- 成交额
         PRIMARY KEY (TS_CODE, TRADE_DATE)
