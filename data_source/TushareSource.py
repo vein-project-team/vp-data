@@ -1,4 +1,5 @@
 from data_source import DataSource
+from data_source.tokens import TUSHARE_TOKEN
 import tushare as ts
 import pandas as pd
 from tqdm import tqdm as pb
@@ -8,8 +9,7 @@ class TushareSource(DataSource):
 
     def __init__(self):
         super().__init__()
-        ts.set_token(
-            "3f73ca482044f78edd9694a4e06a0edd9431c24cbac31a07f275d7cf")
+        ts.set_token(TUSHARE_TOKEN)
         self.query = ts.pro_api().query
         self.stock_list = pd.DataFrame()
         self.trade_date_list = {

@@ -1,9 +1,9 @@
-from data_source import local_source
+import analysis.daily_report_test as drt
 
 if __name__ == '__main__':
-    print(local_source.get_quotations_daily(
-        condition='TRADE_DATE = "20220208" AND TS_CODE = "603123.SH"'
-    ))
-    print(local_source.get_stock_list(
-        condition='TS_CODE = "603123.SH"'
-    ))
+    # data = drt.get_limit_up_period('20220208', 5, 3)
+
+    # for t in data: 
+    #     print(t)
+
+    print(drt.pct_chg_ranking('20220209', '1'))

@@ -5,3 +5,4 @@ update_report.json
 *.db
 *.rar
 *.csv
+/data_source/tokens.py
