@@ -10,10 +10,10 @@ def get_stock_type(stock):
     description = ''
     if stock[0:2] in ['00','30','20']:
         market = 'SZ'
-        if stock[0:3] in ['000','001']: 
+        if stock[0:3] in ['000','001','002','003']: 
             block = '主板'
-        if stock[0:3] == '002':
-            block = '中小板'
+        #if stock[0:3] in ['002','003']:
+            #block = '中小板'
         if stock[0:2] == '30':
             block = '创业板'
         if stock[0:2] == '20':
