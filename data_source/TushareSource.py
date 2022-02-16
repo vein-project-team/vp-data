@@ -45,6 +45,10 @@ class TushareSource(DataSource):
                 'raw': 'ts_code,trade_date,open,close,low,high,pre_close,change,vol,amount',
                 'ordered': ['ts_code', 'trade_date', 'open', 'close', 'low', 'high', 'pre_close', 'change', 'vol', 'amount']
             },
+            'QUOTATIONS_DAILY_PART2': {
+                'raw': 'ts_code,trade_date,total_share,float_share,free_share',
+                'ordered': ['ts_code','trade_date','total_share','float_share','free_share']
+            },
             'QUOTATIONS_WEEKLY': {
                 'raw': 'ts_code,trade_date,open,close,low,high,pre_close,change,vol,amount',
                 'ordered': ['ts_code', 'trade_date', 'open', 'close', 'low', 'high', 'pre_close', 'change', 'vol', 'amount']
@@ -175,7 +179,25 @@ class TushareSource(DataSource):
         return data
 
     def get_quotations_daily(self, fill_controller):
-        return self._get_quotations('QUOTATIONS_DAILY', fill_controller)
+        data0 = self._get_quotations('QUOTATIONS_DAILY', fill_controller)
+        print(data0)
+        table_name = 'QUOTATIONS_DAILY_PART2'
+        fields = self._get_fields(table_name)
+        data1 = pd.DataFrame(columns=fields.split(','))
+        for stock in pb(self.stock_list, desc='长任务，请等待', colour='#ffffff'):
+            next_data = None
+            while True:
+                try:
+                    next_data = self.query("daily_basic", ts_code=stock,fields=fields).reset_index(drop=True).fillna('NULL')
+                    break
+                except Exception:
+                    continue
+            data1 = pd.concat([data1, next_data], axis=0)      
+        data1 = self._change_order(table_name, data1)
+        data1 = self.convert_header(table_name, data1)
+        print(data1)    
+        data = pd.merge(data0,data1,on=['TS_CODE','TRADE_DATE'])      
+        return data
 
     def get_quotations_weekly(self, fill_controller):
         return self._get_quotations('QUOTATIONS_WEEKLY', fill_controller, 'weekly')
