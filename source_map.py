@@ -27,6 +27,11 @@ DATA_SOURCE = {
         'checker': date_checker,
         'args': []
     },
+    'STOCK_INDICATORS_DAILY': {
+        'getter': tushare_source.get_quotations_daily,
+        'checker': date_checker,
+        'args': []
+    },
     'QUOTATIONS_WEEKLY': {
         'getter': tushare_source.get_quotations_weekly,
         'checker': date_checker,
