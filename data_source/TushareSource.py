@@ -181,28 +181,49 @@ class TushareSource(DataSource):
     def get_quotations_daily(self, fill_controller):
         return self._get_quotations('QUOTATIONS_DAILY', fill_controller)
 
-    def get_stock_indicators_daily(self, fill_controller):
-        table_name = 'STOCK_INDICATORS_DAILY'
-        fields = self._get_fields(table_name)
-        data = pd.DataFrame(columns=fields.split(','))
-        for stock in pb(self.stock_list, desc='长任务，请等待', colour='#ffffff'):
-            next_data = None
-            while True:
-                try:
-                    next_data = self.query("daily_basic", ts_code=stock,fields=fields).reset_index(drop=True).fillna('NULL')
-                    break
-                except Exception:
-                    continue
-            data = pd.concat([data, next_data], axis=0)      
-        data = self._change_order(table_name, data)
-        data = self.convert_header(table_name, data)  
-        return data
-
     def get_quotations_weekly(self, fill_controller):
         return self._get_quotations('QUOTATIONS_WEEKLY', fill_controller, 'weekly')
 
     def get_quotations_monthly(self, fill_controller):
         return self._get_quotations('QUOTATIONS_MONTHLY', fill_controller, 'monthly')
+
+    def get_stock_indicators_daily(self, fill_controller):
+        table_name = 'STOCK_INDICATORS_DAILY'
+        fields = self._get_fields(table_name)
+        data = pd.DataFrame(columns=fields.split(','))
+
+        trade_date_list = self.trade_date_list['daily']
+        if len(fill_controller) > 0:
+            trade_date_list = self._trim_date_list(trade_date_list, fill_controller['latest_date'])
+
+            if len(trade_date_list) == 0:
+                return
+
+            for trade_date in pb(trade_date_list, desc='长任务，请等待', colour='#ffffff'):
+                next_data = None
+                while True:
+                    try:
+                        next_data = self.query("daily_basic", trade_date=trade_date, fields=fields)
+                        break
+                    except Exception:
+                        continue
+                data = pd.concat([data, next_data], axis=0)
+
+        else:    
+
+            for stock in pb(self.stock_list, desc='长任务，请等待', colour='#ffffff'):
+                next_data = None
+                while True:
+                    try:
+                        next_data = self.query("daily_basic", ts_code=stock,fields=fields).reset_index(drop=True).fillna('NULL')
+                        break
+                    except Exception:
+                        continue
+                data = pd.concat([data, next_data], axis=0)
+
+        data = self._change_order(table_name, data)
+        data = self.convert_header(table_name, data)  
+        return data
 
     def get_limits_statistic(self, fill_controller):
         table_name = 'LIMITS_STATISTIC'
