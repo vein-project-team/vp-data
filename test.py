@@ -1,9 +1,12 @@
-import analysis.daily_report_test as drt
+# 导入你要运行的分析程序
+from analysis.TestReportGener import TestReportGener
 
 if __name__ == '__main__':
-    # data = drt.get_limit_up_period('20220208', 5, 3)
 
-    # for t in data: 
-    #     print(t)
+    # 像这样运行，第一次会运行分析并写入硬盘
+    data = TestReportGener().gen()
+    # print(data)
 
-    print(drt.pct_chg_ranking('20220209', '1'))
+    # 第二次则不会分析，直接从硬盘读取
+    data_read_from_disk = TestReportGener().gen()
+    # print(data_read_from_disk)

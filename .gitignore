@@ -1,8 +1,8 @@
 __pycache__
-vp-renderer
 .vscode
 update_report.json
 *.db
 *.rar
 *.csv
+reports
 /data_source/tokens.py
