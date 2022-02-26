@@ -1,3 +1,4 @@
+from cgi import test
 from pandas import DataFrame
 from analysis.ReportGener import ReportGener
 from analysis.StockListGener import stock_list_gener
@@ -8,7 +9,7 @@ from data_source import date_getter
 
 class DailyReportGener(ReportGener):
 
-  folder_name = 'daily_reports'
+  folder_name = 'daily-reports'
   stock_list = DataFrame()
 
 
@@ -23,7 +24,7 @@ class DailyReportGener(ReportGener):
     if date != 'latest':
       trade_date = date
     filename = f'{trade_date}-up-down-rank'
-    if data := self.fetch(filename) is not None:
+    if (data := self.fetch(filename)) is not None:
       return data
     data = local_source.get_quotations_daily(
       cols='''
@@ -50,7 +51,26 @@ class DailyReportGener(ReportGener):
       return data
 
     quotation_data = self.gen_up_down_rank(date)
+    testing = quotation_data['PCT_CHANGE']
+    aggregation = []
+    for i in range(-10, 11, 1):
+      lb = i / 100
+      ub = (i + 1) / 100
+      count = len(quotation_data[(lb <= testing) & (testing < ub)])
+      aggregation.append(count)
 
+    data = DataFrame({
+      'range': [
+        '[-0.1, -0.09)', '[-0.09, -0.08)', '[-0.08, -0.07)', '[-0.07, -0.06)', '[-0.06, -0.05)',
+        '[-0.05, -0.04)', '[-0.04, -0.03)', '[-0.03, -0.02)', '[-0.02, -0.01)', '[-0.01, 0.00)',
+        '[0.00, 0.01)', '[0.01, 0.02)', '[0.02, 0.03)', '[0.03, -0.04)', '[0.04, 0.05)',
+        '[0.05, 0.06)', '[0.06, 0.07)', '[0.07, 0.08)', '[0.08, -0.09)', '[0.09, 0.1)', '[0.1, 0.11)'
+      ],
+      'count': aggregation
+    })
+
+    self.store(data, filename)
+    return data
 
 
 daily_report_gener = DailyReportGener()
