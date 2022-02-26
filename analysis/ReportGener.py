@@ -35,7 +35,7 @@ class ReportGener(ABC):
         log(f'文件 { store_path.as_posix() } 已存在，程序将不会覆盖它。')
         return
 
-    data.to_csv(store_path)
+    data.to_csv(store_path, index=False)
   
 
   def fetch(self, filename: str) -> DataFrame:
@@ -49,8 +49,3 @@ class ReportGener(ABC):
     else:
       log(f'文件 { store_path.as_posix() } 不存在')
       return
-
-
-  @abstractmethod
-  def gen(self) -> DataFrame:
-    return DataFrame()
