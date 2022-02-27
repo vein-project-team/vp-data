@@ -37,6 +37,11 @@ DATA_SOURCE = {
         'checker': date_checker,
         'args': ['monthly']
     },
+    'STOCK_INDICATORS_DAILY': {
+        'getter': tushare_source.get_stock_indicators_daily,
+        'checker': date_checker,
+        'args': []
+    },
     'LIMITS_STATISTIC': {
         'getter': tushare_source.get_limits_statistic,
         'checker': date_checker,
