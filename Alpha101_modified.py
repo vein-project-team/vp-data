@@ -273,22 +273,22 @@ def get_alpha(df):
         df['alpha101']=stock.alpha101()  
         return df
 
-def daily_panel_csv_initializer(csv_name):
-    if os.path.exists(csv_name)==False:
-        stock_list=local_source.get_stock_list(cols='TS_CODE,INDUSTRY')
-        date_list=local_source.get_indices_daily(cols='TRADE_DATE',condition='INDEX_CODE = "000001.SH"')
-        dataset=0
-        for date in date_list["TRADE_DATE"]:
-            stock_list[date]=stock_list["INDUSTRY"]
-        stock_list.drop("INDUSTRY",axis=1,inplace=True)
-        stock_list.set_index("TS_CODE", inplace=True)
-        dataset = pd.DataFrame(stock_list.stack())
-        dataset.reset_index(inplace=True)
-        dataset.columns=["TS_CODE","TRADE_DATE","INDUSTRY"]
-        dataset.to_csv(csv_name,encoding='utf-8-sig',index=False)
-    else:
-        dataset=pd.read_csv(csv_name)
-    return dataset
+# def daily_panel_csv_initializer(csv_name):
+#     if os.path.exists(csv_name)==False:
+#         stock_list=local_source.get_stock_list(cols='TS_CODE,INDUSTRY')
+#         date_list=local_source.get_indices_daily(cols='TRADE_DATE',condition='INDEX_CODE = "000001.SH"')
+#         dataset=0
+#         for date in date_list["TRADE_DATE"]:
+#             stock_list[date]=stock_list["INDUSTRY"]
+#         stock_list.drop("INDUSTRY",axis=1,inplace=True)
+#         stock_list.set_index("TS_CODE", inplace=True)
+#         dataset = pd.DataFrame(stock_list.stack())
+#         dataset.reset_index(inplace=True)
+#         dataset.columns=["TS_CODE","TRADE_DATE","INDUSTRY"]
+#         dataset.to_csv(csv_name,encoding='utf-8-sig',index=False)
+#     else:
+#         dataset=pd.read_csv(csv_name)
+#     return dataset
 
 
 
@@ -337,7 +337,7 @@ def Preparations_for_Alpha101_alpha048():
             except:
                 pass
             
-            if type(result_unindneutralized_industry)==int:
+            if result_unindneutralized_industry == 0:
                 result_unindneutralized_industry=result_unindneutralized_piece
             else:
                 result_unindneutralized_industry=pd.concat([result_unindneutralized_industry,result_unindneutralized_piece],axis=0)    

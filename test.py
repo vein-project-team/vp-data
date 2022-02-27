@@ -1,4 +1,4 @@
-from analysis.DailyReportGener import daily_report_gener
+from data_api.get_daily_report import get_daily_report
 
 if __name__ == '__main__':
-    data = daily_report_gener.get_down_limits_rank()
+    get_daily_report()
