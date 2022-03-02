@@ -75,7 +75,36 @@ class DailyReportGener(ReportGener):
     return data
 
 
-  def get_up_limits_rank(self, date='latest'):
+  def _gen_limits_rank(self, type, trade_date):
+    date_list = date_getter.get_trade_date_list_forward(100)['TRADE_DATE'].values
+    data = local_source.get_limits_statistic(
+      condition=f'TRADE_DATE = { trade_date } AND LIMIT_TYPE = "{ type }" ORDER BY FD_AMOUNT DESC'
+    )
+
+    t = data['TS_CODE'].isin(self.stock_list['TS_CODE'])
+    data = data[t].reset_index(drop=True)
+
+    lianbans = []
+    for stock in data['TS_CODE']:
+      days = 1
+      while True:
+        previous_trade_date = date_list[-days-1]
+        previous_bans = local_source.get_limits_statistic(
+          cols='TS_CODE',
+          condition=f'TRADE_DATE = { previous_trade_date } AND LIMIT_TYPE = "{ type }"'
+        )['TS_CODE'].values
+        if stock in previous_bans:
+          days += 1
+        else:
+          lianbans.append(days)
+          break
+    
+    data['LIANBAN'] = lianbans
+
+    return data
+
+
+  def gen_up_limits_rank(self, date='latest'):
     trade_date = date_getter.get_trade_date_before()
     if date != 'latest':
       trade_date = date
@@ -83,36 +112,13 @@ class DailyReportGener(ReportGener):
     if (data := self.fetch(filename)) is not None:
       return data
 
-    date_list = date_getter.get_trade_date_list_forward(100)['TRADE_DATE'].values
-    data = local_source.get_limits_statistic(
-      condition=f'TRADE_DATE = { trade_date } AND LIMIT_TYPE = "U" ORDER BY FD_AMOUNT DESC'
-    )
-
-    t = data['TS_CODE'].isin(self.stock_list['TS_CODE'])
-    data = data[t].reset_index(drop=True)
-
-    lianbans = []
-    for stock in data['TS_CODE']:
-      days = 1
-      while True:
-        previous_trade_date = date_list[-days-1]
-        previous_bans = local_source.get_limits_statistic(
-          cols='TS_CODE',
-          condition=f'TRADE_DATE = { previous_trade_date } AND LIMIT_TYPE = "U"'
-        )['TS_CODE'].values
-        if stock in previous_bans:
-          days += 1
-        else:
-          lianbans.append(days)
-          break
-    
-    data['LIANBAN'] = lianbans
+    data = self._gen_limits_rank('U', trade_date)
 
     self.store(data, filename)
     return data
 
 
-  def get_down_limits_rank(self, date='latest'):
+  def gen_down_limits_rank(self, date='latest'):
     trade_date = date_getter.get_trade_date_before()
     if date != 'latest':
       trade_date = date
@@ -120,30 +126,7 @@ class DailyReportGener(ReportGener):
     if (data := self.fetch(filename)) is not None:
       return data
 
-    date_list = date_getter.get_trade_date_list_forward(100)['TRADE_DATE'].values
-    data = local_source.get_limits_statistic(
-      condition=f'TRADE_DATE = { trade_date } AND LIMIT_TYPE = "D" ORDER BY FD_AMOUNT DESC'
-    )
-
-    t = data['TS_CODE'].isin(self.stock_list['TS_CODE'])
-    data = data[t].reset_index(drop=True)
-
-    lianbans = []
-    for stock in data['TS_CODE']:
-      days = 1
-      while True:
-        previous_trade_date = date_list[-days-1]
-        previous_bans = local_source.get_limits_statistic(
-          cols='TS_CODE',
-          condition=f'TRADE_DATE = { previous_trade_date } AND LIMIT_TYPE = "D"'
-        )['TS_CODE'].values
-        if stock in previous_bans:
-          days += 1
-        else:
-          lianbans.append(days)
-          break
-    
-    data['LIANBAN'] = lianbans
+    data = self._gen_limits_rank('D', trade_date)
 
     self.store(data, filename)
     return data
