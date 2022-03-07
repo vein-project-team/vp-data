@@ -6,7 +6,7 @@ from numpy import log
 from numpy import sign
 from scipy.stats import rankdata
 import scipy as sp
-
+import statsmodels.api as sm
 from data_source import local_source
 from tqdm import tqdm as pb
 
@@ -55,14 +55,14 @@ def ema(df, n, m): #exponential moving average
 
 def wma(df, n):
     """
-    Wrapper function to estimate SMA.
+    Wrapper function to estimate WMA.
     :param df: a pandas DataFrame.
     :return: wma_{t}=0.9*a_{t}+1.8*a_{t-1}+...+0.9*n*a_{t-n+1}
     """   
     weights = pd.Series(0.9*np.flipud(np.arange(1,n+1)))
     result = pd.Series(np.nan, index=df.index)
     for i in range(n-1,len(df)):
-        result.iloc[i]= sum(df[i-n+1:i+1]*weights)
+        result.iloc[i]= sum(df[i-n+1:i+1].reset_index(drop=True)*weights.reset_index(drop=True))
     return result
 
 def stddev(df, window=10):
@@ -2142,8 +2142,29 @@ class GTJAalphas(object):
     
     #Alpha30 WMA((REGRESI(CLOSE/DELAY(CLOSE)-1,MKT,SMB,HML，60))^2,20)
     def GTJAalpha030(self):
-        print("30号还没做！")
-        return 0
+        y = (self.close/delay(self.close)) -1
+        y.rename("y",inplace=True)
+        y = pd.concat([self.available_dates, y],axis=1)
+        MKT = self.benchmarkindexclose.pct_change()
+        MKT.rename("MKT", inplace=True)
+        MKT = pd.concat([self.available_dates,MKT],axis=1)
+        FFfactor_data=pd.read_csv("FFfactors_daily.csv")
+        FFfactor_data_needed = FFfactor_data[["TRADE_DATE","SMB","HML"]]        
+        dt = pd.merge(y, MKT, on=['TRADE_DATE'], how="left")
+        dt = pd.merge(dt, FFfactor_data_needed, on=['TRADE_DATE'], how="left")
+        dt["const"]=1
+        result = pd.Series(np.nan, index=dt.index)
+        for i in range(60-1,len(y)):
+            dt_piece = dt[i-60+1:i+1]
+            dt_piece= dt_piece.dropna()
+            y = dt_piece["y"]
+            x = dt_piece[["MKT","SMB","HML","const"]]
+            if len(y)!=0:
+                model = sm.OLS(y,x)
+                result.iloc[i] = model.fit().params.loc["const"]    
+        print((result)**2)
+        alpha = wma((result)**2,20)    
+        return alpha
     
     #Alpha31 (CLOSE-MEAN(CLOSE,12))/MEAN(CLOSE,12)*100
     def GTJAalpha031(self):
@@ -3475,7 +3496,7 @@ def get_GTJAalphas(ts_code="000001.SZ"):
 
 
 #alpha101_test=Alphas()
-#GTJAalpha_test=GTJAalphas()
+GTJAalpha_test=GTJAalphas()
 
 
 
