@@ -49,3 +49,12 @@ class LocalSource(DataSource):
 
     def get_cash_flows(self, cols='*', condition='1'):
         return self.get('STATEMENTS_OF_CASH_FLOWS', cols, condition)
+
+    def get_income_forecasts(self, cols='*', condition='1'):
+        return self.get('INCOME_FORECASTS', cols, condition)
+
+    def get_financial_indicators(self, cols='*', condition='1'):
+        return self.get('FINANCIAL_INDICATORS', cols, condition)
+
+    def get_stock_indicators_daily(self, cols='*', condition='1'):
+        return self.get('STOCK_INDICATORS_DAILY', cols, condition)
