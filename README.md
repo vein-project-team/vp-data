@@ -25,7 +25,7 @@ clone the repo and run
 pip install --upgrade -r .\\requirements.txt
 ```
 
-If use `Tushare` to fetch data, Add a token to `data_source/token.py`
+If use `Tushare` to fetch data, Add a token to `data_source/token.py`, you need to create that file yourself. 
 
 ```python
 TUSHARE_TOKEN = "XXXXXXXXXX"
