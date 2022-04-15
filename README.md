@@ -125,6 +125,6 @@ The output would be:
 26   20211108  688613.SH      57.51   52.94 -0.079464
 ```
 
-## Perform simple analysis
+## Perform complex analysis
 
 In most of situations, you can treat the complex analysis as the combination of several simple analysis, just create a py file and code the analysis you need. You are recommended to use the `ReportGener` class in `analysis` module as the template of your analysis file, it provide some basic functions such as `csv` file output helper. 
