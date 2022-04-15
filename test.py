@@ -1,14 +1,8 @@
-import re
+from data_source import local_source
 
-def filter_list(list: list, filter: list) -> list:
-    return [item for item in list if item not in filter]
-
-def filter_list_by_regex(list: list, filter: str) -> list:
-    return [item for item in list if re.search(filter, item) is None]
-
-if __name__ == '__main__':
-    list1 = ['Freddie', 'fucked', 'himself', 'for', '3', 'days', 'and', 'got', '100ml', 'milk']
-    list2 = ['to', 'for', 'and']
-    list1 = filter_list(list1, list2)
-    result = filter_list_by_regex(list1, '[0-9]+')
-    print(result)
+if __name__ == "__main__":
+    data = local_source.get_quotations_daily(
+        cols="TRADE_DATE, TS_CODE, PRE_CLOSE, CLOSE, ((CLOSE - PRE_CLOSE) / PRE_CLOSE) AS CHANGE",
+        condition="TRADE_DATE = '20211108' AND ((CLOSE - PRE_CLOSE) / PRE_CLOSE) < -0.07"
+    )
+    print(data)

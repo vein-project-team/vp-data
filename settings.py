@@ -1,4 +1,6 @@
-DB_PATH = '.\\vein-project.db'
+import os
+
+DB_PATH = '.' + os.sep + 'vein-project.db'
 TABLE_NAMES = [
     # 'INDEX_LIST',
     'STOCK_LIST',
