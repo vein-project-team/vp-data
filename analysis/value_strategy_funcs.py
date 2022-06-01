@@ -356,7 +356,7 @@ def univariate_test_for_returns_2(df, var_name, mv_weighted=False, freq='daily',
     data_merged = pd.merge(data_merged, df_, on=["TS_CODE","TRADE_DATE"],how='left')  
     
     date_list = data_merged["TRADE_DATE"].unique()
-    if mv_weighted == True:
+    if mv_weighted == False:
         avg_ret_q1_list=[]
         avg_ret_q2_list=[]
         avg_ret_q3_list=[]
@@ -403,7 +403,7 @@ def univariate_test_for_returns_2(df, var_name, mv_weighted=False, freq='daily',
         t_q5minusq1=stats.ttest_1samp(avg_ret_q5minusq1_list,0)
         print(t_q1,t_q2,t_q3,t_q4,t_q5,t_q5minusq1)
     
-    if mv_weighted == False:
+    if mv_weighted == True:
         avg_ret_q1_w_list=[]
         avg_ret_q2_w_list=[]
         avg_ret_q3_w_list=[]
@@ -422,11 +422,11 @@ def univariate_test_for_returns_2(df, var_name, mv_weighted=False, freq='daily',
             data_1m_q3=data_1m.iloc[q2:q3,:]
             data_1m_q4=data_1m.iloc[q3:q4,:]
             data_1m_q5=data_1m.iloc[q4:len(data_1m),:]
-            avg_ret_q1_w=np.average(data_1m_q1.loc[:,"PCT_CHANGE"],weights=data_1m_q1.loc[:,"TOTAL_MV"]/data_1m_q1.loc[:,"TOTAL_MV"].sum())
-            avg_ret_q2_w=np.average(data_1m_q2.loc[:,"PCT_CHANGE"],weights=data_1m_q2.loc[:,"TOTAL_MV"]/data_1m_q2.loc[:,"TOTAL_MV"].sum())
-            avg_ret_q3_w=np.average(data_1m_q3.loc[:,"PCT_CHANGE"],weights=data_1m_q3.loc[:,"TOTAL_MV"]/data_1m_q3.loc[:,"TOTAL_MV"].sum())
-            avg_ret_q4_w=np.average(data_1m_q4.loc[:,"PCT_CHANGE"],weights=data_1m_q4.loc[:,"TOTAL_MV"]/data_1m_q4.loc[:,"TOTAL_MV"].sum())
-            avg_ret_q5_w=np.average(data_1m_q5.loc[:,"PCT_CHANGE"],weights=data_1m_q5.loc[:,"TOTAL_MV"]/data_1m_q5.loc[:,"TOTAL_MV"].sum())
+            avg_ret_q1_w = np.ma.average(np.ma.array(data_1m_q1.loc[:,"PCT_CHANGE"].values, mask=data_1m_q1.loc[:,"PCT_CHANGE"].isnull().values), weights=data_1m_q1.loc[:,"TOTAL_MV"])
+            avg_ret_q2_w = np.ma.average(np.ma.array(data_1m_q2.loc[:,"PCT_CHANGE"].values, mask=data_1m_q2.loc[:,"PCT_CHANGE"].isnull().values), weights=data_1m_q2.loc[:,"TOTAL_MV"])            
+            avg_ret_q3_w = np.ma.average(np.ma.array(data_1m_q3.loc[:,"PCT_CHANGE"].values, mask=data_1m_q3.loc[:,"PCT_CHANGE"].isnull().values), weights=data_1m_q3.loc[:,"TOTAL_MV"])            
+            avg_ret_q4_w = np.ma.average(np.ma.array(data_1m_q4.loc[:,"PCT_CHANGE"].values, mask=data_1m_q4.loc[:,"PCT_CHANGE"].isnull().values), weights=data_1m_q4.loc[:,"TOTAL_MV"])            
+            avg_ret_q5_w = np.ma.average(np.ma.array(data_1m_q5.loc[:,"PCT_CHANGE"].values, mask=data_1m_q5.loc[:,"PCT_CHANGE"].isnull().values), weights=data_1m_q5.loc[:,"TOTAL_MV"])            
             avg_ret_q1_w_list.append(avg_ret_q1_w)
             avg_ret_q2_w_list.append(avg_ret_q2_w)
             avg_ret_q3_w_list.append(avg_ret_q3_w)
@@ -449,8 +449,6 @@ def univariate_test_for_returns_2(df, var_name, mv_weighted=False, freq='daily',
         t_q5_w=stats.ttest_1samp(avg_ret_q5_w_list,0)
         t_q5minusq1_w=stats.ttest_1samp(avg_ret_q5minusq1_w_list,0)
         print(t_q1_w,t_q2_w,t_q3_w,t_q4_w,t_q5_w,t_q5minusq1_w)
-
-
 
 
 def fm_single_summary(reg_single_result_df):
@@ -551,6 +549,9 @@ test6 = stock_selection_by_var(test3, var_name="test", pct=0.2, Type='best', sta
 
 
 
+#a=pd.Series([1,2,np.nan,5])
+#b=pd.Series([1,2,3,4])
+#c=np.ma.average(np.ma.array(a.values, mask=a.isnull().values), weights=b)
 
 
 
