@@ -27,8 +27,8 @@ class StockListGener(ReportGener):
     return data
 
 
-  def gen_no_st_mainboard_stocks(self):
-    filename = 'no-st-mainboard-stocks'
+  def buyable_stocks(self):
+    filename = 'buyable-stocks'
     trade_date = date_getter.get_trade_date_before()
     data = local_source.get_stock_list(
       cols='''

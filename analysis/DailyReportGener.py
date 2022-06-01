@@ -17,7 +17,7 @@ class DailyReportGener(ReportGener):
   def __init__(self, scope="default") -> None:
       super().__init__()
       if scope == 'default':
-        self.stock_list = stock_list_gener.gen_no_st_mainboard_stocks()
+        self.stock_list = stock_list_gener.buyable_stocks()
 
 
   def gen_up_down_rank(self, date='latest') -> DataFrame:
