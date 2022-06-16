@@ -1,6 +1,6 @@
 import datetime
 import time
-from database.db_reader import read_from_db
+from database.db_reader import read_from_db, check_table_exist
 
 
 class DateGetter:
@@ -8,18 +8,24 @@ class DateGetter:
     def __init__(self):
         self.start_date = '20100101'
         self.today = self.get_today()
-        self.latest_finished_trade_date = read_from_db(
-            'SELECT TRADE_DATE FROM INDICES_DAILY ORDER BY TRADE_DATE DESC LIMIT 1;'
-        )['TRADE_DATE'][0]
-        self.trade_date_list_daily = read_from_db('SELECT TRADE_DATE FROM INDICES_DAILY;')
-        self.trade_date_list_weekly = read_from_db('SELECT TRADE_DATE FROM INDICES_WEEKLY;')
-        self.trade_date_list_monthly = read_from_db('SELECT TRADE_DATE FROM INDICES_MONTHLY;')
+        self.latest_finished_trade_date = ''
+        self.trade_date_list_daily = None
+        self.trade_date_list_weekly = None
+        self.trade_date_list_monthly = None
+        self.refresh()
+
 
     def refresh(self):
         """
         更新当前实例的数据
         """
-        self.__init__()
+        if check_table_exist('INDICES_DAILY'):
+            self.latest_finished_trade_date = read_from_db(
+                'SELECT TRADE_DATE FROM INDICES_DAILY ORDER BY TRADE_DATE DESC LIMIT 1;'
+            )['TRADE_DATE'][0]
+            self.trade_date_list_daily = read_from_db('SELECT TRADE_DATE FROM INDICES_DAILY;')
+            self.trade_date_list_weekly = read_from_db('SELECT TRADE_DATE FROM INDICES_WEEKLY;')
+            self.trade_date_list_monthly = read_from_db('SELECT TRADE_DATE FROM INDICES_MONTHLY;')
 
     @staticmethod
     def get_today():

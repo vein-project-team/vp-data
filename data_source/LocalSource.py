@@ -1,4 +1,4 @@
-from data_source import DataSource
+from data_source.DataSource import DataSource
 from database.db_reader import read_from_db
 
 

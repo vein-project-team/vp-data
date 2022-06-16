@@ -1,4 +1,4 @@
-from data_source import DataSource
+from data_source.DataSource import DataSource
 from data_source.tokens import TUSHARE_TOKEN
 import tushare as ts
 import pandas as pd
