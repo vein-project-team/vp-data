@@ -1,6 +1,8 @@
 # vein-project: vp-data
 database and data analysis system for the **vein project**
 
+![title logo](./logo/title_logo.jpg)
+
 ## The Vein Project
 
 This project aim at creating an application to provide gamut of analysis features for Chinese stock market.
