@@ -2,7 +2,7 @@ import sqlite3
 from utils import log
 from settings import DB_PATH, TABLES_NEED_FILL
 from source_map import DATA_SOURCE
-from data_source import date_getter
+from database import date_getter
 
 
 def write_to_db(table_name, dataframe):
@@ -37,10 +37,10 @@ class DataGetter:
 
 
 def fill_table(table_name):
-
-    if table_name == 'QUOTATIONS_DAILY': 
-        date_getter.refresh()
     
+    if table_name == "QUOTATIONS_DAILY":
+        date_getter.refresh()
+
     checker = DATA_SOURCE[table_name]['checker']
     getter = DATA_SOURCE[table_name]['getter']
     args = [table_name, ]

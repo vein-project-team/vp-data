@@ -1,7 +1,7 @@
 from analysis.ReportGener import ReportGener
 
 from data_source import local_source
-from data_source import date_getter
+from database import date_getter
 
 class StockListGener(ReportGener):
 

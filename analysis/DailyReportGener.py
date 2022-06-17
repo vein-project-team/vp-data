@@ -5,8 +5,8 @@ from analysis.StockListGener import stock_list_gener
 
 import pandas as pd
 from data_source import local_source
-from data_source import date_getter
-from data_source.DateGetter import DateGetter
+from database import date_getter
+from database.DateGetter import DateGetter
 
 class DailyReportGener(ReportGener):
 

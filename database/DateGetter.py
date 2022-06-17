@@ -12,6 +12,7 @@ class DateGetter:
         self.trade_date_list_daily = None
         self.trade_date_list_weekly = None
         self.trade_date_list_monthly = None
+        self.quarter_end_date_list = None
         self.refresh()
 
 
@@ -26,6 +27,8 @@ class DateGetter:
             self.trade_date_list_daily = read_from_db('SELECT TRADE_DATE FROM INDICES_DAILY;')
             self.trade_date_list_weekly = read_from_db('SELECT TRADE_DATE FROM INDICES_WEEKLY;')
             self.trade_date_list_monthly = read_from_db('SELECT TRADE_DATE FROM INDICES_MONTHLY;')
+            self.quarter_end_date_list = read_from_db("SELECT DISTINCT TRADE_DATE FROM INDICES_MONTHLY WHERE SUBSTR(TRADE_DATE, 5, 2) IN ('03', '06', '09', '12')")
+            
 
     @staticmethod
     def get_today():
@@ -62,6 +65,12 @@ class DateGetter:
         timestamp_day2 = int(time.mktime(time_array2))
         result = (timestamp_day2 - timestamp_day1) // 60 // 60 // 24
         return abs(result)
+
+    def get_quarter_end_date_list(self):
+        return self.quarter_end_date_list
+
+    def get_quarter_end_date_before(self, date='last'):
+        return self.quarter_end_date_list['TRADE_DATE'][len(self.quarter_end_date_list)-1]
 
     def get_trade_date_between(self, date1, date2, frequency='DAILY'):
         """

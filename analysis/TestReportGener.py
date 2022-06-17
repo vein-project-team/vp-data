@@ -3,7 +3,7 @@
 from analysis.ReportGener import ReportGener
 # 导入其他依赖
 from data_source import local_source
-from data_source import date_getter
+from database import date_getter
 
 # 自定义类名，格式照抄
 class TestReportGener(ReportGener):

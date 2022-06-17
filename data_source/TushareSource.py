@@ -1,3 +1,4 @@
+from database import date_getter
 from data_source.DataSource import DataSource
 from data_source.tokens import TUSHARE_TOKEN
 import tushare as ts
@@ -17,6 +18,7 @@ class TushareSource(DataSource):
             'weekly': pd.DataFrame(),
             'monthly': pd.DataFrame()
         }
+        self.quarter_end_date_list = pd.DataFrame()
         self.fields = {
             'INDEX_LIST': {
                 'raw': 'ts_code,name,fullname,market,publisher,index_type,category,base_date,base_point,list_date,weight_rule,desc,exp_date',
@@ -277,34 +279,39 @@ class TushareSource(DataSource):
         table_name = 'INCOME_STATEMENTS'
         fields = self._get_fields(table_name)
         data = pd.DataFrame(columns=fields.split(','))
-        for stock in pb(self.stock_list, desc='长任务，请等待', colour='#ffffff'):
+        end_date_list = date_getter.get_quarter_end_date_list()['TRADE_DATE']
+        if len(fill_controller) > 0:
+            end_date_list = self._trim_date_list(end_date_list, fill_controller['latest_date'])
+        if len(end_date_list) == 0:
+            return
+        for date in pb(end_date_list, desc='长任务，请等待', colour='#ffffff'):
             next_data = None
             while True:
                 try:
                     next_data = self._change_order(table_name, pd.concat([
-                        self.query("income", ts_code=stock,
+                        self.query("income_vip", period=date,
                                    report_type=1, fields=fields),
-                        self.query("income", ts_code=stock,
+                        self.query("income_vip", period=date,
                                    report_type=2, fields=fields),
-                        self.query("income", ts_code=stock,
+                        self.query("income_vip", period=date,
                                    report_type=3, fields=fields),
-                        self.query("income", ts_code=stock,
+                        self.query("income_vip", period=date,
                                    report_type=4, fields=fields),
-                        self.query("income", ts_code=stock,
+                        self.query("income_vip", period=date,
                                    report_type=5, fields=fields),
-                        self.query("income", ts_code=stock,
+                        self.query("income_vip", period=date,
                                    report_type=6, fields=fields),
-                        self.query("income", ts_code=stock,
+                        self.query("income_vip", period=date,
                                    report_type=7, fields=fields),
-                        self.query("income", ts_code=stock,
+                        self.query("income_vip", period=date,
                                    report_type=8, fields=fields),
-                        self.query("income", ts_code=stock,
+                        self.query("income_vip", period=date,
                                    report_type=9, fields=fields),
-                        self.query("income", ts_code=stock,
+                        self.query("income_vip", period=date,
                                    report_type=10, fields=fields),
-                        self.query("income", ts_code=stock,
+                        self.query("income_vip", period=date,
                                    report_type=11, fields=fields),
-                        self.query("income", ts_code=stock,
+                        self.query("income_vip", period=date,
                                    report_type=12, fields=fields)
                     ], axis=0).reset_index(drop=True).fillna('NULL'))
                     break
@@ -317,34 +324,39 @@ class TushareSource(DataSource):
         table_name = 'BALANCE_SHEETS'
         fields = self._get_fields(table_name)
         data = pd.DataFrame(columns=fields.split(','))
-        for stock in pb(self.stock_list, desc='长任务，请等待', colour='#ffffff'):
+        end_date_list = date_getter.get_quarter_end_date_list()['TRADE_DATE']
+        if len(fill_controller) > 0:
+            end_date_list = self._trim_date_list(end_date_list, fill_controller['latest_date'])
+        if len(end_date_list) == 0:
+            return
+        for date in pb(end_date_list, desc='长任务，请等待', colour='#ffffff'):
             next_data = None
             while True:
                 try:
                     next_data = self._change_order(table_name, pd.concat([
-                        self.query("balancesheet", ts_code=stock,
+                        self.query("balancesheet_vip", period=date,
                                    report_type=1, fields=fields),
-                        self.query("balancesheet", ts_code=stock,
+                        self.query("balancesheet_vip", period=date,
                                    report_type=2, fields=fields),
-                        self.query("balancesheet", ts_code=stock,
+                        self.query("balancesheet_vip", period=date,
                                    report_type=3, fields=fields),
-                        self.query("balancesheet", ts_code=stock,
+                        self.query("balancesheet_vip", period=date,
                                    report_type=4, fields=fields),
-                        self.query("balancesheet", ts_code=stock,
+                        self.query("balancesheet_vip", period=date,
                                    report_type=5, fields=fields),
-                        self.query("balancesheet", ts_code=stock,
+                        self.query("balancesheet_vip", period=date,
                                    report_type=6, fields=fields),
-                        self.query("balancesheet", ts_code=stock,
+                        self.query("balancesheet_vip", period=date,
                                    report_type=7, fields=fields),
-                        self.query("balancesheet", ts_code=stock,
+                        self.query("balancesheet_vip", period=date,
                                    report_type=8, fields=fields),
-                        self.query("balancesheet", ts_code=stock,
+                        self.query("balancesheet_vip", period=date,
                                    report_type=9, fields=fields),
-                        self.query("balancesheet", ts_code=stock,
+                        self.query("balancesheet_vip", period=date,
                                    report_type=10, fields=fields),
-                        self.query("balancesheet", ts_code=stock,
+                        self.query("balancesheet_vip", period=date,
                                    report_type=11, fields=fields),
-                        self.query("balancesheet", ts_code=stock,
+                        self.query("balancesheet_vip", period=date,
                                    report_type=12, fields=fields)
                     ], axis=0).reset_index(drop=True).fillna('NULL'))
                     break
@@ -357,34 +369,39 @@ class TushareSource(DataSource):
         table_name = 'STATEMENTS_OF_CASH_FLOWS'
         fields = self._get_fields(table_name)
         data = pd.DataFrame(columns=fields.split(','))
-        for stock in pb(self.stock_list, desc='长任务，请等待', colour='#ffffff'):
+        end_date_list = date_getter.get_quarter_end_date_list()['TRADE_DATE']
+        if len(fill_controller) > 0:
+            end_date_list = self._trim_date_list(end_date_list, fill_controller['latest_date'])
+        if len(end_date_list) == 0:
+            return
+        for date in pb(end_date_list, desc='长任务，请等待', colour='#ffffff'):
             next_data = None
             while True:
                 try:
                     next_data = self._change_order(table_name, pd.concat([
-                        self.query("cashflow", ts_code=stock,
+                        self.query("cashflow_vip", period=date,
                                    report_type=1, fields=fields),
-                        self.query("cashflow", ts_code=stock,
+                        self.query("cashflow_vip", period=date,
                                    report_type=2, fields=fields),
-                        self.query("cashflow", ts_code=stock,
+                        self.query("cashflow_vip", period=date,
                                    report_type=3, fields=fields),
-                        self.query("cashflow", ts_code=stock,
+                        self.query("cashflow_vip", period=date,
                                    report_type=4, fields=fields),
-                        self.query("cashflow", ts_code=stock,
+                        self.query("cashflow_vip", period=date,
                                    report_type=5, fields=fields),
-                        self.query("cashflow", ts_code=stock,
+                        self.query("cashflow_vip", period=date,
                                    report_type=6, fields=fields),
-                        self.query("cashflow", ts_code=stock,
+                        self.query("cashflow_vip", period=date,
                                    report_type=7, fields=fields),
-                        self.query("cashflow", ts_code=stock,
+                        self.query("cashflow_vip", period=date,
                                    report_type=8, fields=fields),
-                        self.query("cashflow", ts_code=stock,
+                        self.query("cashflow_vip", period=date,
                                    report_type=9, fields=fields),
-                        self.query("cashflow", ts_code=stock,
+                        self.query("cashflow_vip", period=date,
                                    report_type=10, fields=fields),
-                        self.query("cashflow", ts_code=stock,
+                        self.query("cashflow_vip", period=date,
                                    report_type=11, fields=fields),
-                        self.query("cashflow", ts_code=stock,
+                        self.query("cashflow_vip", period=date,
                                    report_type=12, fields=fields)
                     ], axis=0).reset_index(drop=True).fillna('NULL'))
                     break
@@ -397,11 +414,16 @@ class TushareSource(DataSource):
         table_name = 'INCOME_FORECASTS'
         fields = self._get_fields(table_name)
         data = pd.DataFrame(columns=fields.split(','))
-        for stock in pb(self.stock_list, desc='长任务，请等待', colour='#ffffff'):
+        end_date_list = date_getter.get_quarter_end_date_list()['TRADE_DATE']
+        if len(fill_controller) > 0:
+            end_date_list = self._trim_date_list(end_date_list, fill_controller['latest_date'])
+        if len(end_date_list) == 0:
+            return
+        for date in pb(end_date_list, desc='长任务，请等待', colour='#ffffff'):
             next_data = None
             while True:
                 try:
-                    next_data = self.query("forecast", ts_code=stock, fields=fields).reset_index(drop=True).fillna('NULL')
+                    next_data = self.query("forecast_vip", period=date, fields=fields).reset_index(drop=True).fillna('NULL')
                     next_data = self._change_order(table_name, next_data)
                     break
                 except Exception:
@@ -413,11 +435,16 @@ class TushareSource(DataSource):
         table_name = 'FINANCIAL_INDICATORS'
         fields = self._get_fields(table_name)
         data = pd.DataFrame(columns=fields.split(','))
-        for stock in pb(self.stock_list, desc='长任务，请等待', colour='#ffffff'):
+        end_date_list = date_getter.get_quarter_end_date_list()['TRADE_DATE']
+        if len(fill_controller) > 0:
+            end_date_list = self._trim_date_list(end_date_list, fill_controller['latest_date'])
+        if len(end_date_list) == 0:
+            return
+        for date in pb(end_date_list, desc='长任务，请等待', colour='#ffffff'):
             next_data = None
             while True:
                 try:
-                    next_data = self.query("fina_indicator", ts_code=stock, fields=fields).reset_index(drop=True).fillna('NULL')
+                    next_data = self.query("fina_indicator_vip", period=date, fields=fields).reset_index(drop=True).fillna('NULL')
                     next_data = self._change_order(table_name, next_data)
                     break
                 except Exception:

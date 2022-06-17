@@ -54,28 +54,28 @@ DATA_SOURCE = {
     },
     "INCOME_STATEMENTS": {
         'getter': tushare_source.get_income_statements,
-        'checker': manual_checker,
-        'args': []
+        'checker': date_checker,
+        'args': ['quarter', 'END_DATE']
     },
     "BALANCE_SHEETS": {
         'getter': tushare_source.get_balance_sheets,
-        'checker': manual_checker,
-        'args': []
+        'checker': date_checker,
+        'args': ['quarter', 'END_DATE']
     },
     "STATEMENTS_OF_CASH_FLOWS": {
         'getter': tushare_source.get_cash_flows,
-        'checker': manual_checker,
-        'args': []
+        'checker': date_checker,
+        'args': ['quarter', 'END_DATE']
     },
     "INCOME_FORECASTS": {
         'getter': tushare_source.get_income_forecasts,
-        'checker': manual_checker,
-        'args': []
+        'checker': date_checker,
+        'args': ['quarter', 'END_DATE']
     },
     "FINANCIAL_INDICATORS": {
         'getter': tushare_source.get_financial_indicators,
-        'checker': manual_checker,
-        'args': []
+        'checker': date_checker,
+        'args': ['quarter', 'END_DATE']
     }
     
 }
