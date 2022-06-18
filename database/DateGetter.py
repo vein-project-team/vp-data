@@ -27,8 +27,13 @@ class DateGetter:
             self.trade_date_list_daily = read_from_db('SELECT TRADE_DATE FROM INDICES_DAILY;')
             self.trade_date_list_weekly = read_from_db('SELECT TRADE_DATE FROM INDICES_WEEKLY;')
             self.trade_date_list_monthly = read_from_db('SELECT TRADE_DATE FROM INDICES_MONTHLY;')
-            self.quarter_end_date_list = read_from_db("SELECT DISTINCT TRADE_DATE FROM INDICES_MONTHLY WHERE SUBSTR(TRADE_DATE, 5, 2) IN ('03', '06', '09', '12')")
-            
+
+            quarter_end_date_list = read_from_db("SELECT DISTINCT TRADE_DATE FROM INDICES_MONTHLY WHERE SUBSTR(TRADE_DATE, 5, 2) IN ('03', '06', '09', '12')")
+            quarter_end_date_list = quarter_end_date_list.replace(r'^([\d]{4}03)(\d{2})$', r'\g<1>31', regex=True)
+            quarter_end_date_list = quarter_end_date_list.replace(r'^([\d]{4}06)(\d{2})$', r'\g<1>30', regex=True)
+            quarter_end_date_list = quarter_end_date_list.replace(r'^([\d]{4}09)(\d{2})$', r'\g<1>30', regex=True)
+            quarter_end_date_list = quarter_end_date_list.replace(r'^([\d]{4}12)(\d{2})$', r'\g<1>31', regex=True)
+            self.quarter_end_date_list = quarter_end_date_list
 
     @staticmethod
     def get_today():
