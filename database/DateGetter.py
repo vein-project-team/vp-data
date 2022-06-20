@@ -48,8 +48,8 @@ class DateGetter:
     def get_date_before_today(days):
         """
         获得前n天的日期
-        :param days:多少天前？
-        :return:日期 string 'YYYYMMDD'
+        :param days: 多少天前？
+        :return: 日期 string 'YYYYMMDD'
         """
         today = datetime.datetime.now()
         offset = datetime.timedelta(days=-days)

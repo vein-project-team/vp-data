@@ -1,5 +1,8 @@
+from pandas import DataFrame
+from soupsieve import match
 from data_source.DataSource import DataSource
 from database.db_reader import read_from_db
+import re
 
 
 class LocalSource(DataSource):
@@ -26,8 +29,31 @@ class LocalSource(DataSource):
     def get_indices_monthly(self, cols='*', condition='1'):
         return self.get('INDICES_MONTHLY', cols, condition)
 
-    def get_quotations_daily(self, cols='*', condition='1'):
-        return self.get('QUOTATIONS_DAILY', cols, condition)
+    def get_quotations_daily(self, stock='', date='', cols='*', condition='1') -> DataFrame:
+        """
+        提取日线行情数据
+        :param stock: 指定股票 | 代码 XXXXXX.XX | 全称 |
+        :param date: 指定日期 | 某日 XXXXXXXX | 某月 XXXXXX | 某年 XXXX | 日期区间 XXXXXXXX-XXXXXXXX |
+        """
+        stock_con = '1'
+        if re.match(r'[\d]{6}\.S[ZH]', stock):
+            stock_con = f'TS_CODE = "{stock}"'
+        elif len(stock) > 0:
+            stock = self.get_stock_list(condition=f'NAME = "{stock}"')['TS_CODE'][0]
+            stock_con = f'TS_CODE = "{stock}"'
+        
+        date_con = '1'
+        if re.match(r'[\d]{8}', date):
+            date_con = f'TRADE_DATE = {date}'
+        elif re.match(r'[\d]{6}', date):
+            date_con = f'TRADE_DATE BETWEEN {date}01 AND {date}31'
+        elif re.match(r'[\d]{4}', date):
+            date_con = f'TRADE_DATE BETWEEN {date}0101 AND {date}1231'
+        elif re.match(r'[\d]{8}-[\d]{8}', date):
+            date = date.split('-')
+            date_con = f'TRADE_DATE BETWEEN {date[0]} AND {date[1]}'
+            
+        return self.get('QUOTATIONS_DAILY', cols, f'{stock_con} AND {date_con} AND ' + condition)
 
     def get_quotations_weekly(self, cols='*', condition='1'):
         return self.get('QUOTATIONS_WEEKLY', cols, condition)
