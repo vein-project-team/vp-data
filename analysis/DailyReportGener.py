@@ -1,5 +1,4 @@
 from pandas import DataFrame
-import pandas
 from analysis.ReportGener import ReportGener
 from analysis.StockListGener import stock_list_gener
 
@@ -17,7 +16,7 @@ class DailyReportGener(ReportGener):
   def __init__(self, scope="default") -> None:
       super().__init__()
       if scope == 'default':
-        self.stock_list = stock_list_gener.buyable_stocks()
+        self.stock_list = stock_list_gener.gen_buyable_stocks()
 
 
   def gen_up_down_rank(self, date='latest') -> DataFrame:
@@ -75,7 +74,7 @@ class DailyReportGener(ReportGener):
     return data
 
 
-  def _gen_limits_rank(self, type, trade_date):
+  def _gen_limits(self, type, trade_date):
     date_list = date_getter.get_trade_date_list_forward(100)['TRADE_DATE'].values
     data = local_source.get_limits_statistic(
       condition=f'TRADE_DATE = { trade_date } AND LIMIT_TYPE = "{ type }" ORDER BY FD_AMOUNT DESC'
@@ -104,29 +103,29 @@ class DailyReportGener(ReportGener):
     return data
 
 
-  def gen_up_limits_rank(self, date='latest'):
+  def gen_up_limits(self, date='latest'):
     trade_date = date_getter.get_trade_date_before()
     if date != 'latest':
       trade_date = date
-    filename = f'{trade_date}-up-limits_rank'
+    filename = f'{trade_date}-up-limits'
     if (data := self.fetch(filename)) is not None:
       return data
 
-    data = self._gen_limits_rank('U', trade_date)
+    data = self._gen_limits('U', trade_date)
 
     self.store(data, filename)
     return data
 
 
-  def gen_down_limits_rank(self, date='latest'):
+  def gen_down_limits(self, date='latest'):
     trade_date = date_getter.get_trade_date_before()
     if date != 'latest':
       trade_date = date
-    filename = f'{trade_date}-down-limits_rank'
+    filename = f'{trade_date}-down-limits'
     if (data := self.fetch(filename)) is not None:
       return data
 
-    data = self._gen_limits_rank('D', trade_date)
+    data = self._gen_limits('D', trade_date)
 
     self.store(data, filename)
     return data
