@@ -61,7 +61,7 @@ data1 = value_strategy_funcs.fill_financial_data_to_daily_ann_date_basis(data0)
 #(3)将财务数据变为月频
 data2 = value_strategy_funcs.degenerate_dailydata_to_monthlydata(data1, data_type='panel')
 
-#(4)整合多个指标并标准化
+#(4)整合多个指标并标准化(这里假设以"OTH_RECEIV","PREPAYMENT"为选股指标)
 data3 = value_strategy_funcs.Z_standardization_of_rank(data2, input_name_list=["OTH_RECEIV","PREPAYMENT"], input_ascending=[True,True],output_name="test")
 #data3 = value_strategy_tests.Z_standardization(data2, input_name_list=["OTH_RECEIV","PREPAYMENT"], input_ascending=[True,True],output_name="test")
 
@@ -78,8 +78,7 @@ data_merge = pd.merge(data_close, data3, on=["TS_CODE","TRADE_DATE"], how='left'
 data_return = value_strategy_funcs.calculate_pctchange_bystock(data_close)
 data_merge = pd.merge(data_merge, data_return, on=["TS_CODE","TRADE_DATE"], how='left')
 test5 = value_strategy_funcs.Fama_MacBeth_reg(data_merge,'PCT_CHANGE', ["test"])
-print(test5)
-#print(value_strategy_funcs.fm_summary([test5, test5, test5]))
+print(value_strategy_funcs.fm_summary([test5, test5, test5]))
 
 #(7)并输出根据这种策略选出的一定比例的股票
 choice_matrix = value_strategy_funcs.stock_selection_by_var(data3, var_name="test", pct=0.2, Type='best', start_date=start_date, end_date=end_date)

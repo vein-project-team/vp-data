@@ -73,14 +73,15 @@ def date_delta_calculator2(date, date_list, diff_days=-180): #input: YYYYMMDD  #
 
 
 def degenerate_dailydata_to_monthlydata(data, data_type='matrix'):   #matrix: 输入日期(YYYYMMDD)*股票(代码)的矩阵; panel: 输入含有日期TRADE_DATE与个体TS_CODE列的dataframe.
+    data_ = data.copy()
     if data_type == 'matrix':
-        data.index = data.index // 100
-        data = data[~data.index.duplicated(keep='last')]
+        data_.index = data_.index // 100
+        data_ = data_[~data_.index.duplicated(keep='last')]
     if data_type == 'panel':
-        data["TRADE_DATE"] = data["TRADE_DATE"]//100
-        data = data.drop_duplicates(["TS_CODE","TRADE_DATE"], keep='last')
-        data = data.reset_index(drop=True)
-    return data
+        data_["TRADE_DATE"] = data_["TRADE_DATE"]//100
+        data_ = data_.drop_duplicates(["TS_CODE","TRADE_DATE"], keep='last')
+        data_ = data_.reset_index(drop=True)
+    return data_
 
 def calculate_pctchange_bystock(df,var_name='CLOSE', result_name='PCT_CHANGE'):
     df_=panel_to_matrix_data(df, var_name = var_name)
@@ -188,12 +189,12 @@ def fill_financial_data_to_daily_ann_date_basis(data_fs, date_list=0):
     return data_fs_daily    
 
 
-def fill_financial_data_to_daily_end_date_basis(data_fs, month=2):
+def fill_financial_data_to_daily_end_date_basis(data_fs, delay_month=2):
     #构建每个年月与延迟后月的最后一个交易日的关系
     date_list = local_source.get_indices_daily(cols='TRADE_DATE',condition='INDEX_CODE = "000001.SH"')["TRADE_DATE"].sort_values(ascending=True).astype(int)
     month_list = pd.Series((date_list//100).unique())
     last_day_of_month_list = pd.Series([date_list[(date_list//100)==month].iloc[-1] for month in month_list])
-    last_day_of_month_list = last_day_of_month_list.shift(-1*month)
+    last_day_of_month_list = last_day_of_month_list.shift(-1*delay_month)
     last_day_of_month_dict =  {i:j for i,j in zip(month_list, last_day_of_month_list)}    
     #填充TRADE_DATE为延迟后月的最后一个交易日
     data_fs["END_DATE"]=data_fs["END_DATE"].astype(int)
@@ -315,13 +316,22 @@ def univariate_test_for_returns(df, var_name, mv_weighted=False, freq='daily', s
         ret_q5 = calculate_MVweighted_average_return(choice_matrix=choice_mat_q5, close_matrix=data_close, mv_matrix=data_mv)
     ret_q5minusq1 = ret_q5-ret_q1
     
-    t_q1=stats.ttest_1samp(ret_q1, 0)
+    t_q1=stats.ttest_1samp(ret_q1, 0) #statistic, pvalue, count
     t_q2=stats.ttest_1samp(ret_q2, 0)
     t_q3=stats.ttest_1samp(ret_q3, 0)
     t_q4=stats.ttest_1samp(ret_q4, 0)
     t_q5=stats.ttest_1samp(ret_q5, 0)
     t_q5minusq1=stats.ttest_1samp(ret_q5minusq1, 0)
-    print(t_q1,'\n',t_q2,'\n',t_q3,'\n',t_q4,'\n',t_q5,'\n',t_q5minusq1)       
+    
+    result = pd.DataFrame(index=["statistic","p-value","Obs."],columns=["q1","q2","q3","q4","q5","diff[q5-q1]"])
+    statistics = [t_q1.statistic,t_q2.statistic,t_q3.statistic,t_q4.statistic,t_q5.statistic,t_q5minusq1.statistic]
+    statistics = [ str(Decimal("%.4f" % float(i))) if np.isnan(i)==False else '' for i in statistics ]
+    pvalues = [t_q1.pvalue,t_q2.pvalue,t_q3.pvalue,t_q4.pvalue,t_q5.pvalue,t_q5minusq1.pvalue]
+    result.loc["statistic",:] = statistics
+    result.loc["p-value",:] = pvalues   
+    result.loc["Obs.",:] = [len(ret_q1),len(ret_q2),len(ret_q3),len(ret_q4),len(ret_q5),len(ret_q5minusq1)] 
+    print(result)
+     
 
 
 def univariate_test_for_returns_2(df, var_name, mv_weighted=False, freq='daily', start_date=20200101, end_date=20201231):  
@@ -508,43 +518,6 @@ def Fama_MacBeth_reg(df,y_name,x_name_list):
     model = FamaMacBeth.from_formula(formula, data=df_)
     reg_result = model.fit(cov_type= 'kernel',debiased = False, bandwidth = 4) #cov_type设定表示输出Newey-West调整后的结果; bandwidth为Newey-West滞后阶数, 选取方式为lag = 4(T/100) ^ (2/9);
     return reg_result
-
-
-'''
-#example: 用财务报表数据寻找有显著收益的价值投资策略
-#(1)获取财务数据
-data0 = local_source.get_balance_sheets(cols='TS_CODE, ANN_DATE, END_DATE, OTH_RECEIV, PREPAYMENT', condition='REPORT_TYPE=1')
-data0 = data0.applymap(lambda x: np.nan if x=="NULL" else x)
-
-#(2)将财务数据向后填充至每天(即使准备用monthly的数据, 也需要用daily填充)
-test1 = fill_financial_data_to_daily_ann_date_basis(data0)  
-#test1 = fill_financial_data_to_daily_end_date_basis(data0, month=2)
-
-#(3)将财务数据变为月频
-test2 = degenerate_dailydata_to_monthlydata(test1, data_type='panel')
-
-#(4)整合多个指标并标准化
-test3 = Z_standardization_of_rank(test2, input_name_list=["OTH_RECEIV","PREPAYMENT"], input_ascending=[True,True],output_name="test")
-#test3 = Z_standardization(test2, input_name_list=["OTH_RECEIV","PREPAYMENT"], input_ascending=[True,True],output_name="test")
-
-#(5)使用t-test检验该财务数据的收益显著性
-test4 = univariate_test_for_returns(test3, var_name="test", mv_weighted=False, freq='monthly', start_date=201001, end_date=202112)
-
-#(6)使用Fama-MacBeth检验该财务数据的收益显著性
-data_close = local_source.get_quotations_daily(cols='TRADE_DATE, TS_CODE, CLOSE',condition = 'TRADE_DATE>=20100101 and TRADE_DATE<=20101231')
-data_close["TRADE_DATE"]=data_close["TRADE_DATE"].astype(int)
-data_close = degenerate_dailydata_to_monthlydata(data_close, data_type='panel')
-data_merge = pd.merge(data_close, test3, on=["TS_CODE","TRADE_DATE"], how='left')
-data_return = calculate_pctchange_bystock(data_close)
-data_merge = pd.merge(data_merge, data_return, on=["TS_CODE","TRADE_DATE"], how='left')
-#univariate_test_for_returns_2(data_merge, var_name="test", mv_weighted=False, freq='monthly', start_date=201001, end_date=202112) #另一种ttest, 需要return数据
-test5 = Fama_MacBeth_reg(data_merge,'PCT_CHANGE', ["test"])
-print(fm_summary([test5, test5, test5]))
-
-#(7)并输出根据这种策略选出的一定比例的股票
-test6 = stock_selection_by_var(test3, var_name="test", pct=0.2, Type='best', start_date=201001, end_date=202112)
-'''
-
 
 
 
