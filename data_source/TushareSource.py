@@ -133,6 +133,7 @@ class TushareSource(DataSource):
             self.query('stock_basic', exchange='SZSE',
                        list_status='D', fields=fields)
         ], axis=0).reset_index(drop=True).fillna('NULL'))
+        data = data.replace({"中小板": "主板"})
         self.stock_list = data['ts_code']
         return self.convert_header(table_name, data)
 
