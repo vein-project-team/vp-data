@@ -4,7 +4,7 @@
 import pandas as pd
 import numpy as np
 from data_source import local_source
-from analysis import value_strategy_tests
+from analysis import value_strategy_funcs
 from tqdm import tqdm as pb
 
 
@@ -25,7 +25,7 @@ def construct_FSdata_for_FFmodels():
     date_list = local_source.get_indices_daily(cols='TRADE_DATE',condition='INDEX_CODE = "000001.SH"')["TRADE_DATE"].astype(int)
     stock_list = local_source.get_stock_list(cols="TS_CODE")
     try:
-        result_existed = pd.read_csv("FSdata_for_FFmodelsdaily.csv")
+        result_existed = pd.read_csv("analysis/FSdata_for_FFmodelsdaily.csv")
         result_existed["TRADE_DATE"] = result_existed["TRADE_DATE"].astype(int)        
         result_existed.set_index("TRADE_DATE",inplace=True)
         date_list_existed = pd.Series(result_existed.index.drop_duplicates())
@@ -83,7 +83,8 @@ def construct_FSdata_for_FFmodels():
         result = pd.concat([result_existed, result_added],axis=0)
     except:
         result = result_added
-    result.to_csv("FSdata_for_FFmodelsdaily.csv",encoding='utf-8-sig',index=False)
+    result.drop_duplicates(subset=["TRADE_DATE","TS_CODE"],inplace=True)
+    result.to_csv("analysis/FSdata_for_FFmodelsdaily.csv",encoding='utf-8-sig',index=False)
     return result
 
 
@@ -91,34 +92,34 @@ def construct_FFfactors(freq='daily'):
     FSdata_for_FFmodel=construct_FSdata_for_FFmodels()
 
     data_close = local_source.get_quotations_daily(cols="TS_CODE, TRADE_DATE, CLOSE")
-    data_close = value_strategy_tests.panel_to_matrix_data(data_close,"CLOSE")
+    data_close = value_strategy_funcs.panel_to_matrix_data(data_close,"CLOSE")
     
     data_mv = FSdata_for_FFmodel[["TS_CODE","TRADE_DATE","TOTAL_MV"]]
-    data_mv = value_strategy_tests.panel_to_matrix_data(data_mv,"TOTAL_MV")
+    data_mv = value_strategy_funcs.panel_to_matrix_data(data_mv,"TOTAL_MV")
     
     data_bm = FSdata_for_FFmodel[["TS_CODE","TRADE_DATE","BM"]]
-    data_bm = value_strategy_tests.panel_to_matrix_data(data_bm,"BM")
+    data_bm = value_strategy_funcs.panel_to_matrix_data(data_bm,"BM")
     
     data_ebit = FSdata_for_FFmodel[["TS_CODE","TRADE_DATE","EBIT"]]
-    data_ebit = value_strategy_tests.panel_to_matrix_data(data_ebit,"EBIT")
+    data_ebit = value_strategy_funcs.panel_to_matrix_data(data_ebit,"EBIT")
     
     data_inv = FSdata_for_FFmodel[["TS_CODE","TRADE_DATE","INV"]]
-    data_inv = value_strategy_tests.panel_to_matrix_data(data_inv,"INV")
+    data_inv = value_strategy_funcs.panel_to_matrix_data(data_inv,"INV")
     
     data_bv = FSdata_for_FFmodel[["TS_CODE","TRADE_DATE","BV"]]
-    data_bv = value_strategy_tests.panel_to_matrix_data(data_bv,"BV")
+    data_bv = value_strategy_funcs.panel_to_matrix_data(data_bv,"BV")
         
     data_past_return = data_close.copy().fillna(method='ffill',axis=0)
     data_past_return = (data_past_return.shift(60)-data_past_return.shift(360)) / data_past_return.shift(360)
 
     if freq == 'monthly': #改月度数据
-        data_close = value_strategy_tests.degenerate_dailydata_to_monthlydata(data_close)
-        data_mv = value_strategy_tests.degenerate_dailydata_to_monthlydata(data_mv)
-        data_bm = value_strategy_tests.degenerate_dailydata_to_monthlydata(data_bm)
-        data_ebit = value_strategy_tests.degenerate_dailydata_to_monthlydata(data_ebit)
-        data_inv = value_strategy_tests.degenerate_dailydata_to_monthlydata(data_inv)
-        data_bv = value_strategy_tests.degenerate_dailydata_to_monthlydata(data_bv)
-        data_past_return = value_strategy_tests.degenerate_dailydata_to_monthlydata(data_past_return)    
+        data_close = value_strategy_funcs.degenerate_dailydata_to_monthlydata(data_close)
+        data_mv = value_strategy_funcs.degenerate_dailydata_to_monthlydata(data_mv)
+        data_bm = value_strategy_funcs.degenerate_dailydata_to_monthlydata(data_bm)
+        data_ebit = value_strategy_funcs.degenerate_dailydata_to_monthlydata(data_ebit)
+        data_inv = value_strategy_funcs.degenerate_dailydata_to_monthlydata(data_inv)
+        data_bv = value_strategy_funcs.degenerate_dailydata_to_monthlydata(data_bv)
+        data_past_return = value_strategy_funcs.degenerate_dailydata_to_monthlydata(data_past_return)    
     
     #选择满足条件的股票组合
     B=data_mv.apply(lambda x:x>=x.quantile(0.5),axis=1)
@@ -161,24 +162,24 @@ def construct_FFfactors(freq='daily'):
     SD = S & D    
         
     #计算市值加权收益率   
-    ret_BH = value_strategy_tests.calculate_MVweighted_average_return(choice_matrix=BH, close_matrix=data_close, mv_matrix=data_mv)
-    ret_BM = value_strategy_tests.calculate_MVweighted_average_return(choice_matrix=BM, close_matrix=data_close, mv_matrix=data_mv)
-    ret_BL = value_strategy_tests.calculate_MVweighted_average_return(choice_matrix=BL, close_matrix=data_close, mv_matrix=data_mv)
-    ret_SH = value_strategy_tests.calculate_MVweighted_average_return(choice_matrix=SH, close_matrix=data_close, mv_matrix=data_mv)
-    ret_SM = value_strategy_tests.calculate_MVweighted_average_return(choice_matrix=SM, close_matrix=data_close, mv_matrix=data_mv)
-    ret_SL = value_strategy_tests.calculate_MVweighted_average_return(choice_matrix=SL, close_matrix=data_close, mv_matrix=data_mv)
-    ret_BR = value_strategy_tests.calculate_MVweighted_average_return(choice_matrix=BR, close_matrix=data_close, mv_matrix=data_mv)
-    ret_BW = value_strategy_tests.calculate_MVweighted_average_return(choice_matrix=BW, close_matrix=data_close, mv_matrix=data_mv)
-    ret_SR = value_strategy_tests.calculate_MVweighted_average_return(choice_matrix=SR, close_matrix=data_close, mv_matrix=data_mv)
-    ret_SW = value_strategy_tests.calculate_MVweighted_average_return(choice_matrix=SW, close_matrix=data_close, mv_matrix=data_mv)
-    ret_BC = value_strategy_tests.calculate_MVweighted_average_return(choice_matrix=BC, close_matrix=data_close, mv_matrix=data_mv)
-    ret_BA = value_strategy_tests.calculate_MVweighted_average_return(choice_matrix=BA, close_matrix=data_close, mv_matrix=data_mv)
-    ret_SC = value_strategy_tests.calculate_MVweighted_average_return(choice_matrix=SC, close_matrix=data_close, mv_matrix=data_mv)
-    ret_SA = value_strategy_tests.calculate_MVweighted_average_return(choice_matrix=SA, close_matrix=data_close, mv_matrix=data_mv)
-    ret_BU = value_strategy_tests.calculate_MVweighted_average_return(choice_matrix=BU, close_matrix=data_close, mv_matrix=data_mv)
-    ret_BD = value_strategy_tests.calculate_MVweighted_average_return(choice_matrix=BD, close_matrix=data_close, mv_matrix=data_mv)
-    ret_SU = value_strategy_tests.calculate_MVweighted_average_return(choice_matrix=SU, close_matrix=data_close, mv_matrix=data_mv)
-    ret_SD = value_strategy_tests.calculate_MVweighted_average_return(choice_matrix=SD, close_matrix=data_close, mv_matrix=data_mv)
+    ret_BH = value_strategy_funcs.calculate_MVweighted_average_return(choice_matrix=BH, close_matrix=data_close, mv_matrix=data_mv)
+    ret_BM = value_strategy_funcs.calculate_MVweighted_average_return(choice_matrix=BM, close_matrix=data_close, mv_matrix=data_mv)
+    ret_BL = value_strategy_funcs.calculate_MVweighted_average_return(choice_matrix=BL, close_matrix=data_close, mv_matrix=data_mv)
+    ret_SH = value_strategy_funcs.calculate_MVweighted_average_return(choice_matrix=SH, close_matrix=data_close, mv_matrix=data_mv)
+    ret_SM = value_strategy_funcs.calculate_MVweighted_average_return(choice_matrix=SM, close_matrix=data_close, mv_matrix=data_mv)
+    ret_SL = value_strategy_funcs.calculate_MVweighted_average_return(choice_matrix=SL, close_matrix=data_close, mv_matrix=data_mv)
+    ret_BR = value_strategy_funcs.calculate_MVweighted_average_return(choice_matrix=BR, close_matrix=data_close, mv_matrix=data_mv)
+    ret_BW = value_strategy_funcs.calculate_MVweighted_average_return(choice_matrix=BW, close_matrix=data_close, mv_matrix=data_mv)
+    ret_SR = value_strategy_funcs.calculate_MVweighted_average_return(choice_matrix=SR, close_matrix=data_close, mv_matrix=data_mv)
+    ret_SW = value_strategy_funcs.calculate_MVweighted_average_return(choice_matrix=SW, close_matrix=data_close, mv_matrix=data_mv)
+    ret_BC = value_strategy_funcs.calculate_MVweighted_average_return(choice_matrix=BC, close_matrix=data_close, mv_matrix=data_mv)
+    ret_BA = value_strategy_funcs.calculate_MVweighted_average_return(choice_matrix=BA, close_matrix=data_close, mv_matrix=data_mv)
+    ret_SC = value_strategy_funcs.calculate_MVweighted_average_return(choice_matrix=SC, close_matrix=data_close, mv_matrix=data_mv)
+    ret_SA = value_strategy_funcs.calculate_MVweighted_average_return(choice_matrix=SA, close_matrix=data_close, mv_matrix=data_mv)
+    ret_BU = value_strategy_funcs.calculate_MVweighted_average_return(choice_matrix=BU, close_matrix=data_close, mv_matrix=data_mv)
+    ret_BD = value_strategy_funcs.calculate_MVweighted_average_return(choice_matrix=BD, close_matrix=data_close, mv_matrix=data_mv)
+    ret_SU = value_strategy_funcs.calculate_MVweighted_average_return(choice_matrix=SU, close_matrix=data_close, mv_matrix=data_mv)
+    ret_SD = value_strategy_funcs.calculate_MVweighted_average_return(choice_matrix=SD, close_matrix=data_close, mv_matrix=data_mv)
  
     #计算因子
     SMB=(ret_SH+ret_SM+ret_SL)/3-(ret_BH+ret_BM+ret_BL)/3
@@ -191,8 +192,8 @@ def construct_FFfactors(freq='daily'):
     result.columns = ["SMB","HML", "RMW", "CMA", "UMD"]
     result = result.shift(1)
     result.replace(0,np.nan, inplace=True)
-    result.to_csv("FFfactors_{freq}.csv".format(freq=freq),encoding='utf-8-sig')
-
+    result.to_csv("analysis/FFfactors_{freq}.csv".format(freq=freq),encoding='utf-8-sig')
+    return result
 
 
 

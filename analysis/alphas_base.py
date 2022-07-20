@@ -267,7 +267,7 @@ def IndustryAverage_vwap():
     
     #check for building/updating/reading dataset
     try:
-        result_industryaveraged_df = pd.read_csv("IndustryAverage_Data_vwap.csv")
+        result_industryaveraged_df = pd.read_csv("analysis/IndustryAverage_Data_vwap.csv")
         result_industryaveraged_df["TRADE_DATE"] = result_industryaveraged_df["TRADE_DATE"].astype(int)        
         result_industryaveraged_df.set_index("TRADE_DATE",inplace=True)
         date_list_existed = pd.Series(result_industryaveraged_df.index)
@@ -277,7 +277,7 @@ def IndustryAverage_vwap():
             return result_industryaveraged_df
         else:
             print("The corresponding industry average vwap data needs to be updated.")
-            first_date_update = date_list_update[0]
+            first_date_update = date_list_update.iloc[0]
     except:
         print("The corresponding industry average vwap data is missing.")
         result_industryaveraged_df=pd.DataFrame(index=date_list,columns=industry_list)
@@ -328,7 +328,7 @@ def IndustryAverage_vwap():
 
         result_unaveraged_industry=0
         
-    result_industryaveraged_df.to_csv("IndustryAverage_Data_vwap.csv",encoding='utf-8-sig')           
+    result_industryaveraged_df.to_csv("analysis/IndustryAverage_Data_vwap.csv",encoding='utf-8-sig')           
     return result_industryaveraged_df
 
 def IndustryAverage_close():          
@@ -338,7 +338,7 @@ def IndustryAverage_close():
     
     #check for building/updating/reading dataset
     try:
-        result_industryaveraged_df = pd.read_csv("IndustryAverage_Data_close.csv")
+        result_industryaveraged_df = pd.read_csv("analysis/IndustryAverage_Data_close.csv")
         result_industryaveraged_df["TRADE_DATE"] = result_industryaveraged_df["TRADE_DATE"].astype(int)        
         result_industryaveraged_df.set_index("TRADE_DATE",inplace=True)
         date_list_existed = pd.Series(result_industryaveraged_df.index)
@@ -348,7 +348,7 @@ def IndustryAverage_close():
             return result_industryaveraged_df
         else:
             print("The corresponding industry average close data needs to be updated.")
-            first_date_update = date_list_update[0]
+            first_date_update = date_list_update.iloc[0]
     except:
         print("The corresponding industry average close data is missing.")
         result_industryaveraged_df=pd.DataFrame(index=date_list,columns=industry_list)
@@ -399,7 +399,7 @@ def IndustryAverage_close():
 
         result_unaveraged_industry=0
         
-    result_industryaveraged_df.to_csv("IndustryAverage_Data_close.csv",encoding='utf-8-sig')           
+    result_industryaveraged_df.to_csv("analysis/IndustryAverage_Data_close.csv",encoding='utf-8-sig')           
     return result_industryaveraged_df
 
 def IndustryAverage_low():          
@@ -409,7 +409,7 @@ def IndustryAverage_low():
     
     #check for building/updating/reading dataset
     try:
-        result_industryaveraged_df = pd.read_csv("IndustryAverage_Data_low.csv")
+        result_industryaveraged_df = pd.read_csv("analysis/IndustryAverage_Data_low.csv")
         result_industryaveraged_df["TRADE_DATE"] = result_industryaveraged_df["TRADE_DATE"].astype(int)        
         result_industryaveraged_df.set_index("TRADE_DATE",inplace=True)
         date_list_existed = pd.Series(result_industryaveraged_df.index)
@@ -419,7 +419,7 @@ def IndustryAverage_low():
             return result_industryaveraged_df
         else:
             print("The corresponding industry average low data needs to be updated.")
-            first_date_update = date_list_update[0]
+            first_date_update = date_list_update.iloc[0]
     except:
         print("The corresponding industry average low data is missing.")
         result_industryaveraged_df=pd.DataFrame(index=date_list,columns=industry_list)
@@ -470,7 +470,7 @@ def IndustryAverage_low():
 
         result_unaveraged_industry=0
         
-    result_industryaveraged_df.to_csv("IndustryAverage_Data_low.csv",encoding='utf-8-sig')           
+    result_industryaveraged_df.to_csv("analysis/IndustryAverage_Data_low.csv",encoding='utf-8-sig')           
     return result_industryaveraged_df
 
 def IndustryAverage_volume():          
@@ -480,7 +480,7 @@ def IndustryAverage_volume():
     
     #check for building/updating/reading dataset
     try:
-        result_industryaveraged_df = pd.read_csv("IndustryAverage_Data_volume.csv")
+        result_industryaveraged_df = pd.read_csv("analysis/IndustryAverage_Data_volume.csv")
         result_industryaveraged_df["TRADE_DATE"] = result_industryaveraged_df["TRADE_DATE"].astype(int)        
         result_industryaveraged_df.set_index("TRADE_DATE",inplace=True)
         date_list_existed = pd.Series(result_industryaveraged_df.index)
@@ -490,7 +490,7 @@ def IndustryAverage_volume():
             return result_industryaveraged_df
         else:
             print("The corresponding industry average volume data needs to be updated.")
-            first_date_update = date_list_update[0]
+            first_date_update = date_list_update.iloc[0]
     except:
         print("The corresponding industry average volume data is missing.")
         result_industryaveraged_df=pd.DataFrame(index=date_list,columns=industry_list)
@@ -541,7 +541,7 @@ def IndustryAverage_volume():
 
         result_unaveraged_industry=0
         
-    result_industryaveraged_df.to_csv("IndustryAverage_Data_volume.csv",encoding='utf-8-sig')           
+    result_industryaveraged_df.to_csv("analysis/IndustryAverage_Data_volume.csv",encoding='utf-8-sig')           
     return result_industryaveraged_df
 
 def IndustryAverage_adv(num):         
@@ -551,7 +551,7 @@ def IndustryAverage_adv(num):
     
     #check for building/updating/reading dataset
     try:
-        result_industryaveraged_df = pd.read_csv("IndustryAverage_Data_adv{num}.csv".format(num=num))
+        result_industryaveraged_df = pd.read_csv("analysis/IndustryAverage_Data_adv{num}.csv".format(num=num))
         result_industryaveraged_df["TRADE_DATE"] = result_industryaveraged_df["TRADE_DATE"].astype(int)        
         result_industryaveraged_df.set_index("TRADE_DATE",inplace=True)
         date_list_existed = pd.Series(result_industryaveraged_df.index)
@@ -561,7 +561,7 @@ def IndustryAverage_adv(num):
             return result_industryaveraged_df
         else:
             print("The corresponding industry average adv{num} data needs to be updated.".format(num=num))
-            first_date_update = date_list_update[0]
+            first_date_update = date_list_update.iloc[0]
     except:
         print("The corresponding industry average adv{num} data is missing.".format(num=num))
         result_industryaveraged_df=pd.DataFrame(index=date_list,columns=industry_list)
@@ -612,7 +612,7 @@ def IndustryAverage_adv(num):
 
         result_unaveraged_industry=0
         
-    result_industryaveraged_df.to_csv("IndustryAverage_Data_adv{num}.csv".format(num=num),encoding='utf-8-sig')           
+    result_industryaveraged_df.to_csv("analysis/IndustryAverage_Data_adv{num}.csv".format(num=num),encoding='utf-8-sig')           
     return result_industryaveraged_df
 
 #(correlation(delta(close, 1), delta(delay(close, 1), 1), 250) *delta(close, 1)) / close
@@ -623,7 +623,7 @@ def IndustryAverage_PreparationForAlpha048():
     
     #check for building/updating/reading dataset
     try:
-        result_industryaveraged_df = pd.read_csv("IndustryAverage_Data_PreparationForAlpha048.csv")
+        result_industryaveraged_df = pd.read_csv("analysis/IndustryAverage_Data_PreparationForAlpha048.csv")
         result_industryaveraged_df["TRADE_DATE"] = result_industryaveraged_df["TRADE_DATE"].astype(int)        
         result_industryaveraged_df.set_index("TRADE_DATE",inplace=True)
         date_list_existed = pd.Series(result_industryaveraged_df.index)
@@ -633,7 +633,7 @@ def IndustryAverage_PreparationForAlpha048():
             return result_industryaveraged_df
         else:
             print("The corresponding industry average data for alpha048 needs to be updated.")
-            first_date_update = date_list_update[0]
+            first_date_update = date_list_update.iloc[0]
     except:
         print("The corresponding industry average dataset for alpha048 is missing.")
         result_industryaveraged_df=pd.DataFrame(index=date_list,columns=industry_list)
@@ -684,7 +684,7 @@ def IndustryAverage_PreparationForAlpha048():
 
         result_unaveraged_industry=0
         
-    result_industryaveraged_df.to_csv("IndustryAverage_Data_PreparationForAlpha048.csv",encoding='utf-8-sig')           
+    result_industryaveraged_df.to_csv("analysis/IndustryAverage_Data_PreparationForAlpha048.csv",encoding='utf-8-sig')           
     return result_industryaveraged_df
 
 #(vwap * 0.728317) + (vwap *(1 - 0.728317))
@@ -695,7 +695,7 @@ def IndustryAverage_PreparationForAlpha059():
     
     #check for building/updating/reading dataset
     try:
-        result_industryaveraged_df = pd.read_csv("IndustryAverage_Data_PreparationForAlpha059.csv")
+        result_industryaveraged_df = pd.read_csv("analysis/IndustryAverage_Data_PreparationForAlpha059.csv")
         result_industryaveraged_df["TRADE_DATE"] = result_industryaveraged_df["TRADE_DATE"].astype(int)        
         result_industryaveraged_df.set_index("TRADE_DATE",inplace=True)
         date_list_existed = pd.Series(result_industryaveraged_df.index)
@@ -705,7 +705,7 @@ def IndustryAverage_PreparationForAlpha059():
             return result_industryaveraged_df
         else:
             print("The corresponding industry average data for alpha059 needs to be updated.")
-            first_date_update = date_list_update[0]
+            first_date_update = date_list_update.iloc[0]
     except:
         print("The corresponding industry average dataset for alpha059 is missing.")
         result_industryaveraged_df=pd.DataFrame(index=date_list,columns=industry_list)
@@ -756,7 +756,7 @@ def IndustryAverage_PreparationForAlpha059():
 
         result_unaveraged_industry=0
         
-    result_industryaveraged_df.to_csv("IndustryAverage_Data_PreparationForAlpha059.csv",encoding='utf-8-sig')           
+    result_industryaveraged_df.to_csv("analysis/IndustryAverage_Data_PreparationForAlpha059.csv",encoding='utf-8-sig')           
     return result_industryaveraged_df
 
 #(close * 0.60733) + (open * (1 - 0.60733))
@@ -767,7 +767,7 @@ def IndustryAverage_PreparationForAlpha079():
     
     #check for building/updating/reading dataset
     try:
-        result_industryaveraged_df = pd.read_csv("IndustryAverage_Data_PreparationForAlpha079.csv")
+        result_industryaveraged_df = pd.read_csv("analysis/IndustryAverage_Data_PreparationForAlpha079.csv")
         result_industryaveraged_df["TRADE_DATE"] = result_industryaveraged_df["TRADE_DATE"].astype(int)        
         result_industryaveraged_df.set_index("TRADE_DATE",inplace=True)
         date_list_existed = pd.Series(result_industryaveraged_df.index)
@@ -777,7 +777,7 @@ def IndustryAverage_PreparationForAlpha079():
             return result_industryaveraged_df
         else:
             print("The corresponding industry average data for alpha079 needs to be updated.")
-            first_date_update = date_list_update[0]
+            first_date_update = date_list_update.iloc[0]
     except:
         print("The corresponding industry average dataset for alpha079 is missing.")
         result_industryaveraged_df=pd.DataFrame(index=date_list,columns=industry_list)
@@ -829,7 +829,7 @@ def IndustryAverage_PreparationForAlpha079():
 
         result_unaveraged_industry=0
         
-    result_industryaveraged_df.to_csv("IndustryAverage_Data_PreparationForAlpha079.csv",encoding='utf-8-sig')           
+    result_industryaveraged_df.to_csv("analysis/IndustryAverage_Data_PreparationForAlpha079.csv",encoding='utf-8-sig')           
     return result_industryaveraged_df
 
 #((open * 0.868128) + (high * (1 - 0.868128))
@@ -840,7 +840,7 @@ def IndustryAverage_PreparationForAlpha080():
     
     #check for building/updating/reading dataset
     try:
-        result_industryaveraged_df = pd.read_csv("IndustryAverage_Data_PreparationForAlpha080.csv")
+        result_industryaveraged_df = pd.read_csv("analysis/IndustryAverage_Data_PreparationForAlpha080.csv")
         result_industryaveraged_df["TRADE_DATE"] = result_industryaveraged_df["TRADE_DATE"].astype(int)        
         result_industryaveraged_df.set_index("TRADE_DATE",inplace=True)
         date_list_existed = pd.Series(result_industryaveraged_df.index)
@@ -850,7 +850,7 @@ def IndustryAverage_PreparationForAlpha080():
             return result_industryaveraged_df
         else:
             print("The corresponding industry average data for alpha080 needs to be updated.")
-            first_date_update = date_list_update[0]
+            first_date_update = date_list_update.iloc[0]
     except:
         print("The corresponding industry average dataset for alpha080 is missing.")
         result_industryaveraged_df=pd.DataFrame(index=date_list,columns=industry_list)
@@ -902,7 +902,7 @@ def IndustryAverage_PreparationForAlpha080():
 
         result_unaveraged_industry=0
         
-    result_industryaveraged_df.to_csv("IndustryAverage_Data_PreparationForAlpha080.csv",encoding='utf-8-sig')           
+    result_industryaveraged_df.to_csv("analysis/IndustryAverage_Data_PreparationForAlpha080.csv",encoding='utf-8-sig')           
     return result_industryaveraged_df
 
 #((low * 0.721001) + (vwap * (1 - 0.721001))
@@ -913,7 +913,7 @@ def IndustryAverage_PreparationForAlpha097():
     
     #check for building/updating/reading dataset
     try:
-        result_industryaveraged_df = pd.read_csv("IndustryAverage_Data_PreparationForAlpha097.csv")
+        result_industryaveraged_df = pd.read_csv("analysis/IndustryAverage_Data_PreparationForAlpha097.csv")
         result_industryaveraged_df["TRADE_DATE"] = result_industryaveraged_df["TRADE_DATE"].astype(int)        
         result_industryaveraged_df.set_index("TRADE_DATE",inplace=True)
         date_list_existed = pd.Series(result_industryaveraged_df.index)
@@ -923,7 +923,7 @@ def IndustryAverage_PreparationForAlpha097():
             return result_industryaveraged_df
         else:
             print("The corresponding industry average data for alpha097 needs to be updated.")
-            first_date_update = date_list_update[0]
+            first_date_update = date_list_update.iloc[0]
     except:
         print("The corresponding industry average dataset for alpha097 is missing.")
         result_industryaveraged_df=pd.DataFrame(index=date_list,columns=industry_list)
@@ -975,7 +975,7 @@ def IndustryAverage_PreparationForAlpha097():
 
         result_unaveraged_industry=0
         
-    result_industryaveraged_df.to_csv("IndustryAverage_Data_PreparationForAlpha097.csv",encoding='utf-8-sig')           
+    result_industryaveraged_df.to_csv("analysis/IndustryAverage_Data_PreparationForAlpha097.csv",encoding='utf-8-sig')           
     return result_industryaveraged_df
 
 #rank(((((close - low) - (high -close)) / (high - low)) * volume))
@@ -986,7 +986,7 @@ def IndustryAverage_PreparationForAlpha100_1():
     
     #check for building/updating/reading dataset
     try:
-        result_industryaveraged_df = pd.read_csv("IndustryAverage_Data_PreparationForAlpha100_1.csv")
+        result_industryaveraged_df = pd.read_csv("analysis/IndustryAverage_Data_PreparationForAlpha100_1.csv")
         result_industryaveraged_df["TRADE_DATE"] = result_industryaveraged_df["TRADE_DATE"].astype(int)        
         result_industryaveraged_df.set_index("TRADE_DATE",inplace=True)
         date_list_existed = pd.Series(result_industryaveraged_df.index)
@@ -996,7 +996,7 @@ def IndustryAverage_PreparationForAlpha100_1():
             return result_industryaveraged_df
         else:
             print("The corresponding industry average data for alpha100_1 needs to be updated.")
-            first_date_update = date_list_update[0]
+            first_date_update = date_list_update.iloc[0]
     except:
         print("The corresponding industry average dataset for alpha100_1 is missing.")
         result_industryaveraged_df=pd.DataFrame(index=date_list,columns=industry_list)
@@ -1050,7 +1050,7 @@ def IndustryAverage_PreparationForAlpha100_1():
 
         result_unaveraged_industry=0
         
-    result_industryaveraged_df.to_csv("IndustryAverage_Data_PreparationForAlpha100_1.csv",encoding='utf-8-sig')           
+    result_industryaveraged_df.to_csv("analysis/IndustryAverage_Data_PreparationForAlpha100_1.csv",encoding='utf-8-sig')           
     return result_industryaveraged_df
 
 #(correlation(close, rank(adv20), 5) - rank(ts_argmin(close, 30))) 
@@ -1061,7 +1061,7 @@ def IndustryAverage_PreparationForAlpha100_2():
     
     #check for building/updating/reading dataset
     try:
-        result_industryaveraged_df = pd.read_csv("IndustryAverage_Data_PreparationForAlpha100_2.csv")
+        result_industryaveraged_df = pd.read_csv("analysis/IndustryAverage_Data_PreparationForAlpha100_2.csv")
         result_industryaveraged_df["TRADE_DATE"] = result_industryaveraged_df["TRADE_DATE"].astype(int)        
         result_industryaveraged_df.set_index("TRADE_DATE",inplace=True)
         date_list_existed = pd.Series(result_industryaveraged_df.index)
@@ -1071,7 +1071,7 @@ def IndustryAverage_PreparationForAlpha100_2():
             return result_industryaveraged_df
         else:
             print("The corresponding industry average data for alpha100_2 needs to be updated.")
-            first_date_update = date_list_update[0]
+            first_date_update = date_list_update.iloc[0]
     except:
         print("The corresponding industry average dataset for alpha100_2 is missing.")
         result_industryaveraged_df=pd.DataFrame(index=date_list,columns=industry_list)
@@ -1124,7 +1124,7 @@ def IndustryAverage_PreparationForAlpha100_2():
 
         result_unaveraged_industry=0
         
-    result_industryaveraged_df.to_csv("IndustryAverage_Data_PreparationForAlpha100_2.csv",encoding='utf-8-sig')           
+    result_industryaveraged_df.to_csv("analysis/IndustryAverage_Data_PreparationForAlpha100_2.csv",encoding='utf-8-sig')           
     return result_industryaveraged_df
 
 
@@ -1151,9 +1151,9 @@ class Alphas(object):
         self.industry = local_source.get_stock_list(cols='TS_CODE,INDUSTRY', condition='TS_CODE = '+'"'+ts_code+'"')['INDUSTRY'].iloc[0]
         self.available_dates = stock_data_chosen["TRADE_DATE"]
 
-        output_dates = stock_data_chosen[(stock_data_chosen["TRADE_DATE"]>=start_date)*(stock_data_chosen["TRADE_DATE"]<=end_date)]["TRADE_DATE"]
-        start_available_date = output_dates.iloc[0]
-        end_available_date = output_dates.iloc[-1]        
+        self.output_dates = stock_data_chosen[(stock_data_chosen["TRADE_DATE"]>=start_date)*(stock_data_chosen["TRADE_DATE"]<=end_date)]["TRADE_DATE"]
+        start_available_date = self.output_dates.iloc[0]
+        end_available_date = self.output_dates.iloc[-1]        
         self.start_date_index = stock_data_chosen["TRADE_DATE"][stock_data_chosen["TRADE_DATE"].values == start_available_date].index[0]
         self.end_date_index = stock_data_chosen["TRADE_DATE"][stock_data_chosen["TRADE_DATE"].values == end_available_date].index[0] +1
          
@@ -1964,9 +1964,9 @@ class GTJAalphas(object):
         self.benchmarkindexopen = indices_daily_chosen['OPEN'] 
         self.benchmarkindexclose = indices_daily_chosen['CLOSE'] 
 
-        output_dates = stock_data_chosen[(stock_data_chosen["TRADE_DATE"]>=start_date)*(stock_data_chosen["TRADE_DATE"]<=end_date)]["TRADE_DATE"]
-        start_available_date = output_dates.iloc[0]
-        end_available_date = output_dates.iloc[-1]        
+        self.output_dates = stock_data_chosen[(stock_data_chosen["TRADE_DATE"]>=start_date)*(stock_data_chosen["TRADE_DATE"]<=end_date)]["TRADE_DATE"]
+        start_available_date = self.output_dates.iloc[0]
+        end_available_date = self.output_dates.iloc[-1]        
         self.start_date_index = stock_data_chosen["TRADE_DATE"][stock_data_chosen["TRADE_DATE"].values == start_available_date].index[0]
         self.end_date_index = stock_data_chosen["TRADE_DATE"][stock_data_chosen["TRADE_DATE"].values == end_available_date].index[0] +1
 
@@ -3208,8 +3208,8 @@ class GTJAalphas(object):
 
 
 
-def get_Alpha101(ts_code="000001.SZ"):  
-    Alpha101_results = Alphas(ts_code)
+def get_Alpha101(ts_code="000001.SZ",start_date=20210101,end_date=20211231):  
+    Alpha101_results = Alphas(ts_code,start_date=start_date,end_date=end_date)
     df = pd.DataFrame(Alpha101_results.alpha001().rename("Alpha001"))
     df['Alpha002']=Alpha101_results.alpha002()
     df['Alpha003']=Alpha101_results.alpha003()
@@ -3311,10 +3311,11 @@ def get_Alpha101(ts_code="000001.SZ"):
     df['Alpha099']=Alpha101_results.alpha099()
     df['Alpha100']=Alpha101_results.alpha100()
     df['Alpha101']=Alpha101_results.alpha101()  
+    df.index = Alpha101_results.output_dates
     return df
 
-def get_GTJAalphas(ts_code="000001.SZ"):  
-    GTJAalphas_results = GTJAalphas(ts_code)
+def get_GTJAalphas(ts_code="000001.SZ",start_date=20210101,end_date=20211231):  
+    GTJAalphas_results = GTJAalphas(ts_code,start_date=start_date,end_date=end_date)
     df = pd.DataFrame(GTJAalphas_results.GTJAalpha001().rename('GTJAalpha001'))
     df['GTJAalpha002']=GTJAalphas_results.GTJAalpha002()
     df['GTJAalpha003']=GTJAalphas_results.GTJAalpha003()
@@ -3506,6 +3507,7 @@ def get_GTJAalphas(ts_code="000001.SZ"):
     df['GTJAalpha189']=GTJAalphas_results.GTJAalpha189()
     df['GTJAalpha190']=GTJAalphas_results.GTJAalpha190()
     df['GTJAalpha191']=GTJAalphas_results.GTJAalpha191()
+    df.index = GTJAalphas_results.output_dates
     return df    
 
 
