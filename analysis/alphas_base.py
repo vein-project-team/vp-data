@@ -1145,7 +1145,7 @@ class Alphas(object):
         self.start_date = start_date
         self.end_date = end_date
         
-        if ts_code == "All":  #需要同时计算多股的alpha时, 将数据一次性取出以加快运行速度
+        if ts_code == "All":  
             quotations_daily=local_source.get_quotations_daily(cols='TRADE_DATE,TS_CODE,OPEN,CLOSE,LOW,HIGH,VOL,CHANGE,AMOUNT').sort_values(by="TRADE_DATE", ascending=True) 
             stock_indicators_daily=local_source.get_stock_indicators_daily(cols='TRADE_DATE,TS_CODE,TOTAL_SHARE').sort_values(by="TRADE_DATE", ascending=True) 
         else:
@@ -1963,7 +1963,7 @@ class GTJAalphas(object):
         self.start_date = start_date
         self.end_date = end_date
         
-        if ts_code == "All":  #需要同时计算多股的alpha时, 将数据一次性取出以加快运行速度
+        if ts_code == "All": 
             quotations_daily=local_source.get_quotations_daily(cols='TRADE_DATE,TS_CODE,OPEN,CLOSE,LOW,HIGH,VOL,CHANGE,AMOUNT').sort_values(by="TRADE_DATE", ascending=True) 
             stock_indicators_daily=local_source.get_stock_indicators_daily(cols='TRADE_DATE,TS_CODE,TOTAL_SHARE').sort_values(by="TRADE_DATE", ascending=True) 
         else:
@@ -3251,6 +3251,7 @@ class GTJAalphas(object):
 
 
 
+
 def get_Alpha101_allalphas(ts_code="000001.SZ",start_date=20210101,end_date=20211231): #取出一个股票的所有alpha的接口  
     Alpha101_results = Alphas(ts_code,start_date=start_date,end_date=end_date)
     Alpha101_results.initializer()
@@ -3558,7 +3559,6 @@ def get_GTJAalphas_allalphas(ts_code="000001.SZ",start_date=20210101,end_date=20
     return df    
 
 
-
 def get_Alpha101_allstocks(alpha_name="Alpha001", start_date=20210101, end_date=20211231):  #取出所有股票的单个alpha的接口
     Alpha101_results = Alphas(ts_code="All",start_date=start_date,end_date=end_date)
     stock_list=local_source.get_stock_list(cols='TS_CODE,INDUSTRY')["TS_CODE"]
@@ -3863,20 +3863,105 @@ def get_GTJAalphas_allstocks(alpha_name="GTJAalpha001", start_date=20210101, end
 
 
 
+#--------------------------------------------------------------------
+#Now define your alphas.
+
+class MyAlphas(object):
+    def __init__(self, ts_code, start_date=20210101, end_date=20211231):
+        #__init__中定义与个股无关的变量, 它在求单股和多股的alphas时都只会运行一次   
+        self.ts_code = ts_code
+        self.start_date = start_date
+        self.end_date = end_date
+        
+        if ts_code == "All":  #求多股的alpha时执行, 将数据一次性取出以加快运行速度
+            quotations_daily=local_source.get_quotations_daily(cols='TRADE_DATE,TS_CODE,OPEN,CLOSE,LOW,HIGH,VOL,CHANGE,AMOUNT').sort_values(by="TRADE_DATE", ascending=True) 
+            stock_indicators_daily=local_source.get_stock_indicators_daily(cols='TRADE_DATE,TS_CODE,TOTAL_SHARE').sort_values(by="TRADE_DATE", ascending=True) 
+        else:                 #求单股的alpha时执行
+            quotations_daily=local_source.get_quotations_daily(cols='TRADE_DATE,TS_CODE,OPEN,CLOSE,LOW,HIGH,VOL,CHANGE,AMOUNT',condition="TS_CODE = " + "'" + ts_code + "'").sort_values(by="TRADE_DATE", ascending=True) 
+            stock_indicators_daily=local_source.get_stock_indicators_daily(cols='TRADE_DATE,TS_CODE,TOTAL_SHARE',condition="TS_CODE = " + "'" + ts_code + "'").sort_values(by="TRADE_DATE", ascending=True) 
+        
+        self.stock_data=pd.merge(quotations_daily, stock_indicators_daily,on=['TRADE_DATE','TS_CODE'],how="left") 
+        self.stock_data=self.stock_data.applymap(lambda x: np.nan if x=="NULL" else x)
+        self.stock_data["TOTAL_MV"]=self.stock_data["TOTAL_SHARE"]*self.stock_data["CLOSE"]
+        self.stock_data["TRADE_DATE"]=self.stock_data["TRADE_DATE"].astype(int)
 
 
+    def initializer(self, ts_code_chosen=0):
+        #initializer中定义与个股相关的变量, 它在求多股的alphas时会对每个股运行一次
+        #求单股alphas时, 不用输入ts_code_chosen参数
+        #求多股(即ts_code参数为all)时, 在循环中输入当前正在求的股票代码为ts_code_chosen参数
+        if self.ts_code == 'All':
+            self.stock_data_chosen = self.stock_data[self.stock_data["TS_CODE"]==ts_code_chosen].reset_index(drop=True)
+        else:
+            self.stock_data_chosen = self.stock_data
+            ts_code_chosen = self.ts_code
+            
+        self.open = self.stock_data_chosen['OPEN'] 
+        self.high = self.stock_data_chosen['HIGH'] 
+        self.low = self.stock_data_chosen['LOW']   
+        self.close = self.stock_data_chosen['CLOSE'] 
+        self.volume = self.stock_data_chosen['VOL']*100 
+        self.amount = self.stock_data_chosen["AMOUNT"]
+        self.returns = self.stock_data_chosen['CHANGE'] / self.stock_data_chosen['OPEN']  
+        self.vwap = (self.stock_data_chosen['AMOUNT']*1000)/(self.stock_data_chosen['VOL']*100+1) 
+        self.cap = self.stock_data_chosen['TOTAL_MV']
+        self.industry = local_source.get_stock_list(cols='TS_CODE,INDUSTRY', condition='TS_CODE = '+'"'+ts_code_chosen+'"')['INDUSTRY'].iloc[0]
+        self.available_dates = self.stock_data_chosen["TRADE_DATE"]
+        self.output_dates = self.stock_data_chosen[(self.stock_data_chosen["TRADE_DATE"]>=self.start_date)*(self.stock_data_chosen["TRADE_DATE"]<=self.end_date)]["TRADE_DATE"]
+        start_available_date = self.output_dates.iloc[0]  #这个是交易日
+        end_available_date = self.output_dates.iloc[-1]        
+        self.start_date_index = self.stock_data_chosen["TRADE_DATE"][self.stock_data_chosen["TRADE_DATE"].values == start_available_date].index[0]
+        self.end_date_index = self.stock_data_chosen["TRADE_DATE"][self.stock_data_chosen["TRADE_DATE"].values == end_available_date].index[0] +1
+        
+        if ts_code_chosen[-2:]=='SZ': index_code = "399001.SZ"
+        else: index_code = "000001.SH"
+        indices_daily_chosen=local_source.get_indices_daily(cols='TRADE_DATE,INDEX_CODE,OPEN,CLOSE',condition='INDEX_CODE = '+'"'+index_code+'"').sort_values(by="TRADE_DATE", ascending=True)
+        indices_daily_chosen=indices_daily_chosen.applymap(lambda x: np.nan if x=="NULL" else x)
+        indices_daily_chosen["TRADE_DATE"]=indices_daily_chosen["TRADE_DATE"].astype(int)
+        indices_daily_chosen = pd.merge(self.stock_data_chosen["TRADE_DATE"], indices_daily_chosen, on=['TRADE_DATE'], how="left")
+        self.benchmarkindexopen = indices_daily_chosen['OPEN'] 
+        self.benchmarkindexclose = indices_daily_chosen['CLOSE'] 
+    
+    #在这里定义新alpha
+    def MyAlpha001(self):
+        alpha = self.close
+        return alpha[self.start_date_index:self.end_date_index]
+    
+    def MyAlpha002(self):
+        alpha = self.close
+        return alpha[self.start_date_index:self.end_date_index]
+
+    
+
+def get_MyAlphas_allalphas(ts_code="000001.SZ",start_date=20210101,end_date=20211231): #取出单个股票的所有alpha的接口
+    MyAlphas_results = MyAlphas(ts_code,start_date=start_date,end_date=end_date)
+    MyAlphas_results.initializer()
+    df = pd.DataFrame(MyAlphas_results.MyAlpha001().rename('MyAlpha001'))
+    df['MyAlpha002']=MyAlphas_results.MyAlpha002()
+    #定义新alpha后这里需补充
+    df.index = MyAlphas_results.output_dates
+    return df
 
 
-
-
-
-
-
-
-
-
-
-
+def get_MyAlphas_allstocks(alpha_name="Alpha001", start_date=20210101, end_date=20211231):  #取出所有股票的单个alpha的接口
+    MyAlphas_results = MyAlphas(ts_code="All",start_date=start_date,end_date=end_date)
+    stock_list=local_source.get_stock_list(cols='TS_CODE,INDUSTRY')["TS_CODE"]
+    df_all = 0
+    for ts_code in pb(stock_list, desc='Please wait', colour='#ffffff'):
+        try: 
+            MyAlphas_results.initializer(ts_code_chosen=ts_code)
+            if alpha_name == 'MyAlpha001': df = pd.DataFrame(MyAlphas_results.alpha001().rename("MyAlpha001"))
+            elif alpha_name == 'MyAlpha002': df = pd.DataFrame(MyAlphas_results.alpha002().rename("MyAlpha002"))
+            #定义新alpha后这里需补充
+            df = pd.concat([MyAlphas_results.output_dates, df],axis=1)
+            df.insert(loc=0,column='TS_CODE',value=ts_code)
+            if type(df_all) == int:
+                df_all = df
+            else:
+                df_all = pd.concat([df_all, df],axis=0)    
+        except:
+            pass
+    return df_all
 
 
 
