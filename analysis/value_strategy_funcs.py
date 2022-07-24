@@ -127,9 +127,9 @@ def Z_standardization(df, input_name_list, input_ascending, output_name): #input
     input_num = 0
     df_[output_name] = 0
     for input_name in input_name_list:
-        df_[input_name] = (df_[input_name]-df_[input_name].mean())/df_[input_name].mean()
-        df_[output_name] = df_[output_name] + df_[input_name]
-        df_.drop(input_name,axis=1,inplace=True)
+        df_[input_name+"_normalized"] = (df_[input_name]-df_[input_name].mean())/df_[input_name].mean()
+        df_[output_name] = df_[output_name] + df_[input_name+"_normalized"]
+        df_.drop(input_name+"_normalized", axis=1, inplace=True)
         input_num = input_num + 1  
     return df_
 
@@ -140,10 +140,10 @@ def Z_standardization_of_rank(df,input_name_list, input_ascending, output_name):
     df_[output_name]=0
     for input_name in input_name_list:
         df_["rank_"+input_name]=df_[input_name].rank(ascending=input_ascending[input_num])
-        df_["rank_"+input_name]=(df_["rank_"+input_name]-df_["rank_"+input_name].mean())/df_["rank_"+input_name].mean()
-        df_[output_name]=df_[output_name]+df_["rank_"+input_name]
-        df_.drop("rank_"+input_name,axis=1,inplace=True)
-        input_num=input_num+1  
+        df_["rank_"+input_name+"_normalized"]=(df_["rank_"+input_name]-df_["rank_"+input_name].mean())/df_["rank_"+input_name].mean()
+        df_[output_name]=df_[output_name]+df_["rank_"+input_name+"_normalized"]
+        df_.drop("rank_"+input_name+"_normalized", axis=1, inplace=True)
+        input_num = input_num + 1  
     return df_
 
 
@@ -331,7 +331,7 @@ def univariate_test_for_returns(df, var_name, mv_weighted=False, freq='daily', s
     result.loc["p-value",:] = pvalues   
     result.loc["Obs.",:] = [len(ret_q1),len(ret_q2),len(ret_q3),len(ret_q4),len(ret_q5),len(ret_q5minusq1)] 
     print(result)
-     
+    return ret_q1, ret_q2, ret_q3, ret_q4, ret_q5
 
 
 def univariate_test_for_returns_2(df, var_name, mv_weighted=False, freq='daily', start_date=20200101, end_date=20201231):  
@@ -461,27 +461,11 @@ def univariate_test_for_returns_2(df, var_name, mv_weighted=False, freq='daily',
         print(t_q1_w,t_q2_w,t_q3_w,t_q4_w,t_q5_w,t_q5minusq1_w)
 
 
-def fm_single_summary(reg_single_result_df):
-    #输入: 单次回归的结果dataframe, 列为变量名, 行为每个变量需要输出的值(parameter, tstat)
-    #输出: 将输入结果整理为学术格式的结果表格的一部分(Series)
-    #auxiliary function, not directly used
-    df = reg_single_result_df.copy()
-    var_list = []
-    var_list = pd.concat([df[i] for i in df.columns],axis=0)  #将属于不同变量的每列首尾相接变为一列
-    index_list = []
-    for m in range(len(var_list)):  #根据df的列名调整index
-        if (m % 2) == 0:
-            index_list.append(df.columns[int(m/2)])
-        elif (m % 2) !=0:
-            index_list.append('')
-    var_list.index = index_list
-    return var_list
-
-
 def fm_summary(reg_result_list):
     #输入: FamaMacBeth的model.fit的结果组成的列表
     #输出: 学术格式的结果表格
-    reg_result_all = 0
+    reg_result_df_rows = []
+    reg_result_processed = []
     for reg_result in reg_result_list:
         #系数保留四位并添加*
         reg_result_params = [ str(Decimal("%.4f" % float(i))) if np.isnan(i)==False else '' for i in reg_result.params ]
@@ -490,21 +474,31 @@ def fm_summary(reg_result_list):
         #t值保留两位并添加( )
         reg_result_tstats = ['(' + str(Decimal("%.2f" % float(i))) +')' if np.isnan(i)==False else '' for i in reg_result.tstats ]
         reg_result_tstats = pd.Series(reg_result_tstats, name=reg_result.tstats.name, index=reg_result.tstats.index)
-        
-        reg_result_piece = pd.DataFrame([reg_result_params, reg_result_tstats])
-        reg_result_piece = fm_single_summary(reg_result_piece)
-        if type(reg_result_all)==int:
-            reg_result_all = reg_result_piece
-        else:
-            reg_result_all = pd.concat([reg_result_all, reg_result_piece], axis=1)
-    reg_result_all = reg_result_all.fillna('')      
-    reg_result_all.columns = [str(i+1) for i in range(len(reg_result_list))] #调整列名为1,2,...
-    #以下输出需要的统计量, 可自行调整
-    r2_list = pd.Series([reg_result.rsquared_overall for reg_result in reg_result_list], name='Avg. R Square', index=reg_result_all.columns)
-    total_obs_list = pd.Series([reg_result.nobs for reg_result in reg_result_list], name='Total Obs.', index=reg_result_all.columns)
-    mean_list = pd.Series([reg_result.time_info['mean'] for reg_result in reg_result_list], name='Avg. Obs.', index=reg_result_all.columns)
-    reg_result_all = reg_result_all.append([r2_list, total_obs_list, mean_list])
-    return reg_result_all
+        #统计量, 及保留小数位
+        rsquared = "%.4f" % float(reg_result.rsquared_overall)
+        obs = reg_result.nobs
+        meanobs = "%.2f" % float(reg_result.time_info['mean'])
+        #整理结果
+        reg_result_processed.append([reg_result_params, reg_result_tstats, rsquared, obs, meanobs]) 
+        #保存变量名用来生成表格的行
+        reg_result_df_rows = reg_result_df_rows + list(reg_result_params.index)
+    
+    reg_result_df_rows = list(set(reg_result_df_rows))
+    reg_result_df_rows = [[i,""] for i in reg_result_df_rows]
+    reg_result_df_rows = sum(reg_result_df_rows, [])
+    reg_result_df_rows = reg_result_df_rows + ['Avg. R Square', 'Total Obs.', 'Avg. Obs.']
+    reg_result_table = pd.DataFrame(index=reg_result_df_rows)
+    
+    for i in range(len(reg_result_processed)):
+        for entry in reg_result_processed[i][0].index:
+               reg_result_table.loc[entry, i] = reg_result_processed[i][0].loc[entry]
+               reg_result_table.iloc[reg_result_table.index.get_loc(entry)+1, i] = reg_result_processed[i][1].loc[entry]
+        reg_result_table.loc['Avg. R Square', i] = reg_result_processed[i][2]
+        reg_result_table.loc['Total Obs.', i] = reg_result_processed[i][3]
+        reg_result_table.loc['Avg. Obs.', i] = reg_result_processed[i][4]
+    reg_result_table.replace(np.nan, '', inplace=True)
+    reg_result_table.columns = [i+1 for i in range(len(reg_result_table.columns))]    #调整列名为1,2,...    
+    return reg_result_table
 
 
 def Fama_MacBeth_reg(df,y_name,x_name_list):
@@ -518,6 +512,70 @@ def Fama_MacBeth_reg(df,y_name,x_name_list):
     model = FamaMacBeth.from_formula(formula, data=df_)
     reg_result = model.fit(cov_type= 'kernel',debiased = False, bandwidth = 4) #cov_type设定表示输出Newey-West调整后的结果; bandwidth为Newey-West滞后阶数, 选取方式为lag = 4(T/100) ^ (2/9);
     return reg_result
+
+
+def value_strategy_tests_monthly(df, factor_name_list, input_list, input_ascending_list=0, test_freq='monthly', standardization_type = 'default'):
+    #本函数是该文件中所有函数的总结, 外部调用
+    #factor_name_list格式: [factor1, factor2]
+    #input_list格式: [[A,B,C],[D,E]]
+    #input_ascending格式: [[True,True,False],[True,True]]
+    #test_freq是进行检验的频率, 输入数据的频率只允许daily    
+    data0 = df.copy()
+    #删除ST股
+    data0 = delete_FinanceCorps(data0)
+    #删除金融业公司
+    data0 = delete_ST(data0)
+    
+    if test_freq == 'monthly':
+        data0 = degenerate_dailydata_to_monthlydata(data0, data_type='panel')  
+    start_date = np.nanmin(data0["TRADE_DATE"])
+    end_date = np.nanmax(data0["TRADE_DATE"])
+    
+    for factor_num in range(len(factor_name_list)):
+        if input_ascending_list == 0: 
+            input_ascending = [True for i in range(len(input_list[factor_num]))]
+        else: 
+            input_ascending = input_ascending_list[factor_num]
+        #对一个factor的各组成部分标准化
+        if standardization_type == 'default':
+            data0 = Z_standardization(data0, input_name_list=input_list[factor_num], input_ascending=input_ascending, output_name=factor_name_list[factor_num])
+        elif standardization_type == 'rank':
+            data0 = Z_standardization_of_rank(data0, input_name_list=input_list[factor_num], input_ascending=input_ascending, output_name=factor_name_list[factor_num])
+        #使用t-test检验该factor的收益显著性
+        print("等额加权下对因子{factor_name}的t检验结果:".format(factor_name=factor_name_list[factor_num]))
+        test = univariate_test_for_returns(data0, var_name=factor_name_list[factor_num], mv_weighted=False, freq=test_freq, start_date=start_date, end_date=end_date)
+        
+    #对所有factor的总标准化和t-test
+    if standardization_type == 'default':
+        data0 = Z_standardization(data0, input_name_list=factor_name_list, input_ascending=[True for i in range(len(input_list))], output_name='Overall_Normalization_Result')
+    elif standardization_type == 'rank':
+        data0 = Z_standardization_of_rank(data0, input_name_list=factor_name_list, input_ascending=[True for i in range(len(input_list))], output_name='Overall_Normalization_Result')
+    print("等额加权下对全部因子标准化后的t检验结果:")
+    test = univariate_test_for_returns(data0, var_name='Overall_Normalization_Result', mv_weighted=False, freq=test_freq, start_date=start_date, end_date=end_date)
+    
+    #Fama-MecBeth检验准备,往dataframe中导入相关数据
+    data_close = local_source.get_quotations_daily(cols='TRADE_DATE, TS_CODE, CLOSE', condition="TRADE_DATE>=" + str(start_date) + " and TRADE_DATE<=" + str(end_date))
+    data_close["TRADE_DATE"]=data_close["TRADE_DATE"].astype(int)
+    if test_freq == 'monthly':    
+        data_close = degenerate_dailydata_to_monthlydata(data_close, data_type='panel')
+    data0 = pd.merge(data_close, data0, on=["TS_CODE","TRADE_DATE"], how='left')
+    data_return = calculate_pctchange_bystock(data_close)
+    data0 = pd.merge(data0, data_return, on=["TS_CODE","TRADE_DATE"], how='left')
+    
+    #进行Fama-MacBeth检验
+    fm_result_list=[]
+    #test = value_strategy_funcs.Fama_MacBeth_reg(data0,'PCT_CHANGE', ['Overall_Normalization_Result']) #这个会报错, 原因未知
+    #fm_result_list.append(test)
+    for factor_name in factor_name_list:
+        test = Fama_MacBeth_reg(data0,'PCT_CHANGE', [factor_name])
+        fm_result_list.append(test)
+    test = Fama_MacBeth_reg(data0,'PCT_CHANGE', factor_name_list)
+    fm_result_list.append(test)
+    print(fm_summary(fm_result_list))
+
+    #输出根据这种策略选出的一定比例的股票
+    choice_matrix = stock_selection_by_var(data0, var_name='Overall_Normalization_Result', pct=0.2, Type='best', start_date=start_date, end_date=end_date)
+    return choice_matrix
 
 
 

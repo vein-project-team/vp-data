@@ -36,7 +36,7 @@ def construct_FSdata_for_FFmodels():
             return result_existed
         else:
             print("The corresponding daily FSdata for FFmodels needs to be updated.")
-            first_date_update = date_list_update[0]
+            first_date_update = date_list_update.iloc[0]
     except:
         print("The corresponding daily FSdata for FFmodels is missing.")
     date_list_update = date_list
@@ -84,6 +84,7 @@ def construct_FSdata_for_FFmodels():
     except:
         result = result_added
     result.drop_duplicates(subset=["TRADE_DATE","TS_CODE"],inplace=True)
+    result.dropna(subset=["TRADE_DATE"],inplace=True) #未知原因, 出现重复但日期为空的数据
     result.to_csv("analysis/FSdata_for_FFmodelsdaily.csv",encoding='utf-8-sig',index=False)
     return result
 

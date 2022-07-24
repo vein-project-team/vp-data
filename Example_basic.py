@@ -5,20 +5,12 @@ import numpy as np
 from data_source import local_source
 
 
-'''
-#example: 计算Fama-French factors
-from analysis import MyFFfactorsmodel
-FFfactors = MyFFfactorsmodel.construct_FFfactors(freq='daily')
-'''
-
-
-'''
 #example: 对个股计算内置alpha
 from analysis import alphas_base
 ts_code = '000002.SZ'
-alphas = alphas_base.get_Alpha101(ts_code=ts_code)
-#GTJAalphas = alphas_base.get_GTJAalphas(ts_code=ts_code)
-'''
+alphas = alphas_base.get_Alpha101_allalphas(ts_code=ts_code)
+#GTJAalphas = alphas_base.get_GTJAalphas_allalphas(ts_code=ts_code)
+
 
 
 

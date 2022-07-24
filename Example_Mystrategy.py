@@ -4,12 +4,13 @@
 import numpy as np
 import pandas as pd
 from data_source import local_source
+from analysis import factor_loader
 from analysis import BackTest
 from analysis import value_strategy_funcs
 from analysis import alphas_base
 from tqdm import tqdm as pb
 
-    
+#量化系统单股模式示例  
 #1.使用alpha策略日频操作单个股票样例
 class BackTest_UnivariateStock_with_Strategy(BackTest.BackTest_UnivariateStock):
     def __init__(self, df, start_date, end_date, freq, startcash, pct_commission_buy, pct_commission_sale, minimum_commission):
@@ -36,6 +37,7 @@ end_date=20211231
 date_list = BackTest.get_all_tradedates(start_date=start_date, end_date=end_date)
 data0 = local_source.get_quotations_daily(cols='TRADE_DATE,TS_CODE,OPEN,HIGH,LOW,CLOSE,VOL',condition="TS_CODE = " + "'" + ts_code + "' and TRADE_DATE>=" + str(start_date) + " and TRADE_DATE<=" + str(end_date))
 Alphas = alphas_base.Alphas(ts_code=ts_code,start_date=start_date,end_date=end_date)
+Alphas.initializer()
 data_alpha = Alphas.alpha001().rename("alpha001")
 data0["alpha"] = data_alpha.values
 data0["TRADE_DATE"] = data0["TRADE_DATE"].astype(int)
@@ -45,46 +47,26 @@ test = BackTest_UnivariateStock_with_Strategy(data0, start_date=start_date, end_
 transaction_history, cash_history = test.BackTest()
 
 #-----------------------------------------------------------------------------------
+#量化系统多股模式示例
+#用内置因子数据寻找有显著收益的价值投资策略； 那之后, 应用其结果进行月频换仓的买卖
 
-#2. 用财务报表数据寻找有显著收益的价值投资策略； 那之后, 应用其结果进行月频换仓的买卖
+start_date = 20210101
+end_date = 20211231
 
-#(1)获取财务数据
-start_date=20200101
-end_date=20211231
-data0 = local_source.get_balance_sheets(cols='TS_CODE, ANN_DATE, END_DATE, OTH_RECEIV, PREPAYMENT', condition='REPORT_TYPE=1')
-data0 = data0.applymap(lambda x: np.nan if x=="NULL" else x)
+#(1)调用需要使用的内置因子数据
+df=0
+for i in ["#CURRENT_RATIO","#QUICK_RATIO","#CASH_RATIO", "#ROA"]:
+    df_new =  factor_loader.EmbeddedFactors_allstocks(factor_name=i, start_date=start_date, end_date=end_date)
+    df = factor_loader.add_factor(df_new, df)
 
-#(2)将财务数据向后填充至每天(即使准备用monthly的数据, 也需要用daily填充)
-data1 = value_strategy_funcs.fill_financial_data_to_daily_ann_date_basis(data0)  
-#test1 = value_strategy_tests.fill_financial_data_to_daily_end_date_basis(data0, month=2)
-
-#(3)将财务数据变为月频
-data2 = value_strategy_funcs.degenerate_dailydata_to_monthlydata(data1, data_type='panel')
-
-#(4)整合多个指标并标准化(这里假设以"OTH_RECEIV","PREPAYMENT"为选股指标)
-data3 = value_strategy_funcs.Z_standardization_of_rank(data2, input_name_list=["OTH_RECEIV","PREPAYMENT"], input_ascending=[True,True],output_name="test")
-#data3 = value_strategy_tests.Z_standardization(data2, input_name_list=["OTH_RECEIV","PREPAYMENT"], input_ascending=[True,True],output_name="test")
-
-#(5)使用t-test检验该财务数据的收益显著性
-start_date=202001
-end_date=202112
-test4 = value_strategy_funcs.univariate_test_for_returns(data3, var_name="test", mv_weighted=False, freq='monthly', start_date=start_date, end_date=end_date)
-
-#(6)使用Fama-MacBeth检验该财务数据的收益显著性
-data_close = local_source.get_quotations_daily(cols='TRADE_DATE, TS_CODE, CLOSE',condition = 'TRADE_DATE>=20200101 and TRADE_DATE<=20211231')
-data_close["TRADE_DATE"]=data_close["TRADE_DATE"].astype(int)
-data_close = value_strategy_funcs.degenerate_dailydata_to_monthlydata(data_close, data_type='panel')
-data_merge = pd.merge(data_close, data3, on=["TS_CODE","TRADE_DATE"], how='left')
-data_return = value_strategy_funcs.calculate_pctchange_bystock(data_close)
-data_merge = pd.merge(data_merge, data_return, on=["TS_CODE","TRADE_DATE"], how='left')
-test5 = value_strategy_funcs.Fama_MacBeth_reg(data_merge,'PCT_CHANGE', ["test"])
-print(value_strategy_funcs.fm_summary([test5, test5, test5]))
-
-#(7)并输出根据这种策略选出的一定比例的股票
-choice_matrix = value_strategy_funcs.stock_selection_by_var(data3, var_name="test", pct=0.2, Type='best', start_date=start_date, end_date=end_date)
+#(2)构建Solvency和Profitability两个factor, 测试盈利能力并输出选股矩阵
+factor_name_list = ["Solvency", "Profitability"]    
+input_list = [["CURRENT_RATIO","QUICK_RATIO", "CASH_RATIO"], ["ROA"]]
+input_ascending_list = [[True, True, True],[True]]
+choice_matrix = value_strategy_funcs.value_strategy_tests_monthly(df, factor_name_list, input_list, input_ascending_list)
 
 
-#适用于该选股模式的Multivariate Strategy, 不需要改动
+#(3)编写对应的交易策略
 class BackTest_MultivariateStock_with_Strategy(BackTest.BackTest_MultivariateStock):
     def __init__(self, stock_df_dict, start_date, end_date, freq, startcash, pct_commission_buy, pct_commission_sale, minimum_commission):
         BackTest.BackTest_MultivariateStock.__init__(self, stock_df_dict, start_date, end_date, freq, startcash, pct_commission_buy, pct_commission_sale, minimum_commission)
@@ -118,8 +100,10 @@ class BackTest_MultivariateStock_with_Strategy(BackTest.BackTest_MultivariateSto
                 pass  
 
 
+#(4)初始化回测系统
+start_date = 202101
+end_date = 202112
 startcash = 100000
-
 stock_set = {}
 startcash_dict={}
 stock_list = local_source.get_stock_list(cols="TS_CODE,NAME")["TS_CODE"]
@@ -133,9 +117,9 @@ for stock in pb(stock_list, desc='Importing stock data', colour='#ffffff'):
     stock_set[stock] = data_stock
     startcash_dict[stock] = startcash
 
-
-test_ = BackTest_MultivariateStock_with_Strategy(stock_df_dict=stock_set, start_date=start_date, end_date=end_date, freq='monthly', startcash=len(stock_set)*100000, pct_commission_buy=0.00012, pct_commission_sale=0.00112, minimum_commission=5)
-transaction_history, cash_history = test_.Multivariate_BackTest()
+#(5)进行回测
+test2 = BackTest_MultivariateStock_with_Strategy(stock_df_dict=stock_set, start_date=start_date, end_date=end_date, freq='monthly', startcash=len(stock_set)*100000, pct_commission_buy=0.00012, pct_commission_sale=0.00112, minimum_commission=5)
+transaction_history, cash_history = test2.Multivariate_BackTest()
 
 
 

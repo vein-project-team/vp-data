@@ -22,17 +22,6 @@ def ts_sum(df, window=10):
     
     return df.rolling(window).sum()
 
-
-def ts_prod(df, window=10):
-    """
-    Wrapper function to estimate rolling product.
-    :param df: a pandas DataFrame.
-    :param window: the rolling window.
-    :return: a pandas DataFrame with the time-series product over the past 'window' days.
-    """
-    
-    return df.rolling(window).prod()
-
 def sma(df, window=10): #simple moving average
     """
     Wrapper function to estimate SMA.
@@ -50,7 +39,9 @@ def ema(df, n, m): #exponential moving average
     """   
     result = df.copy()
     for i in range(1,len(df)):
-        result.iloc[i]= (m*df.iloc[i-1] + (n-m)*result[i-1]) / n
+        result.iloc[i] = (m*df.iloc[i-1] + (n-m)*result.iloc[i-1]) / n
+        if result.iloc[i] != result.iloc[i]:
+            result.iloc[i] = 0
     return result
 
 def wma(df, n):
@@ -92,7 +83,33 @@ def covariance(x, y, window=10):
     """
     return x.rolling(window).cov(y)
 
-def rolling_rank(na):
+def rank(df):
+    """
+    Wrapper function for ranking.
+    :param df: a pandas DataFrame.
+    :return: a pandas DataFrame with rank along columns.
+    """
+    #return df.rank(axis=1, pct=True)
+    return df.rank(pct=True)
+
+def rolling_rank(df, window=1):
+    """
+    Wrapper function to sort a vector by rolling.
+    :param df: a pandas DataFrame.
+    :param window: the rolling window.
+    :return: a pandas Series of the maximum value over past window days.
+    """
+    return df.rolling(window).apply(max)
+
+def ts_rank_(na):
+    """
+    Auxiliary function to be used in pd.rolling_apply
+    :param na: numpy array.
+    :return: a pandas Series of the rank of the values in the array.
+    """
+    return pd.Series(rankdata(na))
+
+def ts_rank_last(na):
     """
     Auxiliary function to be used in pd.rolling_apply
     :param na: numpy array.
@@ -107,9 +124,9 @@ def ts_rank(df, window=10):
     :param window: the rolling window.
     :return: a pandas DataFrame with the time-series rank over the past window days.
     """
-    return df.rolling(window).apply(rolling_rank)
+    return df.rolling(window).apply(ts_rank_last)
 
-def rolling_prod(na):
+def product(na):
     """
     Auxiliary function to be used in pd.rolling_apply
     :param na: numpy array.
@@ -117,14 +134,14 @@ def rolling_prod(na):
     """
     return np.prod(na)
 
-def product(df, window=10):
+def rolling_product(df, window=10):
     """
     Wrapper function to estimate rolling product.
     :param df: a pandas DataFrame.
     :param window: the rolling window.
     :return: a pandas DataFrame with the time-series product over the past 'window' days.
     """
-    return df.rolling(window).apply(rolling_prod)
+    return df.rolling(window).apply(product)
 
 def ts_min(df, window=10):
     """
@@ -161,15 +178,6 @@ def delay(df, period=1):
     :return: a pandas DataFrame with lagged time series
     """
     return df.shift(period)
-
-def rank(df):
-    """
-    Cross sectional rank
-    :param df: a pandas DataFrame.
-    :return: a pandas DataFrame with rank along columns.
-    """
-    #return df.rank(axis=1, pct=True)
-    return df.rank(pct=True)
 
 def scale(df, k=1):
     """
@@ -225,7 +233,7 @@ def decay_linear(df, period=10):
     for row in range(period - 1, df.shape[0]):
         x = na_series[row - period + 1: row + 1, :]
         na_lwma[row, :] = (np.dot(x.T, y))
-    return pd.DataFrame(na_lwma, index=df.index, columns=['CLOSE'])  
+    return pd.DataFrame(na_lwma, index=df.index).iloc[:,0]  
 
 def highday(df, n): #计算df前n期时间序列中最大值距离当前时点的间隔
     result = pd.Series(np.nan, index=df.index)
@@ -1129,33 +1137,50 @@ def IndustryAverage_PreparationForAlpha100_2():
 
 
 
-class Alphas(object):
-    def __init__(self, ts_code="000001.SZ",start_date=20210101,end_date=20211231):
-        
-        quotations_daily_chosen=local_source.get_quotations_daily(cols='TRADE_DATE,TS_CODE,OPEN,CLOSE,LOW,HIGH,VOL,CHANGE,AMOUNT',condition="TS_CODE = " + "'" + ts_code + "'").sort_values(by="TRADE_DATE", ascending=True) 
-        stock_indicators_daily_chosen=local_source.get_stock_indicators_daily(cols='TRADE_DATE,TS_CODE,TOTAL_SHARE',condition="TS_CODE = " + "'" + ts_code + "'").sort_values(by="TRADE_DATE", ascending=True) 
-        stock_data_chosen=pd.merge(quotations_daily_chosen,stock_indicators_daily_chosen,on=['TRADE_DATE','TS_CODE'],how="left") 
-        stock_data_chosen["TOTAL_MV"]=stock_data_chosen["TOTAL_SHARE"]*stock_data_chosen["CLOSE"]
-        stock_data_chosen=stock_data_chosen.applymap(lambda x: np.nan if x=="NULL" else x)
-        stock_data_chosen["TRADE_DATE"]=stock_data_chosen["TRADE_DATE"].astype(int)
-         
-        self.open = stock_data_chosen['OPEN'] 
-        self.high = stock_data_chosen['HIGH'] 
-        self.low = stock_data_chosen['LOW']   
-        self.close = stock_data_chosen['CLOSE'] 
-        self.volume = stock_data_chosen['VOL']*100 
-        self.returns = stock_data_chosen['CHANGE'] / stock_data_chosen['OPEN']  
-        self.vwap = (stock_data_chosen['AMOUNT']*1000)/(stock_data_chosen['VOL']*100+1) 
-        self.cap = stock_data_chosen['TOTAL_MV']
-        
-        self.industry = local_source.get_stock_list(cols='TS_CODE,INDUSTRY', condition='TS_CODE = '+'"'+ts_code+'"')['INDUSTRY'].iloc[0]
-        self.available_dates = stock_data_chosen["TRADE_DATE"]
 
-        self.output_dates = stock_data_chosen[(stock_data_chosen["TRADE_DATE"]>=start_date)*(stock_data_chosen["TRADE_DATE"]<=end_date)]["TRADE_DATE"]
-        start_available_date = self.output_dates.iloc[0]
+class Alphas(object):
+    def __init__(self, ts_code, start_date=20210101, end_date=20211231):
+        
+        self.ts_code = ts_code
+        self.start_date = start_date
+        self.end_date = end_date
+        
+        if ts_code == "All":  #需要同时计算多股的alpha时, 将数据一次性取出以加快运行速度
+            quotations_daily=local_source.get_quotations_daily(cols='TRADE_DATE,TS_CODE,OPEN,CLOSE,LOW,HIGH,VOL,CHANGE,AMOUNT').sort_values(by="TRADE_DATE", ascending=True) 
+            stock_indicators_daily=local_source.get_stock_indicators_daily(cols='TRADE_DATE,TS_CODE,TOTAL_SHARE').sort_values(by="TRADE_DATE", ascending=True) 
+        else:
+            quotations_daily=local_source.get_quotations_daily(cols='TRADE_DATE,TS_CODE,OPEN,CLOSE,LOW,HIGH,VOL,CHANGE,AMOUNT',condition="TS_CODE = " + "'" + ts_code + "'").sort_values(by="TRADE_DATE", ascending=True) 
+            stock_indicators_daily=local_source.get_stock_indicators_daily(cols='TRADE_DATE,TS_CODE,TOTAL_SHARE',condition="TS_CODE = " + "'" + ts_code + "'").sort_values(by="TRADE_DATE", ascending=True) 
+        
+        self.stock_data=pd.merge(quotations_daily, stock_indicators_daily,on=['TRADE_DATE','TS_CODE'],how="left") 
+        self.stock_data=self.stock_data.applymap(lambda x: np.nan if x=="NULL" else x)
+        self.stock_data["TOTAL_MV"]=self.stock_data["TOTAL_SHARE"]*self.stock_data["CLOSE"]
+        self.stock_data["TRADE_DATE"]=self.stock_data["TRADE_DATE"].astype(int)
+
+
+    def initializer(self, ts_code_chosen=0):
+        if self.ts_code == 'All':
+            self.stock_data_chosen = self.stock_data[self.stock_data["TS_CODE"]==ts_code_chosen].reset_index(drop=True)
+        else:
+            self.stock_data_chosen = self.stock_data
+            ts_code_chosen = self.ts_code
+            
+        self.open = self.stock_data_chosen['OPEN'] 
+        self.high = self.stock_data_chosen['HIGH'] 
+        self.low = self.stock_data_chosen['LOW']   
+        self.close = self.stock_data_chosen['CLOSE'] 
+        self.volume = self.stock_data_chosen['VOL']*100
+        self.returns = self.stock_data_chosen['CHANGE'] / self.stock_data_chosen['OPEN']  
+        self.vwap = (self.stock_data_chosen['AMOUNT']*1000)/(self.stock_data_chosen['VOL']*100+1) 
+        self.cap = self.stock_data_chosen['TOTAL_MV']
+        self.industry = local_source.get_stock_list(cols='TS_CODE,INDUSTRY', condition='TS_CODE = '+'"'+ts_code_chosen+'"')['INDUSTRY'].iloc[0]
+        self.available_dates = self.stock_data_chosen["TRADE_DATE"]
+        self.output_dates = self.stock_data_chosen[(self.stock_data_chosen["TRADE_DATE"]>=self.start_date)*(self.stock_data_chosen["TRADE_DATE"]<=self.end_date)]["TRADE_DATE"]
+        start_available_date = self.output_dates.iloc[0]  #这个是交易日
         end_available_date = self.output_dates.iloc[-1]        
-        self.start_date_index = stock_data_chosen["TRADE_DATE"][stock_data_chosen["TRADE_DATE"].values == start_available_date].index[0]
-        self.end_date_index = stock_data_chosen["TRADE_DATE"][stock_data_chosen["TRADE_DATE"].values == end_available_date].index[0] +1
+        self.start_date_index = self.stock_data_chosen["TRADE_DATE"][self.stock_data_chosen["TRADE_DATE"].values == start_available_date].index[0]
+        self.end_date_index = self.stock_data_chosen["TRADE_DATE"][self.stock_data_chosen["TRADE_DATE"].values == end_available_date].index[0] +1
+        
          
     # Alpha#1	 (rank(Ts_ArgMax(SignedPower(((returns < 0) ? stddev(returns, 20) : close), 2.), 5)) -0.5)
     def alpha001(self):
@@ -1339,7 +1364,7 @@ class Alphas(object):
     
     # Alpha#29	 (min(product(rank(rank(scale(log(sum(ts_min(rank(rank((-1 * rank(delta((close - 1),5))))), 2), 1))))), 1), 5) + ts_rank(delay((-1 * returns), 6), 5))
     def alpha029(self):
-        alpha = (ts_min(rank(rank(scale(log(ts_sum(rank(rank(-1 * rank(delta((self.close - 1), 5)))), 2))))), 5) + ts_rank(delay((-1 * self.returns), 6), 5))
+        alpha = (ts_min(rolling_product(rank(rank(scale(log(ts_sum(ts_min(rank(rank((-1 * rank(delta((self.close - 1), 5))))), 2), 1))))), 1), 5) + ts_rank(delay((-1 * self.returns), 6), 5))
         return alpha[self.start_date_index:self.end_date_index]
 
     # Alpha#30	 (((1.0 - rank(((sign((close - delay(close, 1))) + sign((delay(close, 1) - delay(close, 2)))) +sign((delay(close, 2) - delay(close, 3)))))) * sum(volume, 5)) / sum(volume, 20))
@@ -1356,7 +1381,8 @@ class Alphas(object):
         p1=rank(rank(rank(decay_linear((-1 * rank(rank(delta(self.close, 10)))), 10)))) 
         p2=rank((-1 * delta(self.close, 3)))
         p3=sign(scale(df))
-        alpha = p1.CLOSE+p2+p3
+        print(p1)
+        alpha = p1+p2+p3
         return alpha[self.start_date_index:self.end_date_index]
     
     # Alpha#32	 (scale(((sum(close, 7) / 7) - close)) + (20 * scale(correlation(vwap, delay(close, 5),230))))
@@ -1402,7 +1428,7 @@ class Alphas(object):
     # Alpha#39	 ((-1 * rank((delta(close, 7) * (1 - rank(decay_linear((volume / adv20), 9)))))) * (1 +rank(sum(returns, 250))))
     def alpha039(self):
         adv20 = sma(self.volume, 20)
-        alpha = ((-1 * rank(delta(self.close, 7) * (1 - rank(decay_linear((self.volume / adv20), 9).CLOSE)))) * (1 + rank(sma(self.returns, 250))))
+        alpha = ((-1 * rank(delta(self.close, 7) * (1 - rank(decay_linear((self.volume / adv20), 9))))) * (1 + rank(sma(self.returns, 250))))
         return alpha[self.start_date_index:self.end_date_index]
     
     # Alpha#40	 ((-1 * rank(stddev(high, 10))) * correlation(high, volume, 10))
@@ -1516,7 +1542,7 @@ class Alphas(object):
     
     # Alpha#57	 (0 - (1 * ((close - vwap) / decay_linear(rank(ts_argmax(close, 30)), 2))))
     def alpha057(self):
-        alpha = (0 - (1 * ((self.close - self.vwap) / decay_linear(rank(ts_argmax(self.close, 30)), 2).CLOSE)))
+        alpha = (0 - (1 * ((self.close - self.vwap) / decay_linear(rank(ts_argmax(self.close, 30)), 2))))
         return alpha[self.start_date_index:self.end_date_index]
     
     # Alpha#58	 (-1 * Ts_Rank(decay_linear(correlation(IndNeutralize(vwap, IndClass.sector), volume,3.92795), 7.89291), 5.50322))
@@ -1551,6 +1577,7 @@ class Alphas(object):
     def alpha061(self):
         adv180 = sma(self.volume, 180)
         alpha = (rank((self.vwap - ts_min(self.vwap, 16))) < rank(correlation(self.vwap, adv180, 18)))
+        alpha = alpha * 1
         return alpha[self.start_date_index:self.end_date_index]
     
 	# Alpha#62	 ((rank(correlation(vwap, sum(adv20, 22.4101), 9.91009)) < rank(((rank(open) +rank(open)) < (rank(((high + low) / 2)) + rank(high))))) * -1)
@@ -1584,7 +1611,7 @@ class Alphas(object):
     
     # Alpha#66	 ((rank(decay_linear(delta(vwap, 3.51013), 7.23052)) + Ts_Rank(decay_linear(((((low* 0.96633) + (low * (1 - 0.96633))) - vwap) / (open - ((high + low) / 2))), 11.4157), 6.72611)) * -1)
     def alpha066(self):
-        alpha = ((rank(decay_linear(delta(self.vwap, 4), 7).CLOSE) + ts_rank(decay_linear(((((self.low* 0.96633) + (self.low * (1 - 0.96633))) - self.vwap) / (self.open - ((self.high + self.low) / 2))), 11).CLOSE, 7)) * -1)
+        alpha = ((rank(decay_linear(delta(self.vwap, 4), 7)) + ts_rank(decay_linear(((((self.low* 0.96633) + (self.low * (1 - 0.96633))) - self.vwap) / (self.open - ((self.high + self.low) / 2))), 11), 7)) * -1)
         return alpha[self.start_date_index:self.end_date_index]
     
     # Alpha#67	 ((rank((high - ts_min(high, 2.14593)))^rank(correlation(IndNeutralize(vwap,IndClass.sector), IndNeutralize(adv20, IndClass.subindustry), 6.02936))) * -1)
@@ -1634,8 +1661,8 @@ class Alphas(object):
     # Alpha#71	 max(Ts_Rank(decay_linear(correlation(Ts_Rank(close, 3.43976), Ts_Rank(adv180,12.0647), 18.0175), 4.20501), 15.6948), Ts_Rank(decay_linear((rank(((low + open) - (vwap +vwap)))^2), 16.4662), 4.4388))
     def alpha071(self):
         adv180 = sma(self.volume, 180)
-        p1=ts_rank(decay_linear(correlation(ts_rank(self.close, 3), ts_rank(adv180,12), 18), 4).CLOSE, 16)
-        p2=ts_rank(decay_linear((rank(((self.low + self.open) - (self.vwap +self.vwap))).pow(2)), 16).CLOSE, 4)
+        p1=ts_rank(decay_linear(correlation(ts_rank(self.close, 3), ts_rank(adv180,12), 18), 4), 16)
+        p2=ts_rank(decay_linear((rank(((self.low + self.open) - (self.vwap +self.vwap))).pow(2)), 16), 4)
         df=pd.DataFrame({'p1':p1,'p2':p2})
         df.at[df['p1']>=df['p2'],'max']=df['p1']
         df.at[df['p2']>=df['p1'],'max']=df['p2']
@@ -1646,13 +1673,13 @@ class Alphas(object):
     # Alpha#72	 (rank(decay_linear(correlation(((high + low) / 2), adv40, 8.93345), 10.1519)) /rank(decay_linear(correlation(Ts_Rank(vwap, 3.72469), Ts_Rank(volume, 18.5188), 6.86671),2.95011)))
     def alpha072(self):
         adv40 = sma(self.volume, 40)
-        alpha = (rank(decay_linear(correlation(((self.high + self.low) / 2), adv40, 9).to_frame(), 10).CLOSE) /rank(decay_linear(correlation(ts_rank(self.vwap, 4), ts_rank(self.volume, 19), 7).to_frame(),3).CLOSE))
+        alpha = (rank(decay_linear(correlation(((self.high + self.low) / 2), adv40, 9).to_frame(), 10)) /rank(decay_linear(correlation(ts_rank(self.vwap, 4), ts_rank(self.volume, 19), 7).to_frame(),3)))
         return alpha[self.start_date_index:self.end_date_index]
     
     # Alpha#73	 (max(rank(decay_linear(delta(vwap, 4.72775), 2.91864)),Ts_Rank(decay_linear(((delta(((open * 0.147155) + (low * (1 - 0.147155))), 2.03608) / ((open *0.147155) + (low * (1 - 0.147155)))) * -1), 3.33829), 16.7411)) * -1)
     def alpha073(self):
-        p1=rank(decay_linear(delta(self.vwap, 5).to_frame(), 3).CLOSE)
-        p2=ts_rank(decay_linear(((delta(((self.open * 0.147155) + (self.low * (1 - 0.147155))), 2) / ((self.open *0.147155) + (self.low * (1 - 0.147155)))) * -1).to_frame(), 3).CLOSE, 17)
+        p1=rank(decay_linear(delta(self.vwap, 5).to_frame(), 3))
+        p2=ts_rank(decay_linear(((delta(((self.open * 0.147155) + (self.low * (1 - 0.147155))), 2) / ((self.open *0.147155) + (self.low * (1 - 0.147155)))) * -1).to_frame(), 3), 17)
         df=pd.DataFrame({'p1':p1,'p2':p2})
         df.at[df['p1']>=df['p2'],'max']=df['p1']
         df.at[df['p2']>=df['p1'],'max']=df['p2']
@@ -1669,6 +1696,7 @@ class Alphas(object):
     def alpha075(self):
         adv50 = sma(self.volume, 50)
         alpha = (rank(correlation(self.vwap, self.volume, 4)) < rank(correlation(rank(self.low), rank(adv50),12)))
+        alpha = alpha * 1
         return alpha[self.start_date_index:self.end_date_index]
     
     # Alpha#76	 (max(rank(decay_linear(delta(vwap, 1.24383), 11.8259)),Ts_Rank(decay_linear(Ts_Rank(correlation(IndNeutralize(low, IndClass.sector), adv81,8.14941), 19.569), 17.1543), 19.383)) * -1)
@@ -1680,9 +1708,7 @@ class Alphas(object):
         indneutralized_low = self.low - indaverage_low    
         adv81 = sma(self.volume, 81)
         p1 = rank(decay_linear(delta(self.vwap.to_frame(), 1), 12))
-        p2 = ts_rank(decay_linear(ts_rank(correlation(indneutralized_low, adv81, 8).to_frame(), 20), 17), 19)
-        p1=p1.iloc[:,0]
-        p2=p2.iloc[:,0]        
+        p2 = ts_rank(decay_linear(ts_rank(correlation(indneutralized_low, adv81, 8).to_frame(), 20), 17), 19)     
         df=pd.DataFrame({'p1':p1,'p2':p2})
         df.at[df['p1']>=df['p2'],'max']=df['p1']
         df.at[df['p2']>=df['p1'],'max']=df['p2']
@@ -1692,8 +1718,8 @@ class Alphas(object):
     # Alpha#77	 min(rank(decay_linear(((((high + low) / 2) + high) - (vwap + high)), 20.0451)),rank(decay_linear(correlation(((high + low) / 2), adv40, 3.1614), 5.64125)))
     def alpha077(self):
         adv40 = sma(self.volume, 40)
-        p1=rank(decay_linear(((((self.high + self.low) / 2) + self.high) - (self.vwap + self.high)).to_frame(), 20).CLOSE)
-        p2=rank(decay_linear(correlation(((self.high + self.low) / 2), adv40, 3).to_frame(), 6).CLOSE)
+        p1=rank(decay_linear(((((self.high + self.low) / 2) + self.high) - (self.vwap + self.high)).to_frame(), 20))
+        p2=rank(decay_linear(correlation(((self.high + self.low) / 2), adv40, 3).to_frame(), 6))
         df=pd.DataFrame({'p1':p1,'p2':p2})
         df.at[df['p1']>=df['p2'],'min']=df['p2']
         df.at[df['p2']>=df['p1'],'min']=df['p1']
@@ -1733,7 +1759,7 @@ class Alphas(object):
     # Alpha#81	 ((rank(Log(product(rank((rank(correlation(vwap, sum(adv10, 49.6054),8.47743))^4)), 14.9655))) < rank(correlation(rank(vwap), rank(volume), 5.07914))) * -1)
     def alpha081(self):
         adv10 = sma(self.volume, 10)
-        alpha = ((rank(log(product(rank((rank(correlation(self.vwap, ts_sum(adv10, 50),8)).pow(4))), 15))) < rank(correlation(rank(self.vwap), rank(self.volume), 5))) * -1)
+        alpha = ((rank(log(rolling_product(rank((rank(correlation(self.vwap, ts_sum(adv10, 50),8)).pow(4))), 15))) < rank(correlation(rank(self.vwap), rank(self.volume), 5))) * -1)
         return alpha[self.start_date_index:self.end_date_index]
     
     # Alpha#82	 (min(rank(decay_linear(delta(open, 1.46063), 14.8717)),Ts_Rank(decay_linear(correlation(IndNeutralize(volume, IndClass.sector), ((open * 0.634196) +(open * (1 - 0.634196))), 17.4842), 6.92131), 13.4283)) * -1)
@@ -1745,8 +1771,6 @@ class Alphas(object):
         indneutralized_volume = self.volume - indaverage_volume      
         p1 = rank(decay_linear(delta(self.open, 1).to_frame(), 15))
         p2 = ts_rank(decay_linear(correlation(indneutralized_volume, ((self.open * 0.634196)+(self.open * (1 - 0.634196))), 17).to_frame(), 7), 13)
-        p1=p1.iloc[:,0]
-        p2=p2.iloc[:,0]
         df=pd.DataFrame({'p1':p1,'p2':p2})
         df.at[df['p1']>=df['p2'],'min']=df['p2']
         df.at[df['p2']>=df['p1'],'min']=df['p1']
@@ -1784,9 +1808,7 @@ class Alphas(object):
         adv81 = sma(self.volume, 81)        
         indneutralized_adv81 = adv81 - indaverage_adv81     
         p1 = rank(decay_linear(delta(((self.close * 0.369701) + (self.vwap * (1 - 0.369701))),2).to_frame(), 3))
-        p2 = ts_rank(decay_linear(abs(correlation(indneutralized_adv81, self.close, 13)), 5), 14)
-        p1=p1.iloc[:,0]
-        p2=p2.iloc[:,0]        
+        p2 = ts_rank(decay_linear(abs(correlation(indneutralized_adv81, self.close, 13)), 5), 14)       
         df=pd.DataFrame({'p1':p1,'p2':p2})
         df.at[df['p1']>=df['p2'],'max']=df['p1']
         df.at[df['p2']>=df['p1'],'max']=df['p2']
@@ -1796,8 +1818,8 @@ class Alphas(object):
     # Alpha#88	 min(rank(decay_linear(((rank(open) + rank(low)) - (rank(high) + rank(close))),8.06882)), Ts_Rank(decay_linear(correlation(Ts_Rank(close, 8.44728), Ts_Rank(adv60,20.6966), 8.01266), 6.65053), 2.61957))
     def alpha088(self):
         adv60 = sma(self.volume, 60)
-        p1=rank(decay_linear(((rank(self.open) + rank(self.low)) - (rank(self.high) + rank(self.close))).to_frame(),8).CLOSE)
-        p2=ts_rank(decay_linear(correlation(ts_rank(self.close, 8), ts_rank(adv60,21), 8).to_frame(), 7).CLOSE, 3)
+        p1=rank(decay_linear(((rank(self.open) + rank(self.low)) - (rank(self.high) + rank(self.close))).to_frame(),8))
+        p2=ts_rank(decay_linear(correlation(ts_rank(self.close, 8), ts_rank(adv60,21), 8).to_frame(), 7), 3)
         df=pd.DataFrame({'p1':p1,'p2':p2})
         df.at[df['p1']>=df['p2'],'min']=df['p2']
         df.at[df['p2']>=df['p1'],'min']=df['p1']
@@ -1840,8 +1862,8 @@ class Alphas(object):
     # Alpha#92	 min(Ts_Rank(decay_linear(((((high + low) / 2) + close) < (low + open)), 14.7221),18.8683), Ts_Rank(decay_linear(correlation(rank(low), rank(adv30), 7.58555), 6.94024),6.80584))
     def alpha092(self):
         adv30 = sma(self.volume, 30)
-        p1=ts_rank(decay_linear(((((self.high + self.low) / 2) + self.close) < (self.low + self.open)).to_frame(), 15).CLOSE,19)
-        p2=ts_rank(decay_linear(correlation(rank(self.low), rank(adv30), 8).to_frame(), 7).CLOSE,7)
+        p1=ts_rank(decay_linear(((((self.high + self.low) / 2) + self.close) < (self.low + self.open)).to_frame(), 15),19)
+        p2=ts_rank(decay_linear(correlation(rank(self.low), rank(adv30), 8).to_frame(), 7),7)
         df=pd.DataFrame({'p1':p1,'p2':p2})
         df.at[df['p1']>=df['p2'],'min']=df['p2']
         df.at[df['p2']>=df['p1'],'min']=df['p1']
@@ -1869,13 +1891,14 @@ class Alphas(object):
     def alpha095(self):
         adv40 = sma(self.volume, 40)
         alpha = (rank((self.open - ts_min(self.open, 12))) < ts_rank((rank(correlation(sma(((self.high + self.low)/ 2), 19), sma(adv40, 19), 13)).pow(5)), 12))
+        alpha = alpha * 1
         return alpha[self.start_date_index:self.end_date_index]
     
     # Alpha#96	 (max(Ts_Rank(decay_linear(correlation(rank(vwap), rank(volume), 3.83878),4.16783), 8.38151), Ts_Rank(decay_linear(Ts_ArgMax(correlation(Ts_Rank(close, 7.45404),Ts_Rank(adv60, 4.13242), 3.65459), 12.6556), 14.0365), 13.4143)) * -1)
     def alpha096(self):
         adv60 = sma(self.volume, 60)
-        p1=ts_rank(decay_linear(correlation(rank(self.vwap), rank(self.volume).to_frame(), 4),4).CLOSE, 8)
-        p2=ts_rank(decay_linear(ts_argmax(correlation(ts_rank(self.close, 7),ts_rank(adv60, 4), 4), 13).to_frame(), 14).CLOSE, 13)
+        p1=ts_rank(decay_linear(correlation(rank(self.vwap), rank(self.volume).to_frame(), 4),4), 8)
+        p2=ts_rank(decay_linear(ts_argmax(correlation(ts_rank(self.close, 7),ts_rank(adv60, 4), 4), 13).to_frame(), 14), 13)
         df=pd.DataFrame({'p1':p1,'p2':p2})
         df.at[df['p1']>=df['p2'],'max']=df['p1']
         df.at[df['p2']>=df['p1'],'max']=df['p2']
@@ -1899,7 +1922,7 @@ class Alphas(object):
     def alpha098(self):
         adv5 = sma(self.volume, 5)
         adv15 = sma(self.volume, 15)
-        alpha = (rank(decay_linear(correlation(self.vwap, sma(adv5, 26), 5).to_frame(), 7).CLOSE) -rank(decay_linear(ts_rank(ts_argmin(correlation(rank(self.open), rank(adv15), 21), 9),7).to_frame(), 8).CLOSE))
+        alpha = (rank(decay_linear(correlation(self.vwap, sma(adv5, 26), 5).to_frame(), 7)) -rank(decay_linear(ts_rank(ts_argmin(correlation(rank(self.open), rank(adv15), 21), 9),7).to_frame(), 8)))
         return alpha[self.start_date_index:self.end_date_index]
     
     # Alpha#99	 ((rank(correlation(sum(((high + low) / 2), 19.8975), sum(adv60, 19.8975), 8.8136)) <rank(correlation(low, volume, 6.28259))) * -1)
@@ -1934,43 +1957,58 @@ class Alphas(object):
 
 
 class GTJAalphas(object):
-    def __init__(self, ts_code="000001.SZ",start_date=20210101,end_date=20211231):
+    def __init__(self, ts_code, start_date=20210101, end_date=20211231):
         
-        quotations_daily_chosen=local_source.get_quotations_daily(cols='TRADE_DATE,TS_CODE,OPEN,CLOSE,LOW,HIGH,VOL,CHANGE,AMOUNT',condition="TS_CODE = " + "'" + ts_code + "'").sort_values(by="TRADE_DATE", ascending=True) 
-        stock_indicators_daily_chosen=local_source.get_stock_indicators_daily(cols='TRADE_DATE,TS_CODE,TOTAL_SHARE',condition="TS_CODE = " + "'" + ts_code + "'").sort_values(by="TRADE_DATE", ascending=True) 
-        stock_data_chosen=pd.merge(quotations_daily_chosen,stock_indicators_daily_chosen,on=['TRADE_DATE','TS_CODE'],how="left") 
-        stock_data_chosen["TOTAL_MV"]=stock_data_chosen["TOTAL_SHARE"]*stock_data_chosen["CLOSE"]
-        stock_data_chosen=stock_data_chosen.applymap(lambda x: np.nan if x=="NULL" else x)
-        stock_data_chosen["TRADE_DATE"]=stock_data_chosen["TRADE_DATE"].astype(int)
-         
-        self.open = stock_data_chosen['OPEN'] 
-        self.high = stock_data_chosen['HIGH'] 
-        self.low = stock_data_chosen['LOW']   
-        self.close = stock_data_chosen['CLOSE'] 
-        self.volume = stock_data_chosen['VOL']*100 
-        self.amount = stock_data_chosen['AMOUNT']*1000
-        self.returns = stock_data_chosen['CHANGE'] / stock_data_chosen['OPEN']  
-        self.vwap = (stock_data_chosen['AMOUNT']*1000)/(stock_data_chosen['VOL']*100+1) 
-        self.cap = stock_data_chosen['TOTAL_MV']
+        self.ts_code = ts_code
+        self.start_date = start_date
+        self.end_date = end_date
         
-        self.industry = local_source.get_stock_list(cols='TS_CODE,INDUSTRY', condition='TS_CODE = '+'"'+ts_code+'"')['INDUSTRY'].iloc[0]
-        self.available_dates = stock_data_chosen["TRADE_DATE"]
+        if ts_code == "All":  #需要同时计算多股的alpha时, 将数据一次性取出以加快运行速度
+            quotations_daily=local_source.get_quotations_daily(cols='TRADE_DATE,TS_CODE,OPEN,CLOSE,LOW,HIGH,VOL,CHANGE,AMOUNT').sort_values(by="TRADE_DATE", ascending=True) 
+            stock_indicators_daily=local_source.get_stock_indicators_daily(cols='TRADE_DATE,TS_CODE,TOTAL_SHARE').sort_values(by="TRADE_DATE", ascending=True) 
+        else:
+            quotations_daily=local_source.get_quotations_daily(cols='TRADE_DATE,TS_CODE,OPEN,CLOSE,LOW,HIGH,VOL,CHANGE,AMOUNT',condition="TS_CODE = " + "'" + ts_code + "'").sort_values(by="TRADE_DATE", ascending=True) 
+            stock_indicators_daily=local_source.get_stock_indicators_daily(cols='TRADE_DATE,TS_CODE,TOTAL_SHARE',condition="TS_CODE = " + "'" + ts_code + "'").sort_values(by="TRADE_DATE", ascending=True) 
+        
+        self.stock_data=pd.merge(quotations_daily, stock_indicators_daily,on=['TRADE_DATE','TS_CODE'],how="left") 
+        self.stock_data=self.stock_data.applymap(lambda x: np.nan if x=="NULL" else x)
+        self.stock_data["TOTAL_MV"]=self.stock_data["TOTAL_SHARE"]*self.stock_data["CLOSE"]
+        self.stock_data["TRADE_DATE"]=self.stock_data["TRADE_DATE"].astype(int)
 
-        if ts_code[-2:]=='SZ': index_code = "399001.SZ"
+
+    def initializer(self, ts_code_chosen=0):
+        if self.ts_code == 'All':
+            self.stock_data_chosen = self.stock_data[self.stock_data["TS_CODE"]==ts_code_chosen].reset_index(drop=True)
+        else:
+            self.stock_data_chosen = self.stock_data
+            ts_code_chosen = self.ts_code
+            
+        self.open = self.stock_data_chosen['OPEN'] 
+        self.high = self.stock_data_chosen['HIGH'] 
+        self.low = self.stock_data_chosen['LOW']   
+        self.close = self.stock_data_chosen['CLOSE'] 
+        self.volume = self.stock_data_chosen['VOL']*100 
+        self.amount = self.stock_data_chosen["AMOUNT"]
+        self.returns = self.stock_data_chosen['CHANGE'] / self.stock_data_chosen['OPEN']  
+        self.vwap = (self.stock_data_chosen['AMOUNT']*1000)/(self.stock_data_chosen['VOL']*100+1) 
+        self.cap = self.stock_data_chosen['TOTAL_MV']
+        self.industry = local_source.get_stock_list(cols='TS_CODE,INDUSTRY', condition='TS_CODE = '+'"'+ts_code_chosen+'"')['INDUSTRY'].iloc[0]
+        self.available_dates = self.stock_data_chosen["TRADE_DATE"]
+        self.output_dates = self.stock_data_chosen[(self.stock_data_chosen["TRADE_DATE"]>=self.start_date)*(self.stock_data_chosen["TRADE_DATE"]<=self.end_date)]["TRADE_DATE"]
+        start_available_date = self.output_dates.iloc[0]  #这个是交易日
+        end_available_date = self.output_dates.iloc[-1]        
+        self.start_date_index = self.stock_data_chosen["TRADE_DATE"][self.stock_data_chosen["TRADE_DATE"].values == start_available_date].index[0]
+        self.end_date_index = self.stock_data_chosen["TRADE_DATE"][self.stock_data_chosen["TRADE_DATE"].values == end_available_date].index[0] +1
+        
+        if ts_code_chosen[-2:]=='SZ': index_code = "399001.SZ"
         else: index_code = "000001.SH"
         indices_daily_chosen=local_source.get_indices_daily(cols='TRADE_DATE,INDEX_CODE,OPEN,CLOSE',condition='INDEX_CODE = '+'"'+index_code+'"').sort_values(by="TRADE_DATE", ascending=True)
         indices_daily_chosen=indices_daily_chosen.applymap(lambda x: np.nan if x=="NULL" else x)
-        indices_daily_chosen = pd.merge(stock_data_chosen["TRADE_DATE"], indices_daily_chosen, on=['TRADE_DATE'], how="left")
+        indices_daily_chosen["TRADE_DATE"]=indices_daily_chosen["TRADE_DATE"].astype(int)
+        indices_daily_chosen = pd.merge(self.stock_data_chosen["TRADE_DATE"], indices_daily_chosen, on=['TRADE_DATE'], how="left")
         self.benchmarkindexopen = indices_daily_chosen['OPEN'] 
         self.benchmarkindexclose = indices_daily_chosen['CLOSE'] 
-
-        self.output_dates = stock_data_chosen[(stock_data_chosen["TRADE_DATE"]>=start_date)*(stock_data_chosen["TRADE_DATE"]<=end_date)]["TRADE_DATE"]
-        start_available_date = self.output_dates.iloc[0]
-        end_available_date = self.output_dates.iloc[-1]        
-        self.start_date_index = stock_data_chosen["TRADE_DATE"][stock_data_chosen["TRADE_DATE"].values == start_available_date].index[0]
-        self.end_date_index = stock_data_chosen["TRADE_DATE"][stock_data_chosen["TRADE_DATE"].values == end_available_date].index[0] +1
-
-        
+    
     #Alpha1 (-1 * CORR(RANK(DELTA(LOG(VOLUME), 1)), RANK(((CLOSE - OPEN) / OPEN)), 6))
     def GTJAalpha001(self):
         alpha = -1 * correlation(rank(delta(np.log(self.volume),1)),rank(((self.close-self.open)/self.open)), 6)
@@ -2072,8 +2110,8 @@ class GTJAalphas(object):
         return alpha[self.start_date_index:self.end_date_index]
     
     #Alpha17 RANK((VWAP - MAX(VWAP, 15)))^DELTA(CLOSE, 5)
-    def GTJAalpha17(self):
-        alpha = rolling_rank((self.vwap - np.maximum(self.vwap, 15)))**delta(self.close, 5)
+    def GTJAalpha017(self):
+        alpha = rolling_rank((self.vwap - np.maximum(self.vwap, 15)), window=2)**delta(self.close, 5)
         return alpha[self.start_date_index:self.end_date_index]       
     
     #Alpha18 CLOSE/DELAY(CLOSE,5)
@@ -2131,7 +2169,7 @@ class GTJAalphas(object):
         
     #Alpha25 ((-1 * RANK((DELTA(CLOSE, 7) * (1 - RANK(DECAYLINEAR((VOLUME / MEAN(VOLUME,20)), 9)))))) * (1 + RANK(SUM(RET, 250))))
     def GTJAalpha025(self):
-        alpha = ((-1 * rolling_rank((delta(self.close, 7) * (1 - rolling_rank(decay_linear((self.volume / sma(self.volume,20)), 9)))))) * (1 + rolling_rank(ts_sum(self.returns, 250))))
+        alpha = (-1 * rolling_rank((delta(self.close, 7) * (1 - rolling_rank(decay_linear((self.volume / sma(self.volume,20)), 9)))))) * (1 + rolling_rank(ts_sum(self.returns, 250)))
         return alpha[self.start_date_index:self.end_date_index]
     
     #Alpha26 ((((SUM(CLOSE, 7) / 7) - CLOSE)) + ((CORR(VWAP, DELAY(CLOSE, 5), 230))))
@@ -2162,7 +2200,7 @@ class GTJAalphas(object):
         MKT = self.benchmarkindexclose.pct_change()
         MKT.rename("MKT", inplace=True)
         MKT = pd.concat([self.available_dates,MKT],axis=1)
-        FFfactor_data=pd.read_csv("FFfactors_daily.csv")
+        FFfactor_data=pd.read_csv("analysis/FFfactors_daily.csv")
         FFfactor_data_needed = FFfactor_data[["TRADE_DATE","SMB","HML"]]        
         dt = pd.merge(y, MKT, on=['TRADE_DATE'], how="left")
         dt = pd.merge(dt, FFfactor_data_needed, on=['TRADE_DATE'], how="left")
@@ -2192,7 +2230,7 @@ class GTJAalphas(object):
     
     #Alpha33 ((((-1 * TSMIN(LOW, 5)) + DELAY(TSMIN(LOW, 5), 5)) * RANK(((SUM(RET, 240) - SUM(RET, 20)) / 220))) * TSRANK(VOLUME, 5))
     def GTJAalpha033(self):
-        alpha = (((-1 * ts_min(self.low, 5)) + delay(ts_min(self.low, 5), 5)) * ts_rank(((ts_sum(self.returns, 240) - ts_sum(self.returns, 20)) / 220))) * ts_rank(self.volume, 5)
+        alpha = (((-1 * ts_min(self.low, 5)) + delay(ts_min(self.low, 5), 5)) * rolling_rank(((ts_sum(self.returns, 240) - ts_sum(self.returns, 20)) / 220))) * ts_rank(self.volume, 5)
         return alpha[self.start_date_index:self.end_date_index]
     
     #Alpha34 MEAN(CLOSE,12)/CLOSE
@@ -2282,6 +2320,7 @@ class GTJAalphas(object):
     #Alpha47 SMA((TSMAX(HIGH,6)-CLOSE)/(TSMAX(HIGH,6)-TSMIN(LOW,6))*100,9,1)
     def GTJAalpha047(self):
         alpha = ema((ts_max(self.high,6)-self.close)/(ts_max(self.high,6)-ts_min(self.low,6))*100,9,1)
+        alpha = alpha * 1
         return alpha[self.start_date_index:self.end_date_index]
     
     #Alpha48 (-1*((RANK(((SIGN((CLOSE - DELAY(CLOSE, 1))) + SIGN((DELAY(CLOSE, 1) - DELAY(CLOSE, 2)))) + SIGN((DELAY(CLOSE, 2) - DELAY(CLOSE, 3)))))) * SUM(VOLUME, 5)) / SUM(VOLUME, 20))
@@ -2332,7 +2371,7 @@ class GTJAalphas(object):
         condition = (self.close>delay(self.close,1))
         count = pd.Series(np.nan, index=self.close.index)
         for i in range(12-1,len(condition)):
-            count.iloc[i]=condition[i-12+1,i+1].sum()
+            count.iloc[i]=condition[i-12+1:i+1].sum()
         alpha = count / 12 * 100
         return alpha[self.start_date_index:self.end_date_index]
     
@@ -2369,7 +2408,7 @@ class GTJAalphas(object):
         condition = (self.close>delay(self.close,1))
         count = pd.Series(np.nan, index=self.close.index)
         for i in range(20-1,len(condition)):
-            count.iloc[i]=condition[i-20+1,i+1].sum()
+            count.iloc[i]=condition[i-20+1:i+1].sum()
         alpha = count / 20 * 10
         return alpha[self.start_date_index:self.end_date_index]
         
@@ -2478,14 +2517,14 @@ class GTJAalphas(object):
     
     #Alpha75 COUNT(CLOSE>OPEN & BANCHMARKINDEXCLOSE<BANCHMARKINDEXOPEN,50)/COUNT(BANCHMARKINDEXCLOSE<BANCHMARKINDEXOPEN,50) 
     def GTJAalpha075(self):
-        condition_count1 = ((self.close>self.open) & (self.benchmarkclose<self.benchmarkopen))
+        condition_count1 = ((self.close>self.open) & (self.benchmarkindexclose<self.benchmarkindexopen))
         count1 = pd.Series(np.nan, index=condition_count1.index)
         for i in range(50-1,len(condition_count1)):
-            count1.iloc[i]=condition_count1[i-50+1,i+1].sum()        
-        condition_count2 = (self.benchmarkclose < self.benchmarkopen)
+            count1.iloc[i]=condition_count1[i-50+1:i+1].sum()        
+        condition_count2 = (self.benchmarkindexclose < self.benchmarkindexopen)
         count2 = pd.Series(np.nan, index=condition_count2.index)
         for i in range(50-1,len(condition_count2)):
-            count2.iloc[i]=condition_count1[i-50+1,i+1].sum()          
+            count2.iloc[i]=condition_count1[i-50+1:i+1].sum()          
         alpha = count1 / count2
         return alpha[self.start_date_index:self.end_date_index]
         
@@ -2581,7 +2620,7 @@ class GTJAalphas(object):
     
     #Alpha91 ((RANK((CLOSE - MAX(CLOSE, 5)))*RANK(CORR((MEAN(VOLUME,40)), LOW, 5))) * -1)
     def GTJAalpha091(self):
-        alpha = (rolling_rank((self.close - self.max(self.close, 5)))*rolling_rank(rolling_rank((sma(self.volume,40)), self.low, 5))) * -1
+        alpha = (rolling_rank((self.close - np.maximum(self.close, 5)))*rolling_rank(correlation((sma(self.volume,40)), self.low, 5))) * -1
         return alpha[self.start_date_index:self.end_date_index]
     
     #Alpha92 (MAX(RANK(DECAYLINEAR(DELTA(((CLOSE * 0.35) + (VWAP *0.65)), 2), 3)), TSRANK(DECAYLINEAR(ABS(CORR((MEAN(VOLUME,180)), CLOSE, 13)), 5), 15)) * -1) 
@@ -2617,7 +2656,7 @@ class GTJAalphas(object):
         return alpha[self.start_date_index:self.end_date_index]
     
     #Alpha96 SMA(SMA((CLOSE-TSMIN(LOW,9))/(TSMAX(HIGH,9)-TSMIN(LOW,9))*100,3,1),3,1)
-    def GJTAalpha096(self):
+    def GTJAalpha096(self):
         alpha = ema(ema((self.close-ts_min(self.low,9))/(ts_max(self.high,9)-ts_min(self.low,9))*100,3,1),3,1)
         return alpha[self.start_date_index:self.end_date_index]
 
@@ -2846,11 +2885,11 @@ class GTJAalphas(object):
     
     #Alpha137 16*(CLOSE-DELAY(CLOSE,1)+(CLOSE-OPEN)/2+DELAY(CLOSE,1)-DELAY(OPEN,1)) / ((ABS(HIGH-DELAY(CLOSE,1))>ABS(LOW-DELAY(CLOSE,1)) & ABS(HIGH-DELAY(CLOSE,1))>ABS(HIGH-DELAY(LOW,1))?ABS(HIGH-DELAY(CLOSE,1))+ABS(LOW-DELAY(CLOSE,1))/2+ABS(DELAY(CLOSE,1)-DELAY(OPEN,1))/4:(ABS(LOW-DELAY(CLOSE,1))>ABS(HIGH-DELAY(LOW,1)) & ABS(LOW-DELAY(CLOSE,1))>ABS(HIGH-DELAY(CLOSE,1))?ABS(LOW-DELAY(CLOSE,1))+ABS(HIGH-DELAY(CLOSE,1))/2+ABS(DELAY(CLOSE,1)-DELAY(OPEN,1))/4:ABS(HIGH-DELAY(LOW,1))+ABS(DELAY(CLOSE,1)-DELAY(OPEN,1))/4))) * MAX(ABS(HIGH-DELAY(CLOSE,1)),ABS(LOW-DELAY(CLOSE,1)))    
     def GTJAalpha137(self):
-        condition1 = abs(self.low-delay(self.close,1))>abs(self.high-delay(self.low,1)) & abs(self.low-delay(self.close,1))>abs(self.high-delay(self.close,1))
+        condition1 = (abs(self.low-delay(self.close,1))>abs(self.high-delay(self.low,1))) & (abs(self.low-delay(self.close,1))>abs(self.high-delay(self.close,1)))
         inner1_true = abs(self.low-delay(self.close,1)) + abs(self.high-delay(self.close,1))/2 + abs(delay(self.close,1)-delay(self.open,1))/4
         inner1_false = abs(self.high-delay(self.low,1)) + abs(delay(self.close,1)-delay(self.open,1))/4
         inner1 = pd.Series(np.where(condition1, inner1_true, inner1_false))         
-        condition2 = abs(self.high-delay(self.close,1))>abs(self.low-delay(self.close,1)) & abs(self.high-delay(self.close,1))>abs(self.high-delay(self.low,1))
+        condition2 = (abs(self.high-delay(self.close,1))>abs(self.low-delay(self.close,1))) & (abs(self.high-delay(self.close,1))>abs(self.high-delay(self.low,1)))
         inner2_true = abs(self.high-delay(self.close,1)) + abs(self.low-delay(self.close,1))/2 + abs(delay(self.close,1)-delay(self.open,1))/4
         inner2_false = inner1
         inner2 = pd.Series(np.where(condition2, inner2_true, inner2_false))         
@@ -2896,10 +2935,10 @@ class GTJAalphas(object):
     def GTJAalpha144(self):
         condition = self.close < delay(self.close,1)
         inner_sumif = abs(self.close/delay(self.close,1)-1) / self.amount
-        value_sumif = inner_sumif.apply(lambda x: (inner_sumif[x-20:x]*condition[x-20:x]).sum())  
+        value_sumif = ts_sum(inner_sumif*condition, window=20)
         count = pd.Series(np.nan, index=condition.index)
         for i in range(20-1,len(condition)):
-            count.iloc[i]=condition[i-20+1,i+1].sum()        
+            count.iloc[i]=condition[i-20+1:i+1].sum()        
         alpha = value_sumif / count
         return alpha[self.start_date_index:self.end_date_index]
     
@@ -2910,7 +2949,7 @@ class GTJAalphas(object):
     
     #Alpha146 MEAN((CLOSE-DELAY(CLOSE,1))/DELAY(CLOSE,1)-SMA((CLOSE-DELAY(CLOSE,1))/DELAY(CLOSE,1),61,2),20)*((CLOSE-DELAY(CLOSE,1))/DELAY(CLOSE,1)-SMA((CLOSE-DELAY(CLOSE,1))/DELAY(CLOSE,1),61,2))/SMA(((CLOSE-DELAY(CLOSE,1))/DELAY(CLOSE,1)-((CLOSE-DELAY(CLOSE,1))/DELAY(CLOSE,1)-SMA((CLOSE-DELAY(CLOSE,1))/DELAY(CLOSE,1),61,2)))^2,60)
     def GTJAalpha146(self):
-        alpha = sma((self.close-delay(self.close,1))/delay(self.close,1)-ema((self.close-delay(self.close,1))/delay(self.close,1),61,2),20) * ((self.close-delay(self.close,1))/delay(self.close,1)-ema((self.close-delay(self.close,1))/delay(self.close,1),61,2)) / ema(((self.close-delay(self.close,1))/delay(self.close,1)-((self.close-delay(self.close,1))/delay(self.close,1)-ema((self.close-delay(self.close,1))/delay(self.close,1),61,2)))**2,60)
+        alpha = sma((self.close-delay(self.close,1))/delay(self.close,1)-ema((self.close-delay(self.close,1))/delay(self.close,1),61,2),20) * ((self.close-delay(self.close,1))/delay(self.close,1)-ema((self.close-delay(self.close,1))/delay(self.close,1),61,2)) / ema(((self.close-delay(self.close,1))/delay(self.close,1)-((self.close-delay(self.close,1))/delay(self.close,1)-ema((self.close-delay(self.close,1))/delay(self.close,1),61,2)))**2,60,2)
         return alpha[self.start_date_index:self.end_date_index]
     
     #Alpha147 REGBETA(MEAN(CLOSE,12),SEQUENCE(12))    
@@ -2929,12 +2968,15 @@ class GTJAalphas(object):
     #Alpha149 REGBETA(FILTER(CLOSE/DELAY(CLOSE,1)-1,BANCHMARKINDEXCLOSE<DELAY(BANCHMARKINDEXCLOSE,1)),FILTER(BANCHMARKINDEXCLOSE/DELAY(BANCHMARKINDEXCLOSE,1)-1,BANCHMARKINDEXCLOSE<DELAY(BANCHMARKINDEXCLOSE,1)),252)
     def GTJAalpha149(self):
         y = self.close/delay(self.close,1)-1
-        y = y[self.benchmarkindexclose < delay(self.benchmarkindexclose,1)]
+        y_satisfied = y[self.benchmarkindexclose < delay(self.benchmarkindexclose,1)]
         x = self.benchmarkindexclose/delay(self.benchmarkindexclose,1) -1
-        x = x[self.benchmarkindexclose < delay(self.benchmarkindexclose,1)]
+        x_satisfied = x[self.benchmarkindexclose < delay(self.benchmarkindexclose,1)]
         alpha = pd.Series(np.nan, index=y.index)
         for i in range(252-1,len(alpha)):
-            alpha.iloc[i]=sp.stats.linregress(x[i-252+1:i+1], y[i-252+1:i+1])[0]        
+            try: #防止区间内没有符合条件的结果
+                alpha.iloc[i] = sp.stats.linregress(x_satisfied.loc[i-252+1:i+1], y_satisfied.loc[i-252+1:i+1])[0]        
+            except:
+                alpha.iloc[i] = 0
         return alpha[self.start_date_index:self.end_date_index]        
     
     #Alpha150 (CLOSE+HIGH+LOW)/3*VOLUME
@@ -2960,6 +3002,7 @@ class GTJAalphas(object):
     #Alpha154 (((VWAP - MIN(VWAP, 16))) < (CORR(VWAP, MEAN(VOLUME,180), 18))) 
     def GTJAalpha154(self):
         alpha = (((self.vwap - np.minimum(self.vwap, 16))) < (correlation(self.vwap, sma(self.volume,180), 18)))
+        alpha = alpha * 1
         return alpha[self.start_date_index:self.end_date_index]
     
     #Alpha155 SMA(VOLUME,13,2)-SMA(VOLUME,27,2)-SMA(SMA(VOLUME,13,2)-SMA(VOLUME,27,2),10,2) 
@@ -2974,7 +3017,7 @@ class GTJAalphas(object):
     
     #Alpha157 (MIN(PROD(RANK(RANK(LOG(SUM(TSMIN(RANK(RANK((-1 * RANK(DELTA((CLOSE - 1), 5))))), 2), 1)))), 1), 5) + TSRANK(DELAY((-1 * RET), 6), 5)) 
     def GTJAalpha157(self):
-        alpha = np.minimum(ts_prod(rolling_rank(rolling_rank(np.log(ts_sum(ts_min(rolling_rank(rolling_rank((-1 * rolling_rank(delta((self.close - 1), 5))))), 2), 1)))), 1), 5) + ts_rank(delay(-1*self.returns, 6), 5)
+        alpha = np.minimum(rolling_product(rolling_rank(rolling_rank(np.log(ts_sum(ts_min(rolling_rank(rolling_rank((-1 * rolling_rank(delta((self.close - 1), 5))))), 2), 1)))), 1), 5) + ts_rank(delay(-1*self.returns, 6), 5)
         return alpha[self.start_date_index:self.end_date_index]
     
     #Alpha158 ((HIGH-SMA(CLOSE,15,2))-(LOW-SMA(CLOSE,15,2)))/CLOSE 
@@ -3022,12 +3065,12 @@ class GTJAalphas(object):
         
     #Alpha165 MAX(SUMAC(CLOSE-MEAN(CLOSE,48)))-MIN(SUMAC(CLOSE-MEAN(CLOSE,48)))/STD(CLOSE,48) 
     def GTJAalpha165(self):   #I'm not sure if I've understood the formula correctly.
-        alpha = np.maximum(ts_sum(self.close-sma(self.close,48),48))-np.minimum(ts_sum(self.close-sma(self.close,48),48))/stddev(self.close,48)
+        alpha = np.nanmax(ts_sum(self.close-sma(self.close,48),48))-np.nanmin(ts_sum(self.close-sma(self.close,48),48))/stddev(self.close,48)
         return alpha[self.start_date_index:self.end_date_index]
     
     #Alpha166 -20* (20-1)^1.5*SUM(CLOSE/DELAY(CLOSE,1)-1-MEAN(CLOSE/DELAY(CLOSE,1)-1,20),20) / ((20-1)*(20-2)(SUM((CLOSE/DELAY(CLOSE,1),20)^2,20))^1.5) 
-    def GTJAalpha166(self):
-        alpha = -20*((20-1)**1.5) * ts_sum(self.close/delay(self.close,1) -1 -sma(self.close/delay(self.close,1)-1,20), 20) / ((20-1)*(20-2)*(ts_sum((self.close/delay(self.close,1),20)**2,20))**1.5) 
+    def GTJAalpha166(self):   #I'm not sure if I've understood the formula correctly.
+        alpha = -20*((20-1)**1.5) * ts_sum(self.close/delay(self.close,1) -1 -sma(self.close/delay(self.close,1)-1,20), 20) / ((20-1)*(20-2)*(ts_sum((self.close/delay(self.close,1))**2,20))**1.5) 
         return alpha[self.start_date_index:self.end_date_index]
     
     #Alpha167 SUM((CLOSE-DELAY(CLOSE,1)>0?CLOSE-DELAY(CLOSE,1):0),12) 
@@ -3127,16 +3170,16 @@ class GTJAalphas(object):
     
     #Alpha182 COUNT((CLOSE>OPEN & BANCHMARKINDEXCLOSE>BANCHMARKINDEXOPEN) OR (CLOSE<OPEN & BANCHMARKINDEXCLOSE<BANCHMARKINDEXOPEN),20) /20
     def GTJAalpha182(self):
-        condition_count1 = (self.close>self.open & self.benchmarkindexclose>self.benchmarkindexopen) | (self.close<self.open & self.benchmarkindexclose<self.benchmarkindexopen)
+        condition_count1 = ((self.close>self.open) & (self.benchmarkindexclose>self.benchmarkindexopen)) | ((self.close<self.open) & (self.benchmarkindexclose<self.benchmarkindexopen))
         count1 = pd.Series(np.nan, index=condition_count1.index)
         for i in range(20-1,len(condition_count1)):
-            count1.iloc[i]=condition_count1[i-20+1,i+1].sum()         
+            count1.iloc[i]=condition_count1[i-20+1:i+1].sum()         
         alpha = count1 / 20
         return alpha[self.start_date_index:self.end_date_index]
     
     #Alpha183 MAX(SUMAC(CLOSE-MEAN(CLOSE,24)))-MIN(SUMAC(CLOSE-MEAN(CLOSE,24)))/STD(CLOSE,24)
     def GTJAalpha183(self):
-        alpha = np.maximum(ts_sum(self.close-sma(self.close,24),24)) - np.minimum(ts_sum(self.close-sma(self.close,24)))/stddev(self.close,24)
+        alpha = np.nanmax(ts_sum(self.close-sma(self.close,24),24)) - np.nanmin(ts_sum(self.close-sma(self.close,24)))/stddev(self.close,24)
         return alpha[self.start_date_index:self.end_date_index]
     
     #Alpha184 (RANK(CORR(DELAY((OPEN - CLOSE), 1), CLOSE, 200)) + RANK((OPEN - CLOSE)))
@@ -3188,16 +3231,16 @@ class GTJAalphas(object):
         condition_count1 = self.close/delay(self.close)-1 > ((self.close/delay(self.close,19))**(1/20) -1)
         count1 = pd.Series(np.nan, index=condition_count1.index)
         for i in range(20-1,len(condition_count1)):
-            count1.iloc[i]=condition_count1[i-20+1,i+1].sum()
+            count1.iloc[i]=condition_count1[i-20+1:i+1].sum()
         condition_count2 = self.close/delay(self.close)-1 < ((self.close/delay(self.close,19))**(1/20) -1)
         count2 = pd.Series(np.nan, index=condition_count2.index)
         for i in range(20-1,len(condition_count2)):
-            count2.iloc[i]=condition_count2[i-20+1,i+1].sum()        
+            count2.iloc[i]=condition_count2[i-20+1:i+1].sum()        
         condition_sumif1 = self.close/delay(self.close)-1 < (self.close/delay(self.close,19))**(1/20)-1
         condition_sumif2 = self.close/delay(self.close)-1 > (self.close/delay(self.close,19))**(1/20)-1
         inner_sumif = (self.close/delay(self.close)-1-(self.close/delay(self.close,19))**(1/20)-1)**2
-        value1 = inner_sumif.apply(lambda x: (inner_sumif[x-20:x]*condition_sumif1[x-20:x]).sum()) 
-        value2 = inner_sumif.apply(lambda x: (inner_sumif[x-20:x]*condition_sumif2[x-20:x]).sum()) 
+        value1 = ts_sum(inner_sumif * condition_sumif1, window=20)
+        value2 = ts_sum(inner_sumif * condition_sumif2, window=20)
         alpha = np.log( (count1-1)*(value1)/((count2)*(value2)) )        
         return alpha[self.start_date_index:self.end_date_index]
     
@@ -3208,8 +3251,9 @@ class GTJAalphas(object):
 
 
 
-def get_Alpha101(ts_code="000001.SZ",start_date=20210101,end_date=20211231):  
+def get_Alpha101_allalphas(ts_code="000001.SZ",start_date=20210101,end_date=20211231): #取出一个股票的所有alpha的接口  
     Alpha101_results = Alphas(ts_code,start_date=start_date,end_date=end_date)
+    Alpha101_results.initializer()
     df = pd.DataFrame(Alpha101_results.alpha001().rename("Alpha001"))
     df['Alpha002']=Alpha101_results.alpha002()
     df['Alpha003']=Alpha101_results.alpha003()
@@ -3314,8 +3358,11 @@ def get_Alpha101(ts_code="000001.SZ",start_date=20210101,end_date=20211231):
     df.index = Alpha101_results.output_dates
     return df
 
-def get_GTJAalphas(ts_code="000001.SZ",start_date=20210101,end_date=20211231):  
+
+
+def get_GTJAalphas_allalphas(ts_code="000001.SZ",start_date=20210101,end_date=20211231):  
     GTJAalphas_results = GTJAalphas(ts_code,start_date=start_date,end_date=end_date)
+    GTJAalphas_results.initializer()
     df = pd.DataFrame(GTJAalphas_results.GTJAalpha001().rename('GTJAalpha001'))
     df['GTJAalpha002']=GTJAalphas_results.GTJAalpha002()
     df['GTJAalpha003']=GTJAalphas_results.GTJAalpha003()
@@ -3511,8 +3558,312 @@ def get_GTJAalphas(ts_code="000001.SZ",start_date=20210101,end_date=20211231):
     return df    
 
 
-#alpha101_test=Alphas(ts_code="000001.SZ")
-#GTJAalpha_test=GTJAalphas()
+
+def get_Alpha101_allstocks(alpha_name="Alpha001", start_date=20210101, end_date=20211231):  #取出所有股票的单个alpha的接口
+    Alpha101_results = Alphas(ts_code="All",start_date=start_date,end_date=end_date)
+    stock_list=local_source.get_stock_list(cols='TS_CODE,INDUSTRY')["TS_CODE"]
+    df_all = 0
+    for ts_code in pb(stock_list, desc='Please wait', colour='#ffffff'):
+        try: #防止所给日期区间内没有交易日
+            Alpha101_results.initializer(ts_code_chosen=ts_code)
+            if alpha_name == 'Alpha001': df = pd.DataFrame(Alpha101_results.alpha001().rename("Alpha001"))
+            elif alpha_name == 'Alpha002': df = pd.DataFrame(Alpha101_results.alpha002().rename("Alpha002"))
+            elif alpha_name == 'Alpha003': df = pd.DataFrame(Alpha101_results.alpha003().rename("Alpha003"))
+            elif alpha_name == 'Alpha004': df = pd.DataFrame(Alpha101_results.alpha004().rename("Alpha004"))
+            elif alpha_name == 'Alpha005': df = pd.DataFrame(Alpha101_results.alpha005().rename("Alpha005"))
+            elif alpha_name == 'Alpha006': df = pd.DataFrame(Alpha101_results.alpha006().rename("Alpha006"))
+            elif alpha_name == 'Alpha007': df = pd.DataFrame(Alpha101_results.alpha007().rename("Alpha007"))
+            elif alpha_name == 'Alpha008': df = pd.DataFrame(Alpha101_results.alpha008().rename("Alpha008"))
+            elif alpha_name == 'Alpha009': df = pd.DataFrame(Alpha101_results.alpha009().rename("Alpha009"))
+            elif alpha_name == 'Alpha011': df = pd.DataFrame(Alpha101_results.alpha011().rename("Alpha011"))
+            elif alpha_name == 'Alpha012': df = pd.DataFrame(Alpha101_results.alpha012().rename("Alpha012"))
+            elif alpha_name == 'Alpha013': df = pd.DataFrame(Alpha101_results.alpha013().rename("Alpha013"))
+            elif alpha_name == 'Alpha014': df = pd.DataFrame(Alpha101_results.alpha014().rename("Alpha014"))
+            elif alpha_name == 'Alpha015': df = pd.DataFrame(Alpha101_results.alpha015().rename("Alpha015"))
+            elif alpha_name == 'Alpha016': df = pd.DataFrame(Alpha101_results.alpha016().rename("Alpha016"))
+            elif alpha_name == 'Alpha017': df = pd.DataFrame(Alpha101_results.alpha017().rename("Alpha017"))
+            elif alpha_name == 'Alpha018': df = pd.DataFrame(Alpha101_results.alpha018().rename("Alpha018"))
+            elif alpha_name == 'Alpha019': df = pd.DataFrame(Alpha101_results.alpha019().rename("Alpha019"))        
+            elif alpha_name == 'Alpha021': df = pd.DataFrame(Alpha101_results.alpha021().rename("Alpha021"))
+            elif alpha_name == 'Alpha022': df = pd.DataFrame(Alpha101_results.alpha022().rename("Alpha022"))
+            elif alpha_name == 'Alpha023': df = pd.DataFrame(Alpha101_results.alpha023().rename("Alpha023"))
+            elif alpha_name == 'Alpha024': df = pd.DataFrame(Alpha101_results.alpha024().rename("Alpha024"))
+            elif alpha_name == 'Alpha025': df = pd.DataFrame(Alpha101_results.alpha025().rename("Alpha025"))
+            elif alpha_name == 'Alpha026': df = pd.DataFrame(Alpha101_results.alpha026().rename("Alpha026"))
+            elif alpha_name == 'Alpha027': df = pd.DataFrame(Alpha101_results.alpha027().rename("Alpha027"))
+            elif alpha_name == 'Alpha028': df = pd.DataFrame(Alpha101_results.alpha028().rename("Alpha028"))
+            elif alpha_name == 'Alpha029': df = pd.DataFrame(Alpha101_results.alpha029().rename("Alpha029"))
+            elif alpha_name == 'Alpha031': df = pd.DataFrame(Alpha101_results.alpha031().rename("Alpha031"))
+            elif alpha_name == 'Alpha032': df = pd.DataFrame(Alpha101_results.alpha032().rename("Alpha032"))
+            elif alpha_name == 'Alpha033': df = pd.DataFrame(Alpha101_results.alpha033().rename("Alpha033"))
+            elif alpha_name == 'Alpha034': df = pd.DataFrame(Alpha101_results.alpha034().rename("Alpha034"))
+            elif alpha_name == 'Alpha035': df = pd.DataFrame(Alpha101_results.alpha035().rename("Alpha035"))
+            elif alpha_name == 'Alpha036': df = pd.DataFrame(Alpha101_results.alpha036().rename("Alpha036"))
+            elif alpha_name == 'Alpha037': df = pd.DataFrame(Alpha101_results.alpha037().rename("Alpha037"))
+            elif alpha_name == 'Alpha038': df = pd.DataFrame(Alpha101_results.alpha038().rename("Alpha038"))
+            elif alpha_name == 'Alpha039': df = pd.DataFrame(Alpha101_results.alpha039().rename("Alpha039"))
+            elif alpha_name == 'Alpha041': df = pd.DataFrame(Alpha101_results.alpha041().rename("Alpha041"))
+            elif alpha_name == 'Alpha042': df = pd.DataFrame(Alpha101_results.alpha042().rename("Alpha042"))
+            elif alpha_name == 'Alpha043': df = pd.DataFrame(Alpha101_results.alpha043().rename("Alpha043"))
+            elif alpha_name == 'Alpha044': df = pd.DataFrame(Alpha101_results.alpha044().rename("Alpha044"))
+            elif alpha_name == 'Alpha045': df = pd.DataFrame(Alpha101_results.alpha045().rename("Alpha045"))
+            elif alpha_name == 'Alpha046': df = pd.DataFrame(Alpha101_results.alpha046().rename("Alpha046"))
+            elif alpha_name == 'Alpha047': df = pd.DataFrame(Alpha101_results.alpha047().rename("Alpha047"))
+            elif alpha_name == 'Alpha048': df = pd.DataFrame(Alpha101_results.alpha048().rename("Alpha048"))
+            elif alpha_name == 'Alpha049': df = pd.DataFrame(Alpha101_results.alpha049().rename("Alpha049"))
+            elif alpha_name == 'Alpha051': df = pd.DataFrame(Alpha101_results.alpha051().rename("Alpha051"))
+            elif alpha_name == 'Alpha052': df = pd.DataFrame(Alpha101_results.alpha052().rename("Alpha052"))
+            elif alpha_name == 'Alpha053': df = pd.DataFrame(Alpha101_results.alpha053().rename("Alpha053"))
+            elif alpha_name == 'Alpha054': df = pd.DataFrame(Alpha101_results.alpha054().rename("Alpha054"))
+            elif alpha_name == 'Alpha055': df = pd.DataFrame(Alpha101_results.alpha055().rename("Alpha055"))
+            elif alpha_name == 'Alpha056': df = pd.DataFrame(Alpha101_results.alpha056().rename("Alpha056"))
+            elif alpha_name == 'Alpha057': df = pd.DataFrame(Alpha101_results.alpha057().rename("Alpha057"))
+            elif alpha_name == 'Alpha058': df = pd.DataFrame(Alpha101_results.alpha058().rename("Alpha058"))
+            elif alpha_name == 'Alpha059': df = pd.DataFrame(Alpha101_results.alpha059().rename("Alpha059"))
+            elif alpha_name == 'Alpha061': df = pd.DataFrame(Alpha101_results.alpha061().rename("Alpha061"))
+            elif alpha_name == 'Alpha062': df = pd.DataFrame(Alpha101_results.alpha062().rename("Alpha062"))
+            elif alpha_name == 'Alpha063': df = pd.DataFrame(Alpha101_results.alpha063().rename("Alpha063"))
+            elif alpha_name == 'Alpha064': df = pd.DataFrame(Alpha101_results.alpha064().rename("Alpha064"))
+            elif alpha_name == 'Alpha065': df = pd.DataFrame(Alpha101_results.alpha065().rename("Alpha065"))
+            elif alpha_name == 'Alpha066': df = pd.DataFrame(Alpha101_results.alpha066().rename("Alpha066"))
+            elif alpha_name == 'Alpha067': df = pd.DataFrame(Alpha101_results.alpha067().rename("Alpha067"))
+            elif alpha_name == 'Alpha068': df = pd.DataFrame(Alpha101_results.alpha068().rename("Alpha068"))
+            elif alpha_name == 'Alpha069': df = pd.DataFrame(Alpha101_results.alpha069().rename("Alpha069"))
+            elif alpha_name == 'Alpha071': df = pd.DataFrame(Alpha101_results.alpha071().rename("Alpha071"))
+            elif alpha_name == 'Alpha072': df = pd.DataFrame(Alpha101_results.alpha072().rename("Alpha072"))
+            elif alpha_name == 'Alpha073': df = pd.DataFrame(Alpha101_results.alpha073().rename("Alpha073"))
+            elif alpha_name == 'Alpha074': df = pd.DataFrame(Alpha101_results.alpha074().rename("Alpha074"))
+            elif alpha_name == 'Alpha075': df = pd.DataFrame(Alpha101_results.alpha075().rename("Alpha075"))
+            elif alpha_name == 'Alpha076': df = pd.DataFrame(Alpha101_results.alpha076().rename("Alpha076"))
+            elif alpha_name == 'Alpha077': df = pd.DataFrame(Alpha101_results.alpha077().rename("Alpha077"))
+            elif alpha_name == 'Alpha078': df = pd.DataFrame(Alpha101_results.alpha078().rename("Alpha078"))
+            elif alpha_name == 'Alpha079': df = pd.DataFrame(Alpha101_results.alpha079().rename("Alpha079"))
+            elif alpha_name == 'Alpha081': df = pd.DataFrame(Alpha101_results.alpha081().rename("Alpha081"))
+            elif alpha_name == 'Alpha082': df = pd.DataFrame(Alpha101_results.alpha082().rename("Alpha082"))
+            elif alpha_name == 'Alpha083': df = pd.DataFrame(Alpha101_results.alpha083().rename("Alpha083"))
+            elif alpha_name == 'Alpha084': df = pd.DataFrame(Alpha101_results.alpha084().rename("Alpha084"))
+            elif alpha_name == 'Alpha085': df = pd.DataFrame(Alpha101_results.alpha085().rename("Alpha085"))
+            elif alpha_name == 'Alpha086': df = pd.DataFrame(Alpha101_results.alpha086().rename("Alpha086"))
+            elif alpha_name == 'Alpha087': df = pd.DataFrame(Alpha101_results.alpha087().rename("Alpha087"))
+            elif alpha_name == 'Alpha088': df = pd.DataFrame(Alpha101_results.alpha088().rename("Alpha088"))
+            elif alpha_name == 'Alpha089': df = pd.DataFrame(Alpha101_results.alpha089().rename("Alpha089"))
+            elif alpha_name == 'Alpha091': df = pd.DataFrame(Alpha101_results.alpha091().rename("Alpha091"))
+            elif alpha_name == 'Alpha092': df = pd.DataFrame(Alpha101_results.alpha092().rename("Alpha092"))
+            elif alpha_name == 'Alpha093': df = pd.DataFrame(Alpha101_results.alpha093().rename("Alpha093"))
+            elif alpha_name == 'Alpha094': df = pd.DataFrame(Alpha101_results.alpha094().rename("Alpha094"))
+            elif alpha_name == 'Alpha095': df = pd.DataFrame(Alpha101_results.alpha095().rename("Alpha095"))
+            elif alpha_name == 'Alpha096': df = pd.DataFrame(Alpha101_results.alpha096().rename("Alpha096"))
+            elif alpha_name == 'Alpha097': df = pd.DataFrame(Alpha101_results.alpha097().rename("Alpha097"))
+            elif alpha_name == 'Alpha098': df = pd.DataFrame(Alpha101_results.alpha098().rename("Alpha098"))
+            elif alpha_name == 'Alpha099': df = pd.DataFrame(Alpha101_results.alpha099().rename("Alpha099"))
+            elif alpha_name == 'Alpha100': df = pd.DataFrame(Alpha101_results.alpha100().rename("Alpha100"))
+            elif alpha_name == 'Alpha101': df = pd.DataFrame(Alpha101_results.alpha101().rename("Alpha101"))
+            df = pd.concat([Alpha101_results.output_dates, df],axis=1)
+            df.insert(loc=0,column='TS_CODE',value=ts_code)
+            if type(df_all) == int:
+                df_all = df
+            else:
+                df_all = pd.concat([df_all, df],axis=0)    
+        except:
+            pass
+    return df_all
+
+
+
+def get_GTJAalphas_allstocks(alpha_name="GTJAalpha001", start_date=20210101, end_date=20211231):
+    GTJAalphas_results = GTJAalphas(ts_code="All",start_date=start_date,end_date=end_date)
+    stock_list=local_source.get_stock_list(cols='TS_CODE,INDUSTRY')["TS_CODE"]
+    df_all = 0
+    for ts_code in pb(stock_list, desc='Please wait', colour='#ffffff'):
+        try: #防止所给日期区间内没有交易日
+            GTJAalphas_results.initializer(ts_code_chosen=ts_code)
+            if alpha_name == 'GTJAalpha001': 
+                df = pd.DataFrame(GTJAalphas_results.GTJAalpha001().rename('GTJAalpha001'))            
+            elif alpha_name == 'GTJAalpha002': df = pd.DataFrame(GTJAalphas_results.GTJAalpha002().rename('GTJAalpha002'))
+            elif alpha_name == 'GTJAalpha003': df = pd.DataFrame(GTJAalphas_results.GTJAalpha003().rename('GTJAalpha003'))
+            elif alpha_name == 'GTJAalpha004': df = pd.DataFrame(GTJAalphas_results.GTJAalpha004().rename('GTJAalpha004'))
+            elif alpha_name == 'GTJAalpha005': df = pd.DataFrame(GTJAalphas_results.GTJAalpha005().rename('GTJAalpha005'))
+            elif alpha_name == 'GTJAalpha006': df = pd.DataFrame(GTJAalphas_results.GTJAalpha006().rename('GTJAalpha006'))
+            elif alpha_name == 'GTJAalpha007': df = pd.DataFrame(GTJAalphas_results.GTJAalpha007().rename('GTJAalpha007'))
+            elif alpha_name == 'GTJAalpha008': df = pd.DataFrame(GTJAalphas_results.GTJAalpha008().rename('GTJAalpha008'))
+            elif alpha_name == 'GTJAalpha009': df = pd.DataFrame(GTJAalphas_results.GTJAalpha009().rename('GTJAalpha009'))
+            elif alpha_name == 'GTJAalpha011': df = pd.DataFrame(GTJAalphas_results.GTJAalpha011().rename('GTJAalpha011'))            
+            elif alpha_name == 'GTJAalpha012': df = pd.DataFrame(GTJAalphas_results.GTJAalpha012().rename('GTJAalpha012'))
+            elif alpha_name == 'GTJAalpha013': df = pd.DataFrame(GTJAalphas_results.GTJAalpha013().rename('GTJAalpha013'))
+            elif alpha_name == 'GTJAalpha014': df = pd.DataFrame(GTJAalphas_results.GTJAalpha014().rename('GTJAalpha014'))
+            elif alpha_name == 'GTJAalpha015': df = pd.DataFrame(GTJAalphas_results.GTJAalpha015().rename('GTJAalpha015'))
+            elif alpha_name == 'GTJAalpha016': df = pd.DataFrame(GTJAalphas_results.GTJAalpha016().rename('GTJAalpha016'))
+            elif alpha_name == 'GTJAalpha017': df = pd.DataFrame(GTJAalphas_results.GTJAalpha017().rename('GTJAalpha017'))
+            elif alpha_name == 'GTJAalpha018': df = pd.DataFrame(GTJAalphas_results.GTJAalpha018().rename('GTJAalpha018'))
+            elif alpha_name == 'GTJAalpha019': df = pd.DataFrame(GTJAalphas_results.GTJAalpha019().rename('GTJAalpha019'))            
+            elif alpha_name == 'GTJAalpha021': df = pd.DataFrame(GTJAalphas_results.GTJAalpha021().rename('GTJAalpha021'))            
+            elif alpha_name == 'GTJAalpha022': df = pd.DataFrame(GTJAalphas_results.GTJAalpha022().rename('GTJAalpha022'))
+            elif alpha_name == 'GTJAalpha023': df = pd.DataFrame(GTJAalphas_results.GTJAalpha023().rename('GTJAalpha023'))
+            elif alpha_name == 'GTJAalpha024': df = pd.DataFrame(GTJAalphas_results.GTJAalpha024().rename('GTJAalpha024'))
+            elif alpha_name == 'GTJAalpha025': df = pd.DataFrame(GTJAalphas_results.GTJAalpha025().rename('GTJAalpha025'))
+            elif alpha_name == 'GTJAalpha026': df = pd.DataFrame(GTJAalphas_results.GTJAalpha026().rename('GTJAalpha026'))
+            elif alpha_name == 'GTJAalpha027': df = pd.DataFrame(GTJAalphas_results.GTJAalpha027().rename('GTJAalpha027'))
+            elif alpha_name == 'GTJAalpha028': df = pd.DataFrame(GTJAalphas_results.GTJAalpha028().rename('GTJAalpha028'))
+            elif alpha_name == 'GTJAalpha029': df = pd.DataFrame(GTJAalphas_results.GTJAalpha029().rename('GTJAalpha029'))
+            elif alpha_name == 'GTJAalpha031': df = pd.DataFrame(GTJAalphas_results.GTJAalpha031().rename('GTJAalpha031'))            
+            elif alpha_name == 'GTJAalpha032': df = pd.DataFrame(GTJAalphas_results.GTJAalpha032().rename('GTJAalpha032'))
+            elif alpha_name == 'GTJAalpha033': df = pd.DataFrame(GTJAalphas_results.GTJAalpha033().rename('GTJAalpha033'))
+            elif alpha_name == 'GTJAalpha034': df = pd.DataFrame(GTJAalphas_results.GTJAalpha034().rename('GTJAalpha034'))
+            elif alpha_name == 'GTJAalpha035': df = pd.DataFrame(GTJAalphas_results.GTJAalpha035().rename('GTJAalpha035'))
+            elif alpha_name == 'GTJAalpha036': df = pd.DataFrame(GTJAalphas_results.GTJAalpha036().rename('GTJAalpha036'))
+            elif alpha_name == 'GTJAalpha037': df = pd.DataFrame(GTJAalphas_results.GTJAalpha037().rename('GTJAalpha037'))
+            elif alpha_name == 'GTJAalpha038': df = pd.DataFrame(GTJAalphas_results.GTJAalpha038().rename('GTJAalpha038'))
+            elif alpha_name == 'GTJAalpha039': df = pd.DataFrame(GTJAalphas_results.GTJAalpha039().rename('GTJAalpha039'))
+            elif alpha_name == 'GTJAalpha041': df = pd.DataFrame(GTJAalphas_results.GTJAalpha041().rename('GTJAalpha041'))            
+            elif alpha_name == 'GTJAalpha042': df = pd.DataFrame(GTJAalphas_results.GTJAalpha042().rename('GTJAalpha042'))
+            elif alpha_name == 'GTJAalpha043': df = pd.DataFrame(GTJAalphas_results.GTJAalpha043().rename('GTJAalpha043'))
+            elif alpha_name == 'GTJAalpha044': df = pd.DataFrame(GTJAalphas_results.GTJAalpha044().rename('GTJAalpha044'))
+            elif alpha_name == 'GTJAalpha045': df = pd.DataFrame(GTJAalphas_results.GTJAalpha045().rename('GTJAalpha045'))
+            elif alpha_name == 'GTJAalpha046': df = pd.DataFrame(GTJAalphas_results.GTJAalpha046().rename('GTJAalpha046'))
+            elif alpha_name == 'GTJAalpha047': df = pd.DataFrame(GTJAalphas_results.GTJAalpha047().rename('GTJAalpha047'))
+            elif alpha_name == 'GTJAalpha048': df = pd.DataFrame(GTJAalphas_results.GTJAalpha048().rename('GTJAalpha048'))
+            elif alpha_name == 'GTJAalpha049': df = pd.DataFrame(GTJAalphas_results.GTJAalpha049().rename('GTJAalpha049'))
+            elif alpha_name == 'GTJAalpha051': df = pd.DataFrame(GTJAalphas_results.GTJAalpha051().rename('GTJAalpha051'))            
+            elif alpha_name == 'GTJAalpha052': df = pd.DataFrame(GTJAalphas_results.GTJAalpha052().rename('GTJAalpha052'))
+            elif alpha_name == 'GTJAalpha053': df = pd.DataFrame(GTJAalphas_results.GTJAalpha053().rename('GTJAalpha053'))
+            elif alpha_name == 'GTJAalpha054': df = pd.DataFrame(GTJAalphas_results.GTJAalpha054().rename('GTJAalpha054'))
+            elif alpha_name == 'GTJAalpha055': df = pd.DataFrame(GTJAalphas_results.GTJAalpha055().rename('GTJAalpha055'))
+            elif alpha_name == 'GTJAalpha056': df = pd.DataFrame(GTJAalphas_results.GTJAalpha056().rename('GTJAalpha056'))
+            elif alpha_name == 'GTJAalpha057': df = pd.DataFrame(GTJAalphas_results.GTJAalpha057().rename('GTJAalpha057'))
+            elif alpha_name == 'GTJAalpha058': df = pd.DataFrame(GTJAalphas_results.GTJAalpha058().rename('GTJAalpha058'))
+            elif alpha_name == 'GTJAalpha059': df = pd.DataFrame(GTJAalphas_results.GTJAalpha059().rename('GTJAalpha059'))
+            elif alpha_name == 'GTJAalpha061': df = pd.DataFrame(GTJAalphas_results.GTJAalpha061().rename('GTJAalpha061'))            
+            elif alpha_name == 'GTJAalpha062': df = pd.DataFrame(GTJAalphas_results.GTJAalpha062().rename('GTJAalpha062'))
+            elif alpha_name == 'GTJAalpha063': df = pd.DataFrame(GTJAalphas_results.GTJAalpha063().rename('GTJAalpha063'))
+            elif alpha_name == 'GTJAalpha064': df = pd.DataFrame(GTJAalphas_results.GTJAalpha064().rename('GTJAalpha064'))
+            elif alpha_name == 'GTJAalpha065': df = pd.DataFrame(GTJAalphas_results.GTJAalpha065().rename('GTJAalpha065'))
+            elif alpha_name == 'GTJAalpha066': df = pd.DataFrame(GTJAalphas_results.GTJAalpha066().rename('GTJAalpha066'))
+            elif alpha_name == 'GTJAalpha067': df = pd.DataFrame(GTJAalphas_results.GTJAalpha067().rename('GTJAalpha067'))
+            elif alpha_name == 'GTJAalpha068': df = pd.DataFrame(GTJAalphas_results.GTJAalpha068().rename('GTJAalpha068'))
+            elif alpha_name == 'GTJAalpha069': df = pd.DataFrame(GTJAalphas_results.GTJAalpha069().rename('GTJAalpha069'))
+            elif alpha_name == 'GTJAalpha071': df = pd.DataFrame(GTJAalphas_results.GTJAalpha071().rename('GTJAalpha071'))            
+            elif alpha_name == 'GTJAalpha072': df = pd.DataFrame(GTJAalphas_results.GTJAalpha072().rename('GTJAalpha072'))
+            elif alpha_name == 'GTJAalpha073': df = pd.DataFrame(GTJAalphas_results.GTJAalpha073().rename('GTJAalpha073'))
+            elif alpha_name == 'GTJAalpha074': df = pd.DataFrame(GTJAalphas_results.GTJAalpha074().rename('GTJAalpha074'))
+            elif alpha_name == 'GTJAalpha075': df = pd.DataFrame(GTJAalphas_results.GTJAalpha075().rename('GTJAalpha075'))
+            elif alpha_name == 'GTJAalpha076': df = pd.DataFrame(GTJAalphas_results.GTJAalpha076().rename('GTJAalpha076'))
+            elif alpha_name == 'GTJAalpha077': df = pd.DataFrame(GTJAalphas_results.GTJAalpha077().rename('GTJAalpha077'))
+            elif alpha_name == 'GTJAalpha078': df = pd.DataFrame(GTJAalphas_results.GTJAalpha078().rename('GTJAalpha078'))
+            elif alpha_name == 'GTJAalpha079': df = pd.DataFrame(GTJAalphas_results.GTJAalpha079().rename('GTJAalpha079'))
+            elif alpha_name == 'GTJAalpha081': df = pd.DataFrame(GTJAalphas_results.GTJAalpha081().rename('GTJAalpha081'))            
+            elif alpha_name == 'GTJAalpha082': df = pd.DataFrame(GTJAalphas_results.GTJAalpha082().rename('GTJAalpha082'))
+            elif alpha_name == 'GTJAalpha083': df = pd.DataFrame(GTJAalphas_results.GTJAalpha083().rename('GTJAalpha083'))
+            elif alpha_name == 'GTJAalpha084': df = pd.DataFrame(GTJAalphas_results.GTJAalpha084().rename('GTJAalpha084'))
+            elif alpha_name == 'GTJAalpha085': df = pd.DataFrame(GTJAalphas_results.GTJAalpha085().rename('GTJAalpha085'))
+            elif alpha_name == 'GTJAalpha086': df = pd.DataFrame(GTJAalphas_results.GTJAalpha086().rename('GTJAalpha086'))
+            elif alpha_name == 'GTJAalpha087': df = pd.DataFrame(GTJAalphas_results.GTJAalpha087().rename('GTJAalpha087'))
+            elif alpha_name == 'GTJAalpha088': df = pd.DataFrame(GTJAalphas_results.GTJAalpha088().rename('GTJAalpha088'))
+            elif alpha_name == 'GTJAalpha089': df = pd.DataFrame(GTJAalphas_results.GTJAalpha089().rename('GTJAalpha089'))
+            elif alpha_name == 'GTJAalpha091': df = pd.DataFrame(GTJAalphas_results.GTJAalpha091().rename('GTJAalpha091'))            
+            elif alpha_name == 'GTJAalpha092': df = pd.DataFrame(GTJAalphas_results.GTJAalpha092().rename('GTJAalpha092'))
+            elif alpha_name == 'GTJAalpha093': df = pd.DataFrame(GTJAalphas_results.GTJAalpha093().rename('GTJAalpha093'))
+            elif alpha_name == 'GTJAalpha094': df = pd.DataFrame(GTJAalphas_results.GTJAalpha094().rename('GTJAalpha094'))
+            elif alpha_name == 'GTJAalpha095': df = pd.DataFrame(GTJAalphas_results.GTJAalpha095().rename('GTJAalpha095'))
+            elif alpha_name == 'GTJAalpha096': df = pd.DataFrame(GTJAalphas_results.GTJAalpha096().rename('GTJAalpha096'))
+            elif alpha_name == 'GTJAalpha097': df = pd.DataFrame(GTJAalphas_results.GTJAalpha097().rename('GTJAalpha097'))
+            elif alpha_name == 'GTJAalpha098': df = pd.DataFrame(GTJAalphas_results.GTJAalpha098().rename('GTJAalpha098'))
+            elif alpha_name == 'GTJAalpha099': df = pd.DataFrame(GTJAalphas_results.GTJAalpha099().rename('GTJAalpha099'))
+            elif alpha_name == 'GTJAalpha100': df = pd.DataFrame(GTJAalphas_results.GTJAalpha100().rename('GTJAalpha100'))
+            elif alpha_name == 'GTJAalpha101': df = pd.DataFrame(GTJAalphas_results.GTJAalpha101().rename('GTJAalpha101'))            
+            elif alpha_name == 'GTJAalpha102': df = pd.DataFrame(GTJAalphas_results.GTJAalpha102().rename('GTJAalpha102'))
+            elif alpha_name == 'GTJAalpha103': df = pd.DataFrame(GTJAalphas_results.GTJAalpha103().rename('GTJAalpha103'))
+            elif alpha_name == 'GTJAalpha104': df = pd.DataFrame(GTJAalphas_results.GTJAalpha104().rename('GTJAalpha104'))
+            elif alpha_name == 'GTJAalpha105': df = pd.DataFrame(GTJAalphas_results.GTJAalpha105().rename('GTJAalpha105'))
+            elif alpha_name == 'GTJAalpha106': df = pd.DataFrame(GTJAalphas_results.GTJAalpha106().rename('GTJAalpha106'))
+            elif alpha_name == 'GTJAalpha107': df = pd.DataFrame(GTJAalphas_results.GTJAalpha107().rename('GTJAalpha107'))
+            elif alpha_name == 'GTJAalpha108': df = pd.DataFrame(GTJAalphas_results.GTJAalpha108().rename('GTJAalpha108'))
+            elif alpha_name == 'GTJAalpha109': df = pd.DataFrame(GTJAalphas_results.GTJAalpha109().rename('GTJAalpha109'))
+            elif alpha_name == 'GTJAalpha111': df = pd.DataFrame(GTJAalphas_results.GTJAalpha111().rename('GTJAalpha111'))            
+            elif alpha_name == 'GTJAalpha112': df = pd.DataFrame(GTJAalphas_results.GTJAalpha112().rename('GTJAalpha112'))
+            elif alpha_name == 'GTJAalpha113': df = pd.DataFrame(GTJAalphas_results.GTJAalpha113().rename('GTJAalpha113'))
+            elif alpha_name == 'GTJAalpha114': df = pd.DataFrame(GTJAalphas_results.GTJAalpha114().rename('GTJAalpha114'))
+            elif alpha_name == 'GTJAalpha115': df = pd.DataFrame(GTJAalphas_results.GTJAalpha115().rename('GTJAalpha115'))
+            elif alpha_name == 'GTJAalpha116': df = pd.DataFrame(GTJAalphas_results.GTJAalpha116().rename('GTJAalpha116'))
+            elif alpha_name == 'GTJAalpha117': df = pd.DataFrame(GTJAalphas_results.GTJAalpha117().rename('GTJAalpha117'))
+            elif alpha_name == 'GTJAalpha118': df = pd.DataFrame(GTJAalphas_results.GTJAalpha118().rename('GTJAalpha118'))
+            elif alpha_name == 'GTJAalpha119': df = pd.DataFrame(GTJAalphas_results.GTJAalpha119().rename('GTJAalpha119'))            
+            elif alpha_name == 'GTJAalpha121': df = pd.DataFrame(GTJAalphas_results.GTJAalpha121().rename('GTJAalpha121'))            
+            elif alpha_name == 'GTJAalpha122': df = pd.DataFrame(GTJAalphas_results.GTJAalpha122().rename('GTJAalpha122'))
+            elif alpha_name == 'GTJAalpha123': df = pd.DataFrame(GTJAalphas_results.GTJAalpha123().rename('GTJAalpha123'))
+            elif alpha_name == 'GTJAalpha124': df = pd.DataFrame(GTJAalphas_results.GTJAalpha124().rename('GTJAalpha124'))
+            elif alpha_name == 'GTJAalpha125': df = pd.DataFrame(GTJAalphas_results.GTJAalpha125().rename('GTJAalpha125'))
+            elif alpha_name == 'GTJAalpha126': df = pd.DataFrame(GTJAalphas_results.GTJAalpha126().rename('GTJAalpha126'))
+            elif alpha_name == 'GTJAalpha127': df = pd.DataFrame(GTJAalphas_results.GTJAalpha127().rename('GTJAalpha127'))
+            elif alpha_name == 'GTJAalpha128': df = pd.DataFrame(GTJAalphas_results.GTJAalpha128().rename('GTJAalpha128'))
+            elif alpha_name == 'GTJAalpha129': df = pd.DataFrame(GTJAalphas_results.GTJAalpha129().rename('GTJAalpha129'))
+            elif alpha_name == 'GTJAalpha131': df = pd.DataFrame(GTJAalphas_results.GTJAalpha131().rename('GTJAalpha131'))            
+            elif alpha_name == 'GTJAalpha132': df = pd.DataFrame(GTJAalphas_results.GTJAalpha132().rename('GTJAalpha132'))
+            elif alpha_name == 'GTJAalpha133': df = pd.DataFrame(GTJAalphas_results.GTJAalpha133().rename('GTJAalpha133'))
+            elif alpha_name == 'GTJAalpha134': df = pd.DataFrame(GTJAalphas_results.GTJAalpha134().rename('GTJAalpha134'))
+            elif alpha_name == 'GTJAalpha135': df = pd.DataFrame(GTJAalphas_results.GTJAalpha135().rename('GTJAalpha135'))
+            elif alpha_name == 'GTJAalpha136': df = pd.DataFrame(GTJAalphas_results.GTJAalpha136().rename('GTJAalpha136'))
+            elif alpha_name == 'GTJAalpha137': df = pd.DataFrame(GTJAalphas_results.GTJAalpha137().rename('GTJAalpha137'))
+            elif alpha_name == 'GTJAalpha138': df = pd.DataFrame(GTJAalphas_results.GTJAalpha138().rename('GTJAalpha138'))
+            elif alpha_name == 'GTJAalpha139': df = pd.DataFrame(GTJAalphas_results.GTJAalpha139().rename('GTJAalpha139'))
+            elif alpha_name == 'GTJAalpha141': df = pd.DataFrame(GTJAalphas_results.GTJAalpha141().rename('GTJAalpha141'))            
+            elif alpha_name == 'GTJAalpha142': df = pd.DataFrame(GTJAalphas_results.GTJAalpha142().rename('GTJAalpha142'))
+            elif alpha_name == 'GTJAalpha143': df = pd.DataFrame(GTJAalphas_results.GTJAalpha143().rename('GTJAalpha143'))
+            elif alpha_name == 'GTJAalpha144': df = pd.DataFrame(GTJAalphas_results.GTJAalpha144().rename('GTJAalpha144'))
+            elif alpha_name == 'GTJAalpha145': df = pd.DataFrame(GTJAalphas_results.GTJAalpha145().rename('GTJAalpha145'))
+            elif alpha_name == 'GTJAalpha146': df = pd.DataFrame(GTJAalphas_results.GTJAalpha146().rename('GTJAalpha146'))
+            elif alpha_name == 'GTJAalpha147': df = pd.DataFrame(GTJAalphas_results.GTJAalpha147().rename('GTJAalpha147'))
+            elif alpha_name == 'GTJAalpha148': df = pd.DataFrame(GTJAalphas_results.GTJAalpha148().rename('GTJAalpha148'))
+            elif alpha_name == 'GTJAalpha149': df = pd.DataFrame(GTJAalphas_results.GTJAalpha149().rename('GTJAalpha149'))
+            elif alpha_name == 'GTJAalpha151': df = pd.DataFrame(GTJAalphas_results.GTJAalpha151().rename('GTJAalpha151'))            
+            elif alpha_name == 'GTJAalpha152': df = pd.DataFrame(GTJAalphas_results.GTJAalpha152().rename('GTJAalpha152'))
+            elif alpha_name == 'GTJAalpha153': df = pd.DataFrame(GTJAalphas_results.GTJAalpha153().rename('GTJAalpha153'))
+            elif alpha_name == 'GTJAalpha154': df = pd.DataFrame(GTJAalphas_results.GTJAalpha154().rename('GTJAalpha154'))
+            elif alpha_name == 'GTJAalpha155': df = pd.DataFrame(GTJAalphas_results.GTJAalpha155().rename('GTJAalpha155'))
+            elif alpha_name == 'GTJAalpha156': df = pd.DataFrame(GTJAalphas_results.GTJAalpha156().rename('GTJAalpha156'))
+            elif alpha_name == 'GTJAalpha157': df = pd.DataFrame(GTJAalphas_results.GTJAalpha157().rename('GTJAalpha157'))
+            elif alpha_name == 'GTJAalpha158': df = pd.DataFrame(GTJAalphas_results.GTJAalpha158().rename('GTJAalpha158'))
+            elif alpha_name == 'GTJAalpha159': df = pd.DataFrame(GTJAalphas_results.GTJAalpha159().rename('GTJAalpha159'))
+            elif alpha_name == 'GTJAalpha161': df = pd.DataFrame(GTJAalphas_results.GTJAalpha161().rename('GTJAalpha161'))            
+            elif alpha_name == 'GTJAalpha162': df = pd.DataFrame(GTJAalphas_results.GTJAalpha162().rename('GTJAalpha162'))
+            elif alpha_name == 'GTJAalpha163': df = pd.DataFrame(GTJAalphas_results.GTJAalpha163().rename('GTJAalpha163'))
+            elif alpha_name == 'GTJAalpha164': df = pd.DataFrame(GTJAalphas_results.GTJAalpha164().rename('GTJAalpha164'))
+            elif alpha_name == 'GTJAalpha165': df = pd.DataFrame(GTJAalphas_results.GTJAalpha165().rename('GTJAalpha165'))
+            elif alpha_name == 'GTJAalpha166': df = pd.DataFrame(GTJAalphas_results.GTJAalpha166().rename('GTJAalpha166'))
+            elif alpha_name == 'GTJAalpha167': df = pd.DataFrame(GTJAalphas_results.GTJAalpha167().rename('GTJAalpha167'))
+            elif alpha_name == 'GTJAalpha168': df = pd.DataFrame(GTJAalphas_results.GTJAalpha168().rename('GTJAalpha168'))
+            elif alpha_name == 'GTJAalpha169': df = pd.DataFrame(GTJAalphas_results.GTJAalpha169().rename('GTJAalpha169'))
+            elif alpha_name == 'GTJAalpha171': df = pd.DataFrame(GTJAalphas_results.GTJAalpha171().rename('GTJAalpha171'))            
+            elif alpha_name == 'GTJAalpha172': df = pd.DataFrame(GTJAalphas_results.GTJAalpha172().rename('GTJAalpha172'))
+            elif alpha_name == 'GTJAalpha173': df = pd.DataFrame(GTJAalphas_results.GTJAalpha173().rename('GTJAalpha173'))
+            elif alpha_name == 'GTJAalpha174': df = pd.DataFrame(GTJAalphas_results.GTJAalpha174().rename('GTJAalpha174'))
+            elif alpha_name == 'GTJAalpha175': df = pd.DataFrame(GTJAalphas_results.GTJAalpha175().rename('GTJAalpha175'))
+            elif alpha_name == 'GTJAalpha176': df = pd.DataFrame(GTJAalphas_results.GTJAalpha176().rename('GTJAalpha176'))
+            elif alpha_name == 'GTJAalpha177': df = pd.DataFrame(GTJAalphas_results.GTJAalpha177().rename('GTJAalpha177'))
+            elif alpha_name == 'GTJAalpha178': df = pd.DataFrame(GTJAalphas_results.GTJAalpha178().rename('GTJAalpha178'))
+            elif alpha_name == 'GTJAalpha179': df = pd.DataFrame(GTJAalphas_results.GTJAalpha179().rename('GTJAalpha179'))
+            elif alpha_name == 'GTJAalpha181': df = pd.DataFrame(GTJAalphas_results.GTJAalpha181().rename('GTJAalpha181'))            
+            elif alpha_name == 'GTJAalpha182': df = pd.DataFrame(GTJAalphas_results.GTJAalpha182().rename('GTJAalpha182'))
+            elif alpha_name == 'GTJAalpha183': df = pd.DataFrame(GTJAalphas_results.GTJAalpha183().rename('GTJAalpha183'))
+            elif alpha_name == 'GTJAalpha184': df = pd.DataFrame(GTJAalphas_results.GTJAalpha184().rename('GTJAalpha184'))
+            elif alpha_name == 'GTJAalpha185': df = pd.DataFrame(GTJAalphas_results.GTJAalpha185().rename('GTJAalpha185'))
+            elif alpha_name == 'GTJAalpha186': df = pd.DataFrame(GTJAalphas_results.GTJAalpha186().rename('GTJAalpha186'))
+            elif alpha_name == 'GTJAalpha187': df = pd.DataFrame(GTJAalphas_results.GTJAalpha187().rename('GTJAalpha187'))
+            elif alpha_name == 'GTJAalpha188': df = pd.DataFrame(GTJAalphas_results.GTJAalpha188().rename('GTJAalpha188'))
+            elif alpha_name == 'GTJAalpha189': df = pd.DataFrame(GTJAalphas_results.GTJAalpha189().rename('GTJAalpha189'))
+            elif alpha_name == 'GTJAalpha191': df = pd.DataFrame(GTJAalphas_results.GTJAalpha191().rename('GTJAalpha191'))  
+            df = pd.concat([GTJAalphas_results.output_dates, df],axis=1)
+            df.insert(loc=0,column='TS_CODE',value=ts_code)
+            if type(df_all) == int:
+                df_all = df
+            else:
+                df_all = pd.concat([df_all, df],axis=0)    
+        except:
+            pass
+    return df_all
+
+
+
+
 
 
 
