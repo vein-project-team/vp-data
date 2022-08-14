@@ -35,7 +35,7 @@ class ReportGener(ABC):
         log(f'文件 { store_path.as_posix() } 已存在，程序将不会覆盖它。')
         return
 
-    data.to_csv(store_path, index=False)
+    data.to_csv(store_path, encoding='utf-8-sig', index=False)
   
 
   def fetch(self, filename: str) -> DataFrame:

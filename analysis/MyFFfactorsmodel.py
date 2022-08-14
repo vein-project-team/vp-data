@@ -32,28 +32,32 @@ def construct_FSdata_for_FFmodels():
         date_list_update = date_list[~date_list.isin(date_list_existed)]
         if len(date_list_update)==0:
             print("The corresponding daily FSdata for FFmodels needs not to be updated.")
-            result_existed.reset_index(inplace=True)
             return result_existed
         else:
             print("The corresponding daily FSdata for FFmodels needs to be updated.")
             first_date_update = date_list_update.iloc[0]
+        result_existed.reset_index(inplace=True)
     except:
         print("The corresponding daily FSdata for FFmodels is missing.")
-    date_list_update = date_list
-    first_date_update=0
+        date_list_update = date_list
+        first_date_update=0
         
-    close_added = local_source.get_quotations_daily(cols='TRADE_DATE,TS_CODE,CLOSE', condition = "TRADE_DATE>="+str(first_date_update))
+    close_added = local_source.get_quotations_daily(cols='TRADE_DATE,TS_CODE,CLOSE', condition = 'TRADE_DATE>='+str(first_date_update))
     total_shares_added = local_source.get_stock_indicators_daily(cols='TRADE_DATE,TS_CODE,TOTAL_SHARE', condition = "TRADE_DATE>="+str(first_date_update))
         
     balancesheet_added=0
     incomestatement_added=0
     for ts_code in pb(stock_list["TS_CODE"], desc='filling financial data', colour='#ffffff'):
-        balancesheet_chosen = local_source.get_balance_sheets(cols='ANN_DATE,TS_CODE,TOTAL_ASSETS,TOTAL_HLDR_EQY_INC_MIN_INT',condition='TS_CODE = '+'"'+ts_code+'" and ANN_DATE >='+str(first_date_update))
+        balancesheet_chosen = local_source.get_balance_sheets(cols='ANN_DATE,TS_CODE,TOTAL_ASSETS,TOTAL_HLDR_EQY_INC_MIN_INT',condition='TS_CODE = '+'"'+ts_code+'"')
         balancesheet_chosen.rename(columns={'TOTAL_HLDR_EQY_INC_MIN_INT':'BV'},inplace=True)
         balancesheet_chosen = fill_financial_data_to_daily_single_stock(data_fs=balancesheet_chosen, date_list=date_list)
-        incomestatement_chosen = local_source.get_income_statements(cols='ANN_DATE,TS_CODE,EBIT',condition='TS_CODE = '+'"'+ts_code+'" and ANN_DATE >='+str(first_date_update))
+        balancesheet_chosen = balancesheet_chosen[balancesheet_chosen["TRADE_DATE"]>=first_date_update]
+        balancesheet_chosen["TS_CODE"] = ts_code
+        incomestatement_chosen = local_source.get_income_statements(cols='ANN_DATE,TS_CODE,EBIT',condition='TS_CODE = '+'"'+ts_code+'"')
         incomestatement_chosen = fill_financial_data_to_daily_single_stock(data_fs=incomestatement_chosen, date_list=date_list)
-           
+        incomestatement_chosen["TS_CODE"] = ts_code
+        incomestatement_chosen = incomestatement_chosen[incomestatement_chosen["TRADE_DATE"]>=first_date_update]
+        
         if first_date_update !=0:
             balancesheet_chosen = balancesheet_chosen.fillna(method='bfill',axis=0)
             incomestatement_chosen = incomestatement_chosen.fillna(method='bfill',axis=0)
